@@ -1,5 +1,6 @@
 """
 Main application for resort booking system with OpenAI function calling.
+Updated to properly handle dictionary returns from tools.
 """
 import os
 import json
@@ -8,6 +9,7 @@ from openai import OpenAI
 from schemas import ALL_FUNCTION_SCHEMAS
 from tools import call_tool
 from dotenv import load_dotenv
+from assistant_thread import AssistantThread
 
 # Load environment variables
 load_dotenv()
@@ -45,11 +47,15 @@ def process_function_call(function_call) -> str:
     except json.JSONDecodeError:
         return json.dumps({"error": "Invalid JSON arguments"})
     
-    # Call the tool function
+    # Call the tool function - this returns a dict
     result = call_tool(function_name, **arguments)
     
-    # Return result as JSON string
-    return json.dumps(result, indent=2)
+    # Ensure result is serializable and return as JSON string
+    if isinstance(result, dict):
+        return json.dumps(result, indent=2, default=str)
+    else:
+        # Handle edge case where result might not be a dict
+        return json.dumps({"result": result}, indent=2, default=str)
 
 
 def chat_with_functions(user_message: str, max_iterations: int = 5) -> str:
@@ -150,49 +156,87 @@ def chat_with_functions(user_message: str, max_iterations: int = 5) -> str:
         print(f"💰 Total Session Usage - Prompt: {total_prompt_tokens}, Completion: {total_completion_tokens}, Total: {total_tokens} tokens, Cost: ${total_cost:.4f}")
     return "Maximum iterations reached. Please try again with a simpler query."
 
-
 def main():
-    """
-    Main function to demonstrate the resort booking system.
-    """
     print("🏖️  Resort Booking System with OpenAI Function Calling")
     print("=" * 60)
-    
-    # Example queries to demonstrate functionality
-    example_queries = [
-        "What bookings does John Doe have?",
-        "List all available resorts",
-        "Tell me about Paradise Bay Resort",
-        "What are the cheapest resorts available?",
-        "Show me Jane Smith's bookings"
-    ]
-    
-    print("\nExample queries you can try:")
-    for i, query in enumerate(example_queries, 1):
-        print(f"{i}. {query}")
-    
-    print("\n" + "=" * 60)
-    
+    thread = AssistantThread()
+    print(f"Thread ID: {thread.thread_id}")
+
     while True:
         print("\nEnter your query (or 'quit' to exit):")
         user_input = input("> ").strip()
-        
         if user_input.lower() in ['quit', 'exit', 'q']:
             print("Goodbye! 👋")
             break
-        
         if not user_input:
             continue
-        
+
+        thread.add_user_message(user_input)
         print("\n🤖 Processing your request...")
         print("-" * 40)
-        
-        # Get response from OpenAI with function calling
-        response = chat_with_functions(user_input)
-        
-        print("Assistant:", response)
-        print("-" * 40)
 
+        response = client.chat.completions.create(
+            model="gpt-4-turbo-preview",
+            messages=thread.get_history(),
+            tools=ALL_FUNCTION_SCHEMAS,
+            tool_choice="auto"
+        )
+        assistant_message = response.choices[0].message
+        thread.add_assistant_message({
+            "role": "assistant",
+            "content": assistant_message.content,
+            "tool_calls": assistant_message.tool_calls
+        })
+        
+        # Only print content if it exists and isn't just function calls
+        if assistant_message.content and assistant_message.content.strip():
+            print("Assistant:", assistant_message.content)
+            print("-" * 40)
+        elif assistant_message.tool_calls:
+            print("🔄 Processing function calls...")
+            print("-" * 40)
+
+        # Handle tool calls
+        if assistant_message.tool_calls:
+            for tool_call in assistant_message.tool_calls:
+                function_name = tool_call.function.name
+                arguments = json.loads(tool_call.function.arguments)
+                
+                # Call your Python function - returns a dict
+                tool_result = call_tool(function_name, **arguments)
+                
+                # Convert dict to JSON string for OpenAI
+                if isinstance(tool_result, dict):
+                    tool_result_str = json.dumps(tool_result, indent=2, default=str)
+                else:
+                    tool_result_str = json.dumps({"result": tool_result}, indent=2, default=str)
+                
+                # Add tool response message
+                thread.add_assistant_message({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": tool_result_str
+                })
+                print(f"✅ Function '{function_name}' executed successfully")
+                
+            # Now, send the updated history to OpenAI to get the final assistant reply
+            print("🧠 Generating final response...")
+            response = client.chat.completions.create(
+                model="gpt-4-turbo-preview",
+                messages=thread.get_history(),
+                tools=ALL_FUNCTION_SCHEMAS,
+                tool_choice="auto"
+            )
+            assistant_message = response.choices[0].message
+            thread.add_assistant_message({
+                "role": "assistant",
+                "content": assistant_message.content
+            })
+            if assistant_message.content:
+                print("Assistant:", assistant_message.content)
+            else:
+                print("Assistant: I apologize, but I couldn't generate a response.")
+            print("-" * 40)
 
 def demo_function_schemas():
     """
@@ -226,17 +270,24 @@ def test_tools_directly():
     # Test get_user_bookings
     print("\n1. Testing get_user_bookings('John Doe'):")
     result = call_tool("get_user_bookings", user_name="John Doe")
-    print(json.dumps(result, indent=2))
+    # Since result is a dict, we can print it nicely
+    print("Result type:", type(result))
+    print("Result content:")
+    print(json.dumps(result, indent=2, default=str))
     
-    # Test list_available_resorts
-    print("\n2. Testing list_available_resorts():")
-    result = call_tool("list_available_resorts")
-    print(json.dumps(result, indent=2))
+    # Test get_available_resorts
+    print("\n2. Testing get_available_resorts():")
+    result = call_tool("get_available_resorts")
+    print("Result type:", type(result))
+    print("Result content:")
+    print(json.dumps(result, indent=2, default=str))
     
     # Test get_resort_details
     print("\n3. Testing get_resort_details('Paradise Bay Resort'):")
     result = call_tool("get_resort_details", resort_name="Paradise Bay Resort")
-    print(json.dumps(result, indent=2))
+    print("Result type:", type(result))
+    print("Result content:")
+    print(json.dumps(result, indent=2, default=str))
 
 
 if __name__ == "__main__":
@@ -251,4 +302,4 @@ if __name__ == "__main__":
         test_tools_directly()
     else:
         # Run full application with OpenAI API
-        main() 
+        main()

@@ -1,193 +1,357 @@
-"""
-OpenAI-compatible function tool schemas for MySQL resort booking system.
-"""
 from typing import List, Dict, Any
 
 
-def get_user_bookings_schema() -> Dict[str, Any]:
-    """OpenAI function schema for get_user_bookings function."""
+def get_amenity_details_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_amenity_details function."""
     return {
-        "type": "function",
-        "function": {
-            "name": "get_user_bookings",
-            "description": "Fetch all bookings for a user by their email address",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_email": {
-                        "type": "string",
-                        "description": "The email address of the user to fetch bookings for"
-                    }
-                },
-                "required": ["user_email"],
-                "additionalProperties": False
-            }
+    "type": "function",
+    "function": {
+        "name": "get_amenity_details",
+        "description": "Get all details for a specific amenity by its ID.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "amenity_id": {
+                    "type": "integer",
+                    "description": "The amenity_id parameter"
+                }
+            },
+            "required": [
+                "amenity_id"
+            ],
+            "additionalProperties": False
         }
     }
+}
 
 
 def get_available_resorts_schema() -> Dict[str, Any]:
-    """OpenAI function schema for get_available_resorts function."""
+    """Auto-generated schema for get_available_resorts function."""
     return {
-        "type": "function",
-        "function": {
-            "name": "get_available_resorts",
-            "description": "List all available resorts with optional filtering by country and status",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "country": {
-                        "type": "string",
-                        "description": "Optional country filter to search resorts in a specific country"
-                    },
-                    "status": {
-                        "type": "string",
-                        "description": "Resort status filter (active, pending). Default is 'active'"
-                    },
-                    "limit": {
-                        "type": "integer",
-                        "description": "Maximum number of resorts to return (default: 10)"
-                    }
+    "type": "function",
+    "function": {
+        "name": "get_available_resorts",
+        "description": "List all available resorts with their basic information",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string",
+                    "description": "The country parameter"
                 },
-                "required": [],
-                "additionalProperties": False
-            }
+                "city": {
+                    "type": "string",
+                    "description": "The city parameter"
+                },
+                "state": {
+                    "type": "string",
+                    "description": "The state parameter"
+                },
+                "status": {
+                    "type": "string",
+                    "description": "The status parameter"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "The limit parameter"
+                }
+            },
+            "required": [],
+            "additionalProperties": False
         }
     }
-
-
-def get_resort_details_schema() -> Dict[str, Any]:
-    """OpenAI function schema for get_resort_details function."""
-    return {
-        "type": "function",
-        "function": {
-            "name": "get_resort_details",
-            "description": "Get detailed information about a specific resort by its ID",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "resort_id": {
-                        "type": "integer",
-                        "description": "The ID of the resort to get details for"
-                    }
-                },
-                "required": ["resort_id"],
-                "additionalProperties": False
-            }
-        }
-    }
-
-
-def search_available_listings_schema() -> Dict[str, Any]:
-    """OpenAI function schema for search_available_listings function."""
-    return {
-        "type": "function",
-        "function": {
-            "name": "search_available_listings",
-            "description": "Search for available listings with various filters like resort, dates, nights, and country",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "resort_id": {
-                        "type": "integer",
-                        "description": "Optional resort ID to filter listings for a specific resort"
-                    },
-                    "check_in_date": {
-                        "type": "string",
-                        "description": "Optional check-in date filter in YYYY-MM-DD format"
-                    },
-                    "check_out_date": {
-                        "type": "string",
-                        "description": "Optional check-out date filter in YYYY-MM-DD format"
-                    },
-                    "nights": {
-                        "type": "integer",
-                        "description": "Optional number of nights filter"
-                    },
-                    "country": {
-                        "type": "string",
-                        "description": "Optional country filter to search listings in a specific country"
-                    },
-                    "limit": {
-                        "type": "integer",
-                        "description": "Maximum number of listings to return (default: 20)"
-                    }
-                },
-                "required": [],
-                "additionalProperties": False
-            }
-        }
-    }
+}
 
 
 def get_booking_details_schema() -> Dict[str, Any]:
-    """OpenAI function schema for get_booking_details function."""
+    """Auto-generated schema for get_booking_details function."""
     return {
-        "type": "function",
-        "function": {
-            "name": "get_booking_details",
-            "description": "Get detailed information about a specific booking by its ID, with selective field returns based on user query",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "booking_id": {
-                        "type": "integer",
-                        "description": "The ID of the booking to get details for"
-                    },
-                    "fields": {
-                        "type": "string",
-                        "description": "What fields to return: 'price' (only pricing info), 'dates' (only date info), 'basic' (key booking details), 'participants' (booker and owner info), 'resort' (resort details), 'all' (complete details). Default is 'all'",
-                        "enum": ["price", "dates", "basic", "participants", "resort", "all"]
-                    }
+    "type": "function",
+    "function": {
+        "name": "get_booking_details",
+        "description": "Get detailed information about a specific booking by its ID.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "booking_id": {
+                    "type": "integer",
+                    "description": "The booking_id parameter"
                 },
-                "required": ["booking_id"],
-                "additionalProperties": False
-            }
+                "fields": {
+                    "type": "string",
+                    "description": "The fields parameter"
+                }
+            },
+            "required": [
+                "booking_id"
+            ],
+            "additionalProperties": False
         }
     }
+}
+
+
+def get_database_url_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_database_url function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "get_database_url",
+        "description": "Get database URL from environment variables.",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+def get_featured_listings_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_featured_listings function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "get_featured_listings",
+        "description": "Get featured listings.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": "The limit parameter"
+                }
+            },
+            "required": [],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+def get_listing_details_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_listing_details function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "get_listing_details",
+        "description": "Get all details for a specific listing by its ID.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "listing_id": {
+                    "type": "integer",
+                    "description": "The listing_id parameter"
+                }
+            },
+            "required": [
+                "listing_id"
+            ],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+def get_resort_details_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_resort_details function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "get_resort_details",
+        "description": "Get detailed information about a specific resort",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "resort_id": {
+                    "type": "integer",
+                    "description": "The resort_id parameter"
+                }
+            },
+            "required": [
+                "resort_id"
+            ],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+def get_user_bookings_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_user_bookings function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "get_user_bookings",
+        "description": "Fetch all bookings for a user by name",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_email": {
+                    "type": "string",
+                    "description": "The user_email parameter"
+                }
+            },
+            "required": [
+                "user_email"
+            ],
+            "additionalProperties": False
+        }
+    }
+}
 
 
 def get_user_profile_schema() -> Dict[str, Any]:
-    """OpenAI function schema for get_user_profile function."""
+    """Auto-generated schema for get_user_profile function."""
     return {
-        "type": "function",
-        "function": {
-            "name": "get_user_profile",
-            "description": "Get user profile information including bookings and listings statistics",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_email": {
-                        "type": "string",
-                        "description": "The email address of the user to get profile for"
-                    }
-                },
-                "required": ["user_email"],
-                "additionalProperties": False
-            }
+    "type": "function",
+    "function": {
+        "name": "get_user_profile",
+        "description": "Get user profile information.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_email": {
+                    "type": "string",
+                    "description": "The user_email parameter"
+                }
+            },
+            "required": [
+                "user_email"
+            ],
+            "additionalProperties": False
         }
     }
+}
+
+
+def get_weekend_listings_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_weekend_listings function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "get_weekend_listings",
+        "description": "Get listings with weekend availability.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": "The limit parameter"
+                }
+            },
+            "required": [],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+def search_available_listings_schema() -> Dict[str, Any]:
+    """Auto-generated schema for search_available_listings function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "search_available_listings",
+        "description": "Search for available listings with various filters.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "resort_id": {
+                    "type": "integer",
+                    "description": "The resort_id parameter"
+                },
+                "check_in_date": {
+                    "type": "string",
+                    "description": "The check_in_date parameter"
+                },
+                "check_out_date": {
+                    "type": "string",
+                    "description": "The check_out_date parameter"
+                },
+                "nights": {
+                    "type": "integer",
+                    "description": "The nights parameter"
+                },
+                "country": {
+                    "type": "string",
+                    "description": "The country parameter"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "The limit parameter"
+                }
+            },
+            "required": [],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+def search_listings_by_type_schema() -> Dict[str, Any]:
+    """Auto-generated schema for search_listings_by_type function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "search_listings_by_type",
+        "description": "Get listings by type.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "listing_type": {
+                    "type": "string",
+                    "description": "The listing_type parameter"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "The limit parameter"
+                }
+            },
+            "required": [
+                "listing_type"
+            ],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+def test_database_connection_schema() -> Dict[str, Any]:
+    """Auto-generated schema for test_database_connection function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "test_database_connection",
+        "description": "Test if the database connection works.",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False
+        }
+    }
+}
 
 
 def get_all_function_schemas() -> List[Dict[str, Any]]:
-    """Get all OpenAI-compatible function schemas."""
+    """Get all auto-generated OpenAI-compatible function schemas."""
     return [
-        get_user_bookings_schema(),
+        get_amenity_details_schema(),
         get_available_resorts_schema(),
-        get_resort_details_schema(),
-        search_available_listings_schema(),
         get_booking_details_schema(),
-        get_user_profile_schema()
+        get_database_url_schema(),
+        get_featured_listings_schema(),
+        get_listing_details_schema(),
+        get_resort_details_schema(),
+        get_user_bookings_schema(),
+        get_user_profile_schema(),
+        get_weekend_listings_schema(),
+        search_available_listings_schema(),
+        search_listings_by_type_schema(),
+        test_database_connection_schema(),
     ]
 
-
-# Export individual schemas for convenience
-GET_USER_BOOKINGS_SCHEMA = get_user_bookings_schema()
-GET_AVAILABLE_RESORTS_SCHEMA = get_available_resorts_schema()
-GET_RESORT_DETAILS_SCHEMA = get_resort_details_schema()
-SEARCH_AVAILABLE_LISTINGS_SCHEMA = search_available_listings_schema()
-GET_BOOKING_DETAILS_SCHEMA = get_booking_details_schema()
-GET_USER_PROFILE_SCHEMA = get_user_profile_schema()
-
 # Export all schemas as a list
-ALL_FUNCTION_SCHEMAS = get_all_function_schemas() 
+ALL_FUNCTION_SCHEMAS = get_all_function_schemas()

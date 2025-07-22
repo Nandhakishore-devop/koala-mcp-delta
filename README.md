@@ -32,7 +32,7 @@ MCP/
 
 ### 3. **Function Tools**
 - ✅ `get_user_bookings(user_name)` - Fetch user bookings
-- ✅ `list_available_resorts()` - List all resorts
+- ✅ `get_available_resorts()` - List all resorts
 - ✅ `get_resort_details(resort_name)` - Get resort details
 
 ### 4. **OpenAI Integration**
@@ -144,7 +144,7 @@ Try these queries in the chat interface:
    - Returns list of bookings with resort, checkin, checkout
 
 2. **"List all available resorts"**
-   - Calls `list_available_resorts()`
+   - Calls `get_available_resorts()`
    - Returns all resorts with details
 
 3. **"Tell me about Paradise Bay Resort"**
@@ -152,7 +152,7 @@ Try these queries in the chat interface:
    - Returns detailed resort information
 
 4. **"What are the cheapest resorts?"**
-   - Calls `list_available_resorts()`
+   - Calls `get_available_resorts()`
    - AI processes and compares prices
 
 ## 🔍 Function Details
@@ -164,10 +164,10 @@ bookings = get_user_bookings("John Doe")
 # Returns: [{"resort": "Paradise Bay Resort", "checkin": "2024-03-15", "checkout": "2024-03-20"}]
 ```
 
-### list_available_resorts() → List[Dict[str, Any]]
+### get_available_resorts() → List[Dict[str, Any]]
 ```python
 # Example usage
-resorts = list_available_resorts()
+resorts = get_available_resorts()
 # Returns: [{"name": "Paradise Bay Resort", "location": "Maldives", "price_per_night": "$450.00", ...}]
 ```
 
@@ -185,7 +185,7 @@ details = get_resort_details("Paradise Bay Resort")
 python -c "
 from tools import *
 print('Users:', get_user_bookings('John Doe'))
-print('Resorts:', list_available_resorts())
+print('Resorts:', get_available_resorts())
 print('Details:', get_resort_details('Paradise Bay Resort'))
 "
 ```
@@ -221,7 +221,7 @@ schema = generate_function_schema(my_function)
 ```python
 descriptions = {
     "get_user_bookings": "Fetch all bookings for a user by name",
-    "list_available_resorts": "List all available resorts with their basic information",
+    "get_available_resorts": "List all available resorts with their basic information",
     "get_resort_details": "Get detailed information about a specific resort"
 }
 
@@ -258,3 +258,8 @@ Feel free to extend this example with:
 ## 📝 License
 
 This project is for educational purposes and demonstrates OpenAI function calling integration patterns. 
+
+## To run streamlit
+- pip install streamlit
+
+streamlit run streamlit_app.py

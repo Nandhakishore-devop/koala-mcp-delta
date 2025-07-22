@@ -2,7 +2,7 @@
 Tool functions for resort booking system using SQLAlchemy with MySQL.
 """
 from typing import List, Dict, Any, Optional
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Text, Float, Boolean
+from sqlalchemy import create_engine, Column, Integer,BigInteger, String, DateTime, ForeignKey, Text, Float, Boolean
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -109,6 +109,107 @@ class Booking(Base):
     listing = relationship("Listing", back_populates="bookings")
 
 
+class Amenity(Base):
+    __tablename__ = 'amenities'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255))
+    vrbo_name = Column(Text)
+    slug = Column(String(255))
+    image = Column(String(255))
+    status = Column(String(255), default='active')
+    has_deleted = Column(Integer, default=0)
+    created_by = Column(Integer, default=0)
+    updated_by = Column(Integer, default=0)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    is_key_amenity = Column(Integer, default=0)
+
+
+class PtRtListing(Base):
+    __tablename__ = 'pt_rt_listings'
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    created_by = Column(Integer, default=0)
+    updated_by = Column(Integer, default=0)
+    listing_id = Column(Integer)
+    redweek_id = Column(String(255), default='0')
+    listing_unique_hash = Column(String(255))
+    listing_unique_listing_code = Column(String(255))
+    listing_price_night = Column(String(50))
+    vrbo_markup_commission = Column(String(10))
+    listing_rw_commission = Column(String(255), default='0')
+    listing_rw_verified = Column(String(255), default='0')
+    listing_rw_redweek_id = Column(String(255), default='0')
+    listing_publish_type = Column(String(50))
+    listing_dvc_id = Column(Integer, default=0)
+    listing_hawaii_id = Column(Integer, default=0)
+    listing_currency_id = Column(Integer, default=0)
+    listing_currency_code = Column(String(255))
+    listing_owner_id = Column(Integer, default=0)
+    listing_nights = Column(Integer, default=0)
+    listing_check_in = Column(DateTime)
+    listing_check_out = Column(DateTime)
+    has_weekend = Column(Integer, default=0)
+    exclusive = Column(Boolean, default=False)
+    vip_featured_old = Column(Integer, default=0)
+    hot_deals = Column(Boolean, default=False)
+    hotdeal_toggled_at = Column(DateTime)
+    l_home_featured = Column(Boolean, default=False)
+    l_destination_featured = Column(Boolean, default=False)
+    l_vip_featured = Column(Boolean, default=False)
+    listing_cancelation_policy_option = Column(String(50))
+    l_booking_type = Column(String(50))
+    l_custom_days = Column(String(5))
+    l_refund_before = Column(String(5))
+    l_refund_after = Column(String(5))
+    listing_cancelation_date = Column(DateTime)
+    listing_has_deleted = Column(Integer, default=0)
+    listing_status = Column(String(50))
+    listing_type = Column(String(255), default='prebook')
+    availability_request = Column(Boolean, default=False)
+    l_created_at = Column(DateTime)
+    l_updated_at = Column(DateTime)
+    l_last_activated_at = Column(DateTime)
+    pt_or_rt = Column(String(10))
+    unit_rate_id = Column(Integer, default=0)
+    unit_type_id = Column(Integer, default=0)
+    pro_unit_type_id = Column(Integer, default=0)
+    unit_has_deleted = Column(Integer, default=0)
+    unit_type_slug = Column(String(255))
+    unit_type_name = Column(String(255))
+    unit_bedrooms = Column(String(5))
+    unit_bathrooms = Column(String(7))
+    unit_sleeps = Column(Integer, default=0)
+    unit_kitchenate = Column(String(255))
+    unit_status = Column(String(255))
+    unit_cancelation_policy_option = Column(String(255))
+    resort_id = Column(Integer, default=0)
+    resort_lattitude = Column(String(255))
+    resort_longitude = Column(String(255))
+    resort_slug = Column(String(255))
+    resort_name = Column(String(255))
+    resort_has_deleted = Column(Integer, default=0)
+    resort_status = Column(String(50))
+    resort_is_featured = Column(Integer, default=0)
+    resort_location_types = Column(Text)
+    resort_amenity_ids = Column(String(255))
+    resort_pets_friendly = Column(String(255))
+    resort_brand_id = Column(Integer, default=0)
+    resort_brand_name = Column(String(255))
+    resort_address = Column(String(255))
+    resort_city = Column(String(100))
+    resort_country = Column(String(100))
+    resort_state = Column(String(100))
+    resort_zip = Column(String(10))
+    resort_county = Column(String(100))
+    resort_google_rating = Column(Integer, default=0)
+    resort_google_rating_default = Column(String(8))
+    r_featured_amenities = Column(String(600))
+    resort_updated_at = Column(DateTime)
+    is_processed = Column(Boolean, default=False)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+
 # Database setup
 def get_database_url():
     """Get database URL from environment variables."""
@@ -122,6 +223,7 @@ def get_database_url():
         return f"mysql+pymysql://{user}:{password}@{host}/{database}"
     else:
         return f"mysql+pymysql://{user}@{host}/{database}"
+
 
 DATABASE_URL = get_database_url()
 engine = create_engine(DATABASE_URL, echo=False)
@@ -178,40 +280,51 @@ def get_user_bookings(user_email: str) -> List[Dict[str, Any]]:
         session.close()
 
 
-def get_available_resorts(country: str = None, status: str = "active", limit: int = 10) -> List[Dict[str, Any]]:
+def get_available_resorts(
+    country: str = None,
+    city: str = None,
+    state: str = None,
+    status: str = "active",
+    limit: int = 10
+) -> List[Dict[str, Any]]:
     """
-    List available resorts with optional filtering.
-    
+    List available resorts with optional filtering by country, city, and state.
+
     Args:
         country: Optional country filter
+        city: Optional city filter
+        state: Optional state filter
         status: Resort status filter (default: active)
         limit: Maximum number of resorts to return (default: 10)
-        
+
     Returns:
         List of dictionaries with resort information
     """
     session = SessionLocal()
-    
+
     try:
         query = session.query(Resort)\
             .join(User, Resort.creator_id == User.id)\
             .filter(Resort.has_deleted == 0)\
             .filter(Resort.status == status)
-        
+
         if country:
-            query = query.filter(Resort.country.ilike(f"%{country}%"))
-        
+            query = query.filter(Resort.country.isnot(None), Resort.country.ilike(f"%{country.strip()}%"))
+        if city:
+            query = query.filter(Resort.city.isnot(None), Resort.city.ilike(f"%{city.strip()}%"))
+        if state:
+            query = query.filter(Resort.state.isnot(None), Resort.state.ilike(f"%{state.strip()}%"))
+
         resorts = query.limit(limit).all()
-        
+
         result = []
         for resort in resorts:
-            # Count active listings for this resort
             active_listings = session.query(Listing)\
                 .filter(Listing.resort_id == resort.id)\
                 .filter(Listing.has_deleted == 0)\
                 .filter(Listing.status.in_(['active', 'pending']))\
                 .count()
-            
+
             result.append({
                 "id": resort.id,
                 "name": resort.name,
@@ -222,9 +335,9 @@ def get_available_resorts(country: str = None, status: str = "active", limit: in
                 "active_listings": active_listings,
                 "status": resort.status
             })
-        
+
         return result
-        
+
     finally:
         session.close()
 
@@ -544,6 +657,66 @@ def get_user_profile(user_email: str) -> Dict[str, Any]:
         session.close()
 
 
+def get_listing_details(listing_id: int) -> Dict[str, Any]:
+    """Get all details for a specific listing by its ID."""
+    session = SessionLocal()
+    try:
+        listing = session.query(PtRtListing).filter(PtRtListing.id == listing_id).first()
+        if not listing:
+            return {"error": f"Listing with ID {listing_id} not found"}
+        return {col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns}
+    finally:
+        session.close()
+
+
+def get_amenity_details(amenity_id: int) -> Dict[str, Any]:
+    """Get all details for a specific amenity by its ID."""
+    session = SessionLocal()
+    try:
+        amenity = session.query(Amenity).filter(Amenity.id == amenity_id).first()
+        if not amenity:
+            return {"error": f"Amenity with ID {amenity_id} not found"}
+        return {col.name: getattr(amenity, col.name) for col in Amenity.__table__.columns}
+    finally:
+        session.close()
+
+
+def search_listings_by_type(listing_type: str, limit: int = 10) -> List[Dict[str, Any]]:
+    """Get listings by type."""
+    session = SessionLocal()
+    try:
+        listings = session.query(PtRtListing)\
+            .filter(PtRtListing.listing_type == listing_type)\
+            .limit(limit).all()
+        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+    finally:
+        session.close()
+
+
+def get_featured_listings(limit: int = 10) -> List[Dict[str, Any]]:
+    """Get featured listings."""
+    session = SessionLocal()
+    try:
+        listings = session.query(PtRtListing)\
+            .filter(PtRtListing.resort_is_featured == 1)\
+            .limit(limit).all()
+        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+    finally:
+        session.close()
+
+
+def get_weekend_listings(limit: int = 10) -> List[Dict[str, Any]]:
+    """Get listings with weekend availability."""
+    session = SessionLocal()
+    try:
+        listings = session.query(PtRtListing)\
+            .filter(PtRtListing.has_weekend == 1)\
+            .limit(limit).all()
+        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+    finally:
+        session.close()
+
+
 # Tool function registry for easy lookup
 AVAILABLE_TOOLS = {
     "get_user_bookings": get_user_bookings,
@@ -551,9 +724,13 @@ AVAILABLE_TOOLS = {
     "get_resort_details": get_resort_details,
     "search_available_listings": search_available_listings,
     "get_booking_details": get_booking_details,
-    "get_user_profile": get_user_profile
+    "get_user_profile": get_user_profile,
+    "get_listing_details": get_listing_details,
+    "get_amenity_details": get_amenity_details,
+    "search_listings_by_type": search_listings_by_type,
+    "get_featured_listings": get_featured_listings,
+    "get_weekend_listings": get_weekend_listings
 }
-
 
 def call_tool(tool_name: str, **kwargs) -> Any:
     """
@@ -587,6 +764,7 @@ def test_database_connection():
         return {"status": "success", "message": "Database connection successful"}
     except Exception as e:
         return {"status": "error", "message": f"Database connection failed: {str(e)}"}
+
 
 
 if __name__ == "__main__":

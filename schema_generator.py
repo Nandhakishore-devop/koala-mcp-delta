@@ -5,6 +5,7 @@ import inspect
 import json
 from typing import Dict, Any, List, get_type_hints, Union, Optional
 from types import GenericAlias
+from tools import get_user_bookings, get_available_resorts, get_resort_details
 
 
 def python_type_to_json_schema(python_type: Any) -> Dict[str, Any]:
@@ -172,7 +173,7 @@ def demonstrate_schema_generation():
     """
     Demonstrate automatic schema generation with example functions.
     """
-    from tools import get_user_bookings, list_available_resorts, get_resort_details
+    from tools import get_user_bookings, get_available_resorts, get_resort_details
     
     print("🔧 Automatic Schema Generation Demo")
     print("=" * 50)
@@ -180,14 +181,14 @@ def demonstrate_schema_generation():
     # Custom descriptions for better function documentation
     descriptions = {
         "get_user_bookings": "Fetch all bookings for a user by name",
-        "list_available_resorts": "List all available resorts with their basic information",
+        "get_available_resorts": "List all available resorts with their basic information",
         "get_resort_details": "Get detailed information about a specific resort"
     }
     
     # Generate schemas for individual functions
     functions = [
         (get_user_bookings, descriptions["get_user_bookings"]),
-        (list_available_resorts, descriptions["list_available_resorts"]),
+        (get_available_resorts, descriptions["get_available_resorts"]),
         (get_resort_details, descriptions["get_resort_details"])
     ]
     
@@ -207,7 +208,7 @@ def generate_schemas_file():
     # Generate schemas from tools module
     descriptions = {
         "get_user_bookings": "Fetch all bookings for a user by name",
-        "list_available_resorts": "List all available resorts with their basic information",
+        "get_available_resorts": "List all available resorts with their basic information",
         "get_resort_details": "Get detailed information about a specific resort"
     }
     
