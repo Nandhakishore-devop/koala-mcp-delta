@@ -1,8 +1,9 @@
 """
-Tool functions for resort booking system using SQLAlchemy with MySQL.
+Fixed Tool functions for resort booking system using SQLAlchemy with MySQL.
 """
 from typing import List, Dict, Any, Optional
 from sqlalchemy import create_engine, Column, Integer,BigInteger, String, DateTime, ForeignKey, Text, Float, Boolean
+from sqlalchemy import create_engine, Column, Integer, BigInteger, String, DateTime, ForeignKey, Text, Float, Boolean
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -28,10 +29,10 @@ class User(Base):
     has_deleted = Column(Integer, default=0)  # 0 = active, 1 = deleted
     status = Column(String(20), default='active')
     
-    # Relationships
+    # Relationships - Fixed to avoid circular references
     created_resorts = relationship("Resort", foreign_keys="Resort.creator_id", back_populates="creator")
-    owned_listings = relationship("Booking", foreign_keys="Booking.owner_id", back_populates="owner")
-    bookings = relationship("Booking", foreign_keys="Booking.user_id", back_populates="user")
+    owned_bookings = relationship("Booking", foreign_keys="Booking.owner_id", back_populates="owner")
+    user_bookings = relationship("Booking", foreign_keys="Booking.user_id", back_populates="user")
 
 
 class Resort(Base):
@@ -44,7 +45,7 @@ class Resort(Base):
     address = Column(Text)
     has_deleted = Column(Integer, default=0)  # 0 = active, 1 = deleted
     status = Column(String(20), default='active')  # active/pending
-    lattitude = Column(String(255))  # Note: it's 'lattitude' with double 't' in the actual DB
+    lattitude = Column(String(255))  # Note: keeping original spelling
     longitude = Column(String(255))
     country = Column(String(100))
     city = Column(String(100))
@@ -84,7 +85,7 @@ class Listing(Base):
     check_in = Column(DateTime, nullable=False)
     check_out = Column(DateTime, nullable=False)
     has_deleted = Column(Integer, default=0)  # 0 = active, 1 = deleted
-    status = Column(String(30), default='active')  # active/pending/booked/needs_fulfiment/fulfilment_request/deleted/failed/draft
+    status = Column(String(30), default='active')
     
     # Relationships
     resort = relationship("Resort", back_populates="listings")
@@ -104,8 +105,8 @@ class Booking(Base):
     total_price = Column(Float, nullable=False)
     
     # Relationships
-    owner = relationship("User", foreign_keys=[owner_id], back_populates="owned_listings")
-    user = relationship("User", foreign_keys=[user_id], back_populates="bookings")
+    owner = relationship("User", foreign_keys=[owner_id], back_populates="owned_bookings")
+    user = relationship("User", foreign_keys=[user_id], back_populates="user_bookings")
     listing = relationship("Listing", back_populates="bookings")
 
 
@@ -123,6 +124,98 @@ class Amenity(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
     is_key_amenity = Column(Integer, default=0)
+
+
+class ResortMigration(Base):
+    __tablename__ = 'resort_migration'
+
+    id = Column(BigInteger, primary_key=True)
+    pt_rt_id = Column(Integer, nullable=False)
+    listing_id = Column(Integer)
+    listing_check_in = Column(DateTime)
+    listing_check_out = Column(DateTime)
+    listing_cancelation_date = Column(DateTime)
+    listing_price_night = Column(String(50))
+    listing_nights = Column(Integer)
+    listing_publish_type = Column(String(50))
+    listing_has_deleted = Column(Integer, default=0)
+    listing_status = Column(String(50))
+    listing_currency_id = Column(Integer, default=0)
+    listing_currency_code = Column(String(255))
+    has_weekend = Column(Integer, default=0)
+    listing_owner_id = Column(Integer, default=0)  # Remove ForeignKey to avoid issues
+    listing_count = Column(Integer, default=0)
+    unit_type_id = Column(Integer, default=0)  # Remove ForeignKey to avoid issues
+    available_count = Column(String(255))
+    exactlisting_listing_count = Column(String(255))
+    unit_type_slug = Column(String(255))
+    unit_type_name = Column(String(255))
+    unit_bedrooms = Column(String(5))
+    unit_bathrooms = Column(String(7))
+    unit_sleeps = Column(Integer, default=0)
+    unit_kitchenate = Column(String(255))
+    unit_has_deleted = Column(Integer, default=0)
+    unit_type_images = Column(Text)  # JSON
+    featured_amenities = Column(String(150))
+    unit_status = Column(String(255))
+    unit_cancelation_policy_option = Column(String(255))
+    resort_id = Column(Integer, default=0)  # This is just an identifier, not a foreign key
+    resort_slug = Column(String(255))
+    resort_name = Column(String(255))
+    lattitude = Column(String(255))
+    longitude = Column(String(255))
+    distance = Column(String(255))
+    address = Column(String(255))
+    location_types = Column(String(255))
+    county = Column(String(255))
+    country = Column(String(255))
+    city = Column(String(255))
+    state = Column(String(255))
+    zip = Column(String(255))
+    is_featured = Column(Integer, default=0)
+    popular = Column(Integer, default=0)
+    is_fitness_center = Column(Integer, default=0)
+    is_free_wifi = Column(Integer, default=0)
+    is_restaurant = Column(Integer, default=0)
+    is_swimming_pool = Column(Integer, default=0)
+    hotel_star = Column(Integer, default=0)
+    top_21_resort = Column(Integer, default=0)
+    resort_amenities = Column(Text)  # JSON
+    reslrt_updated_at = Column(DateTime)
+    resort_google_rating = Column(Integer, default=0)
+    resort_has_deleted = Column(Integer, default=0)
+    resort_status = Column(String(50))
+    google_rating = Column(Integer, default=0)
+    user_ratings_total = Column(Integer, default=0)
+    google_rating_default = Column(String(8))
+    pets_friendly = Column(Integer, default=0)
+    unit_rates_price = Column(String(50))
+    offer = Column(String(255))
+    offer_price = Column(String(255))
+    offer_popup = Column(String(255))
+    drivetime = Column(String(255))
+    image = Column(String(255))
+    images = Column(Text)  # JSON
+    resort_images = Column(Text)  # JSON
+    resort_aminities = Column(Text)  # JSON
+    amenities = Column(Text)  # JSON
+    highlight_quote = Column(String(255))
+    hotelStar = Column(String(255))
+    is_open_availability = Column(String(255))
+    brand_id = Column(Integer, default=0)
+    brand_name = Column(String(255))
+    brand_slug = Column(String(255))
+    brand_order = Column(String(255))
+    unit_rate_id = Column(Integer, default=0)
+    unit_rate_start_date = Column(DateTime)
+    unit_rate_availability = Column(String(255))
+    unit_rate_number_available = Column(String(255))
+    unit_rate_nightly_price = Column(String(255))
+    unit_rates_count = Column(String(255))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+    # No relationships for ResortMigration to avoid circular reference issues
 
 
 class PtRtListing(Base):
@@ -276,6 +369,10 @@ def get_user_bookings(user_email: str) -> List[Dict[str, Any]]:
         
         return result
         
+    except Exception as e:
+        print(f"Error in get_user_bookings: {str(e)}")
+        return []
+        
     finally:
         session.close()
 
@@ -338,20 +435,262 @@ def get_available_resorts(
 
         return result
 
+
+    except Exception as e:
+        print(f"Error in get_available_resorts: {str(e)}")
+        return []
+
     finally:
         session.close()
 
 
-def get_resort_details(resort_id: int) -> Dict[str, Any]:
+def get_resort_price(
+    resort_name: str = None,
+    country: str = None,
+    city: str = None,
+    state: str = None,
+    min_price: float = None,
+    max_price: float = None,
+    unit_type: str = None,
+    nights: int = None,
+    currency_code: str = None,
+    limit: int = 20,
+    debug: bool = False
+) -> List[Dict[str, Any]]:
     """
-    Get detailed information about a specific resort.
+    Enhanced version of get_resort_price with better debugging and flexible matching.
+    """
+    session = SessionLocal()
     
-    Args:
-        resort_id: The ID of the resort to get details for
+    try:
+        if debug:
+            print(f"🔍 Searching for resort: '{resort_name}'")
         
-    Returns:
-        Dictionary with detailed resort information
-    """
+        # Start with base query
+        query = session.query(ResortMigration)
+        
+        # Apply filters one by one and count results at each step
+        if resort_name:
+            query = query.filter(ResortMigration.resort_name.ilike(f"%{resort_name.strip()}%"))
+            if debug:
+                count = query.count()
+                print(f"📊 After name filter '{resort_name}': {count} records")
+        
+        # Try less restrictive status filter first
+        query = query.filter(ResortMigration.listing_has_deleted == 0)
+        if debug:
+            count = query.count()
+            print(f"📊 After deleted filter: {count} records")
+        
+        # Use broader status filter
+        query = query.filter(ResortMigration.listing_status.isnot(None))
+        if debug:
+            count = query.count()
+            print(f"📊 After status not null filter: {count} records")
+        
+        # Location filters
+        if country:
+            query = query.filter(
+                ResortMigration.country.isnot(None),
+                ResortMigration.country.ilike(f"%{country.strip()}%")
+            )
+            if debug:
+                count = query.count()
+                print(f"📊 After country filter '{country}': {count} records")
+        
+        if city:
+            query = query.filter(
+                ResortMigration.city.isnot(None),
+                ResortMigration.city.ilike(f"%{city.strip()}%")
+            )
+            if debug:
+                count = query.count()
+                print(f"📊 After city filter '{city}': {count} records")
+        
+        if state:
+            query = query.filter(
+                ResortMigration.state.isnot(None),
+                ResortMigration.state.ilike(f"%{state.strip()}%")
+            )
+            if debug:
+                count = query.count()
+                print(f"📊 After state filter '{state}': {count} records")
+        
+        # Execute query to get raw results
+        all_resorts = query.limit(limit * 3).all()  # Get more for filtering
+        
+        if debug:
+            print(f"📊 Raw query returned: {len(all_resorts)} records")
+        
+        if not all_resorts:
+            # Try fallback searches
+            if resort_name:
+                # Try searching individual words
+                words = resort_name.split()
+                if len(words) > 1:
+                    fallback_query = session.query(ResortMigration)\
+                        .filter(ResortMigration.listing_has_deleted == 0)
+                    
+                    for word in words:
+                        if len(word) > 2:  # Skip small words
+                            fallback_query = fallback_query.filter(
+                                ResortMigration.resort_name.ilike(f"%{word}%")
+                            )
+                    
+                    all_resorts = fallback_query.limit(limit).all()
+                    if debug:
+                        print(f"📊 Fallback word search returned: {len(all_resorts)} records")
+        
+        result = []
+        
+        for resort in all_resorts:
+            try:
+                # Enhanced price parsing
+                def parse_price_enhanced(price_str):
+                    if not price_str:
+                        return 0.0
+                    
+                    # Convert to string and clean
+                    clean_price = str(price_str).strip()
+                    
+                    # Remove currency symbols and commas
+                    for symbol in ['$', '€', '£', '¥', ',', ' ']:
+                        clean_price = clean_price.replace(symbol, '')
+                    
+                    # Handle ranges (take the first number)
+                    if '-' in clean_price:
+                        clean_price = clean_price.split('-')[0].strip()
+                    
+                    try:
+                        return float(clean_price) if clean_price and clean_price.replace('.', '').isdigit() else 0.0
+                    except (ValueError, AttributeError):
+                        return 0.0
+                
+                # Try multiple price fields
+                listing_price = parse_price_enhanced(resort.listing_price_night)
+                unit_price = parse_price_enhanced(resort.unit_rates_price)
+                nightly_price = parse_price_enhanced(resort.unit_rate_nightly_price)
+                offer_price = parse_price_enhanced(resort.offer_price) if resort.offer_price else None
+                
+                # Use the best available price
+                price_per_night = listing_price or unit_price or nightly_price or 0.0
+                
+                if debug and price_per_night == 0:
+                    print(f"⚠️ No valid price found for {resort.resort_name}")
+                    print(f"   listing_price_night: {resort.listing_price_night}")
+                    print(f"   unit_rates_price: {resort.unit_rates_price}")
+                    print(f"   unit_rate_nightly_price: {resort.unit_rate_nightly_price}")
+                
+                # Apply price filters (but be more lenient)
+                if min_price and price_per_night > 0 and price_per_night < min_price:
+                    continue
+                if max_price and price_per_night > max_price:
+                    continue
+                
+                # Apply other filters
+                if unit_type and resort.unit_type_name:
+                    if unit_type.lower() not in resort.unit_type_name.lower():
+                        continue
+                
+                if nights and resort.listing_nights != nights:
+                    continue
+                
+                if currency_code and resort.listing_currency_code:
+                    if resort.listing_currency_code.upper() != currency_code.upper():
+                        continue
+                
+                # Calculate totals
+                nights_count = resort.listing_nights or 1
+                total_price = price_per_night * nights_count if price_per_night > 0 else None
+                
+                # Build result
+                resort_info = {
+                    "resort_id": resort.resort_id,
+                    "resort_name": resort.resort_name or "Unknown Resort",
+                    "location": {
+                        "address": resort.address,
+                        "city": resort.city,
+                        "state": resort.state,
+                        "country": resort.country,
+                        "zip_code": resort.zip,
+                        "coordinates": {
+                            "latitude": resort.lattitude,
+                            "longitude": resort.longitude
+                        }
+                    },
+                    "pricing": {
+                        "price_per_night": price_per_night,
+                        "currency_code": resort.listing_currency_code or "USD",
+                        "nights": nights_count,
+                        "total_price": total_price,
+                        "offer_price": offer_price,
+                        "offer_description": resort.offer,
+                        "price_display": f"{resort.listing_currency_code or '$'}{price_per_night:.2f}" if price_per_night > 0 else "Contact for pricing",
+                        "raw_prices": {
+                            "listing_price_night": resort.listing_price_night,
+                            "unit_rates_price": resort.unit_rates_price,
+                            "unit_rate_nightly_price": resort.unit_rate_nightly_price
+                        }
+                    },
+                    "unit_details": {
+                        "unit_type": resort.unit_type_name,
+                        "bedrooms": resort.unit_bedrooms,
+                        "bathrooms": resort.unit_bathrooms,
+                        "sleeps": resort.unit_sleeps or 0,
+                        "kitchenette": resort.unit_kitchenate
+                    },
+                    "availability": {
+                        "check_in": resort.listing_check_in.strftime("%Y-%m-%d") if resort.listing_check_in else None,
+                        "check_out": resort.listing_check_out.strftime("%Y-%m-%d") if resort.listing_check_out else None,
+                        "status": resort.listing_status,
+                        "has_weekend": bool(resort.has_weekend)
+                    },
+                    "amenities": {
+                        "fitness_center": bool(resort.is_fitness_center),
+                        "free_wifi": bool(resort.is_free_wifi),
+                        "restaurant": bool(resort.is_restaurant),
+                        "swimming_pool": bool(resort.is_swimming_pool),
+                        "pets_friendly": bool(resort.pets_friendly)
+                    },
+                    "ratings": {
+                        "hotel_stars": resort.hotel_star or 0,
+                        "google_rating": resort.google_rating or 0,
+                        "is_featured": bool(resort.is_featured),
+                        "is_popular": bool(resort.popular)
+                    }
+                }
+                
+                result.append(resort_info)
+                
+                if len(result) >= limit:
+                    break
+                    
+            except Exception as e:
+                if debug:
+                    print(f"❌ Error processing resort {resort.resort_id}: {str(e)}")
+                continue
+        
+        # Sort by price (but show zero prices too)
+        result.sort(key=lambda x: (x['pricing']['price_per_night'] == 0, x['pricing']['price_per_night']))
+        
+        if debug:
+            print(f"✅ Final result count: {len(result)}")
+        
+        return result
+        
+    except Exception as e:
+        print(f"Database error in get_resort_price_enhanced: {str(e)}")
+        return []
+        
+    finally:
+        session.close()
+
+
+# Add to tools
+
+
+def get_resort_details(resort_id: int) -> Dict[str, Any]:
+    """Get detailed information about a specific resort."""
     session = SessionLocal()
     
     try:
@@ -408,6 +747,10 @@ def get_resort_details(resort_id: int) -> Dict[str, Any]:
             "total_bookings": total_bookings
         }
         
+    except Exception as e:
+        print(f"Error in get_resort_details: {str(e)}")
+        return {"error": f"Error retrieving resort details: {str(e)}"}
+        
     finally:
         session.close()
 
@@ -420,20 +763,7 @@ def search_available_listings(
     country: str = None,
     limit: int = 20
 ) -> List[Dict[str, Any]]:
-    """
-    Search for available listings with various filters.
-    
-    Args:
-        resort_id: Optional resort ID filter
-        check_in_date: Optional check-in date filter (YYYY-MM-DD)
-        check_out_date: Optional check-out date filter (YYYY-MM-DD)
-        nights: Optional number of nights filter
-        country: Optional country filter
-        limit: Maximum number of listings to return (default: 20)
-        
-    Returns:
-        List of available listings
-    """
+    """Search for available listings with various filters."""
     session = SessionLocal()
     
     try:
@@ -479,21 +809,16 @@ def search_available_listings(
         
         return result
         
+    except Exception as e:
+        print(f"Error in search_available_listings: {str(e)}")
+        return []
+        
     finally:
         session.close()
 
 
 def get_booking_details(booking_id: int, fields: str = "all") -> Dict[str, Any]:
-    """
-    Get detailed information about a specific booking by its ID.
-    
-    Args:
-        booking_id: The ID of the booking to get details for
-        fields: What fields to return - "all", "price", "dates", "basic", "participants", "resort"
-        
-    Returns:
-        Dictionary with booking information based on requested fields
-    """
+    """Get detailed information about a specific booking by its ID."""
     session = SessionLocal()
     
     try:
@@ -600,20 +925,16 @@ def get_booking_details(booking_id: int, fields: str = "all") -> Dict[str, Any]:
                 }
             }
         
+    except Exception as e:
+        print(f"Error in get_booking_details: {str(e)}")
+        return {"error": f"Error retrieving booking details: {str(e)}"}
+    
     finally:
         session.close()
 
 
 def get_user_profile(user_email: str) -> Dict[str, Any]:
-    """
-    Get user profile information.
-    
-    Args:
-        user_email: Email of the user
-        
-    Returns:
-        User profile information
-    """
+    """Get user profile information."""
     session = SessionLocal()
     
     try:
@@ -652,6 +973,240 @@ def get_user_profile(user_email: str) -> Dict[str, Any]:
             "owned_listings": owned_listings_count,
             "created_resorts": created_resorts_count
         }
+        
+    except Exception as e:
+        print(f"Error in get_user_profile: {str(e)}")
+        return {"error": f"Error retrieving user profile: {str(e)}"}
+        
+    finally:
+        session.close()
+
+
+def get_listing_details(listing_id: int) -> Dict[str, Any]:
+    """Get all details for a specific listing by its ID."""
+    session = SessionLocal()
+    try:
+        listing = session.query(PtRtListing).filter(PtRtListing.id == listing_id).first()
+        if not listing:
+            return {"error": f"Listing with ID {listing_id} not found"}
+        return {col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns}
+    except Exception as e:
+        print(f"Error in get_listing_details: {str(e)}")
+        return {"error": f"Error retrieving listing details: {str(e)}"}
+    finally:
+        session.close()
+
+
+def get_amenity_details(amenity_id: int) -> Dict[str, Any]:
+    """Get all details for a specific amenity by its ID."""
+    session = SessionLocal()
+    try:
+        amenity = session.query(Amenity).filter(Amenity.id == amenity_id).first()
+        if not amenity:
+            return {"error": f"Amenity with ID {amenity_id} not found"}
+        return {col.name: getattr(amenity, col.name) for col in Amenity.__table__.columns}
+    except Exception as e:
+        print(f"Error in get_amenity_details: {str(e)}")
+        return {"error": f"Error retrieving amenity details: {str(e)}"}
+    finally:
+        session.close()
+
+
+def search_listings_by_type(listing_type: str, limit: int = 10) -> List[Dict[str, Any]]:
+    """Get listings by type."""
+    session = SessionLocal()
+    try:
+        listings = session.query(PtRtListing)\
+            .filter(PtRtListing.listing_type == listing_type)\
+            .limit(limit).all()
+        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+    except Exception as e:
+        print(f"Error in search_listings_by_type: {str(e)}")
+        return []
+    finally:
+        session.close()
+
+
+def get_featured_listings(limit: int = 10) -> List[Dict[str, Any]]:
+    """Get featured listings."""
+    session = SessionLocal()
+    try:
+        listings = session.query(PtRtListing)\
+            .filter(PtRtListing.resort_is_featured == 1)\
+            .limit(limit).all()
+        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+    except Exception as e:
+        print(f"Error in get_featured_listings: {str(e)}")
+        return []
+    finally:
+        session.close()
+
+
+def get_weekend_listings(limit: int = 10) -> List[Dict[str, Any]]:
+    """Get listings with weekend availability."""
+    session = SessionLocal()
+    try:
+        listings = session.query(PtRtListing)\
+            .filter(PtRtListing.has_weekend == 1)\
+            .limit(limit).all()
+        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+    except Exception as e:
+        print(f"Error in get_weekend_listings: {str(e)}")
+        return []
+    finally:
+        session.close()
+
+
+def search_resorts_by_amenities(amenities: List[str], limit: int = 10) -> List[Dict[str, Any]]:
+    """
+    Search for resorts that have specific amenities.
+    
+    Args:
+        amenities: List of amenity names to search for
+        limit: Maximum number of resorts to return
+        
+    Returns:
+        List of resorts with matching amenities
+    """
+    session = SessionLocal()
+    
+    try:
+        # Search in ResortMigration table for amenities
+        query = session.query(ResortMigration)\
+            .filter(ResortMigration.resort_has_deleted == 0)\
+            .filter(ResortMigration.resort_status == 'active')
+        
+        # Apply amenity filters
+        for amenity in amenities:
+            if amenity.lower() in ['pool', 'swimming pool']:
+                query = query.filter(ResortMigration.is_swimming_pool == 1)
+            elif amenity.lower() in ['wifi', 'free wifi']:
+                query = query.filter(ResortMigration.is_free_wifi == 1)
+            elif amenity.lower() in ['fitness', 'gym', 'fitness center']:
+                query = query.filter(ResortMigration.is_fitness_center == 1)
+            elif amenity.lower() in ['restaurant', 'dining']:
+                query = query.filter(ResortMigration.is_restaurant == 1)
+            elif amenity.lower() in ['pets', 'pet friendly']:
+                query = query.filter(ResortMigration.pets_friendly == 1)
+        
+        resorts = query.limit(limit).all()
+        
+        result = []
+        seen_resorts = set()  # To avoid duplicates
+        
+        for resort in resorts:
+            if resort.resort_id not in seen_resorts:
+                seen_resorts.add(resort.resort_id)
+                
+                result.append({
+                    "resort_id": resort.resort_id,
+                    "resort_name": resort.resort_name,
+                    "location": {
+                        "city": resort.city,
+                        "state": resort.state,
+                        "country": resort.country,
+                        "address": resort.address
+                    },
+                    "amenities": {
+                        "swimming_pool": bool(resort.is_swimming_pool),
+                        "free_wifi": bool(resort.is_free_wifi),
+                        "fitness_center": bool(resort.is_fitness_center),
+                        "restaurant": bool(resort.is_restaurant),
+                        "pets_friendly": bool(resort.pets_friendly)
+                    },
+                    "ratings": {
+                        "google_rating": resort.google_rating or 0,
+                        "hotel_stars": resort.hotel_star or 0,
+                        "is_featured": bool(resort.is_featured)
+                    },
+                    "brand": resort.brand_name,
+                    "highlight_quote": resort.highlight_quote
+                })
+        
+        return result
+        
+    except Exception as e:
+        print(f"Error in search_resorts_by_amenities: {str(e)}")
+        return []
+        
+    finally:
+        session.close()
+
+
+def get_price_range_summary(country: str = None, state: str = None) -> Dict[str, Any]:
+    """
+    Get price range summary for resorts in a specific location.
+    
+    Args:
+        country: Optional country filter
+        state: Optional state filter
+        
+    Returns:
+        Dictionary with price statistics
+    """
+    session = SessionLocal()
+    
+    try:
+        query = session.query(ResortMigration)\
+            .filter(ResortMigration.listing_has_deleted == 0)\
+            .filter(ResortMigration.listing_status.in_(['active', 'pending', 'available']))
+        
+        if country:
+            query = query.filter(ResortMigration.country.ilike(f"%{country}%"))
+        
+        if state:
+            query = query.filter(ResortMigration.state.ilike(f"%{state}%"))
+        
+        resorts = query.all()
+        
+        if not resorts:
+            return {"error": "No resorts found for the specified criteria"}
+        
+        # Parse prices
+        prices = []
+        for resort in resorts:
+            try:
+                price_str = resort.listing_price_night or resort.unit_rates_price
+                if price_str:
+                    clean_price = str(price_str).replace(',', '').replace(',', '').strip()
+                    try:
+                        price = float(clean_price)
+                        if price > 0:
+                            prices.append(price)
+                    except (ValueError, TypeError):
+                        continue
+            except Exception:
+                continue
+        
+        if not prices:
+            return {"error": "No valid pricing data found"}
+        
+        # Calculate statistics
+        prices.sort()
+        count = len(prices)
+        
+        return {
+            "location": {
+                "country": country,
+                "state": state
+            },
+            "price_statistics": {
+                "min_price": min(prices),
+                "max_price": max(prices),
+                "average_price": sum(prices) / count,
+                "median_price": prices[count // 2] if count % 2 else (prices[count // 2 - 1] + prices[count // 2]) / 2,
+                "total_listings": count
+            },
+            "price_ranges": {
+                "budget": len([p for p in prices if p < 100]),
+                "mid_range": len([p for p in prices if 100 <= p < 300]),
+                "luxury": len([p for p in prices if p >= 300])
+            }
+        }
+        
+    except Exception as e:
+        print(f"Error in get_price_range_summary: {str(e)}")
+        return {"error": f"Error calculating price summary: {str(e)}"}
         
     finally:
         session.close()
@@ -729,7 +1284,11 @@ AVAILABLE_TOOLS = {
     "get_amenity_details": get_amenity_details,
     "search_listings_by_type": search_listings_by_type,
     "get_featured_listings": get_featured_listings,
-    "get_weekend_listings": get_weekend_listings
+    "get_weekend_listings": get_weekend_listings,
+    "get_weekend_listings": get_weekend_listings,
+    "get_resort_price": get_resort_price,
+    "search_resorts_by_amenities": search_resorts_by_amenities,
+    "get_price_range_summary": get_price_range_summary
 }
 
 def call_tool(tool_name: str, **kwargs) -> Any:
@@ -778,4 +1337,25 @@ if __name__ == "__main__":
         print("\n✅ Database connection successful!")
         print("🔧 Available Tools:")
         for tool_name in AVAILABLE_TOOLS.keys():
-            print(f"  - {tool_name}") 
+            print(f"  - {tool_name}")
+        
+        # Test a few functions
+        print("\n🧪 Testing Functions:")
+        
+        # Test get_available_resorts
+        print("Testing get_available_resorts...")
+        resorts = call_tool("get_available_resorts", limit=3)
+        print(f"Found {len(resorts)} resorts")
+        
+        # Test get_resort_price
+        print("Testing get_resort_price...")
+        prices = call_tool("get_resort_price", limit=3)
+        print(f"Found {len(prices)} price records")
+        
+        # Test search_resorts_by_amenities
+        print("Testing search_resorts_by_amenities...")
+        amenity_resorts = call_tool("search_resorts_by_amenities", amenities=["pool"], limit=3)
+        print(f"Found {len(amenity_resorts)} resorts with pool amenity")
+    else:
+        print("\n❌ Database connection failed!")
+        print("Please check your database configuration in the .env file")

@@ -154,6 +154,32 @@ def get_listing_details_schema() -> Dict[str, Any]:
 }
 
 
+def get_price_range_summary_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_price_range_summary function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "get_price_range_summary",
+        "description": "Get price range summary for resorts in a specific location.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string",
+                    "description": "The country parameter"
+                },
+                "state": {
+                    "type": "string",
+                    "description": "The state parameter"
+                }
+            },
+            "required": [],
+            "additionalProperties": False
+        }
+    }
+}
+
+
 def get_resort_details_schema() -> Dict[str, Any]:
     """Auto-generated schema for get_resort_details function."""
     return {
@@ -172,6 +198,68 @@ def get_resort_details_schema() -> Dict[str, Any]:
             "required": [
                 "resort_id"
             ],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+def get_resort_price_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_resort_price function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "get_resort_price",
+        "description": "Enhanced version of get_resort_price with better debugging and flexible matching.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "resort_name": {
+                    "type": "string",
+                    "description": "The resort_name parameter"
+                },
+                "country": {
+                    "type": "string",
+                    "description": "The country parameter"
+                },
+                "city": {
+                    "type": "string",
+                    "description": "The city parameter"
+                },
+                "state": {
+                    "type": "string",
+                    "description": "The state parameter"
+                },
+                "min_price": {
+                    "type": "number",
+                    "description": "The min_price parameter"
+                },
+                "max_price": {
+                    "type": "number",
+                    "description": "The max_price parameter"
+                },
+                "unit_type": {
+                    "type": "string",
+                    "description": "The unit_type parameter"
+                },
+                "nights": {
+                    "type": "integer",
+                    "description": "The nights parameter"
+                },
+                "currency_code": {
+                    "type": "string",
+                    "description": "The currency_code parameter"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "The limit parameter"
+                },
+                "debug": {
+                    "type": "boolean",
+                    "description": "The debug parameter"
+                }
+            },
+            "required": [],
             "additionalProperties": False
         }
     }
@@ -317,6 +405,36 @@ def search_listings_by_type_schema() -> Dict[str, Any]:
     }
 }
 
+def search_resorts_by_amenities_schema() -> Dict[str, Any]:
+    """Auto-generated schema for search_resorts_by_amenities function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "search_resorts_by_amenities",
+        "description": "Search for resorts that have specific amenities.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "amenities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The amenities parameter"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "The limit parameter"
+                }
+            },
+            "required": [
+                "amenities"
+            ],
+            "additionalProperties": False
+        }
+    }
+}
+
 
 def test_database_connection_schema() -> Dict[str, Any]:
     """Auto-generated schema for test_database_connection function."""
@@ -345,11 +463,15 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
         get_featured_listings_schema(),
         get_listing_details_schema(),
         get_resort_details_schema(),
+        get_price_range_summary_schema(),
+        get_resort_details_schema(),
+        get_resort_price_schema(),
         get_user_bookings_schema(),
         get_user_profile_schema(),
         get_weekend_listings_schema(),
         search_available_listings_schema(),
         search_listings_by_type_schema(),
+        search_resorts_by_amenities_schema(),
         test_database_connection_schema(),
     ]
 
