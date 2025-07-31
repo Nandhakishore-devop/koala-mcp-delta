@@ -336,46 +336,7 @@ def get_weekend_listings_schema() -> Dict[str, Any]:
 }
 
 
-def search_available_listings_schema() -> Dict[str, Any]:
-    """Auto-generated schema for search_available_listings function."""
-    return {
-    "type": "function",
-    "function": {
-        "name": "search_available_listings",
-        "description": "Search for available listings with various filters.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "resort_id": {
-                    "type": "integer",
-                    "description": "The resort_id parameter"
-                },
-                "check_in_date": {
-                    "type": "string",
-                    "description": "The check_in_date parameter"
-                },
-                "check_out_date": {
-                    "type": "string",
-                    "description": "The check_out_date parameter"
-                },
-                "nights": {
-                    "type": "integer",
-                    "description": "The nights parameter"
-                },
-                "country": {
-                    "type": "string",
-                    "description": "The country parameter"
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "The limit parameter"
-                }
-            },
-            "required": [],
-            "additionalProperties": False
-        }
-    }
-}
+
 
 
 def search_listings_by_type_schema() -> Dict[str, Any]:
@@ -451,10 +412,93 @@ def test_database_connection_schema() -> Dict[str, Any]:
         }
     }
 }
+def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
+    """Auto-generated schema for search_available_future_listings_enhanced function."""
+    return {
+        "type": "function",
+        "function": {
+            "name": "search_available_future_listings_enhanced",
+            "description": "Enhanced search for available future listings with fallback options and better user guidance. Returns both results and suggestions for alternative searches when no exact matches are found.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "resort_id": {
+                        "type": "integer",
+                        "description": "The resort_id parameter"
+                    },
+                    "check_in_date": {
+                        "type": "string",
+                        "description": "Check-in date in YYYY-MM-DD format"
+                    },
+                    "check_out_date": {
+                        "type": "string",
+                        "description": "Check-out date in YYYY-MM-DD format"
+                    },
+                    "nights": {
+                        "type": "integer",
+                        "description": "Number of nights for the stay"
+                    },
+                    "country": {
+                        "type": "string",
+                        "description": "Country to search in"
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "City to search in"
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "State to search in"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return (default: 20)"
+                    },
+                    "flexible_dates": {
+                        "type": "boolean",
+                        "description": "Whether to search for alternative dates if exact dates not available (default: true)"
+                    },
+                    "debug": {
+                        "type": "boolean",
+                        "description": "Enable debug output (default: false)"
+                    }
+                },
+                "required": [],
+                "additionalProperties": False
+            }
+        }
+    }
 
 
+def get_availability_insights_schema() -> Dict[str, Any]:
+    """Auto-generated schema for get_availability_insights function."""
+    return {
+        "type": "function",
+        "function": {
+            "name": "get_availability_insights",
+            "description": "Get insights about availability patterns to help users understand when to search. Provides monthly distribution, popular durations, price statistics, and recommendations.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "country": {
+                        "type": "string",
+                        "description": "Optional country filter for availability insights"
+                    },
+                    "days_ahead": {
+                        "type": "integer",
+                        "description": "Number of days ahead to analyze (default: 90)"
+                    }
+                },
+                "required": [],
+                "additionalProperties": False
+            }
+        }
+    }
+
+
+# Updated get_all_function_schemas to include the new functions
 def get_all_function_schemas() -> List[Dict[str, Any]]:
-    """Get all auto-generated OpenAI-compatible function schemas."""
+    """Get all auto-generated OpenAI-compatible function schemas including enhanced versions."""
     return [
         get_amenity_details_schema(),
         get_available_resorts_schema(),
@@ -464,16 +508,18 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
         get_listing_details_schema(),
         get_resort_details_schema(),
         get_price_range_summary_schema(),
-        get_resort_details_schema(),
         get_resort_price_schema(),
         get_user_bookings_schema(),
         get_user_profile_schema(),
         get_weekend_listings_schema(),
-        search_available_listings_schema(),
         search_listings_by_type_schema(),
         search_resorts_by_amenities_schema(),
         test_database_connection_schema(),
+        search_available_future_listings_enhanced_schema(),  # Enhanced version
+        get_availability_insights_schema(),  # New insights function
     ]
+
+
 
 # Export all schemas as a list
 ALL_FUNCTION_SCHEMAS = get_all_function_schemas()
