@@ -159,19 +159,55 @@ def get_price_range_summary_schema() -> Dict[str, Any]:
     return {
     "type": "function",
     "function": {
-        "name": "get_price_range_summary",
+        "name": "search_available_future_listings_enhanced",
         "description": "Get price range summary for resorts in a specific location.",
         "parameters": {
             "type": "object",
             "properties": {
-                "country": {
-                    "type": "string",
-                    "description": "The country parameter"
-                },
-                "state": {
-                    "type": "string",
-                    "description": "The state parameter"
-                }
+                "resort_id": {
+                        "type": "integer",
+                        "description": "The resort_id parameter"
+                    },
+                    "listing_check_in": {
+                        "type": "string",
+                        "description": "Check-in date in YYYY-MM-DD format"
+                    },
+                    "listing_check_out": {
+                        "type": "string",
+                        "description": "Check-out date in YYYY-MM-DD format"
+                    },
+                    "listing_price_night": {
+                        "type": "integer",
+                        "description": "Number of nights for the stay"
+                    },
+                    "resort_country": {
+                        "type": "string",
+                        "description": "Country to search in"
+                    },
+                    "resort_city": {
+                        "type": "string",
+                        "description": "City to search in"
+                    },
+                    "resort_state": {
+                        "type": "string",
+                        "description": "State to search in"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return (default: 20)"
+                    },
+                    "flexible_dates": {
+                        "type": "boolean",
+                        "description": "Whether to search for alternative dates if exact dates not available (default: true)"
+                    },
+                    "debug": {
+                        "type": "boolean",
+                        "description": "Enable debug output (default: false)"
+                    },
+                    "price_sort": {
+                        "type": "string",
+                        "description": "Order to sort results by price. Use 'asc' for cheapest listings, 'desc' for most expensive listings."
+                    }
             },
             "required": [],
             "additionalProperties": False
@@ -209,7 +245,7 @@ def get_resort_price_schema() -> Dict[str, Any]:
     return {
     "type": "function",
     "function": {
-        "name": "get_resort_price",
+        "name": "search_available_future_listings_enhanced",
         "description": "Enhanced version of get_resort_price with better debugging and flexible matching.",
         "parameters": {
             "type": "object",
@@ -218,15 +254,15 @@ def get_resort_price_schema() -> Dict[str, Any]:
                     "type": "string",
                     "description": "The resort_name parameter"
                 },
-                "country": {
+                "resort_country": {
                     "type": "string",
                     "description": "The country parameter"
                 },
-                "city": {
+                "resort_city": {
                     "type": "string",
                     "description": "The city parameter"
                 },
-                "state": {
+                "resort_state": {
                     "type": "string",
                     "description": "The state parameter"
                 },
@@ -242,7 +278,7 @@ def get_resort_price_schema() -> Dict[str, Any]:
                     "type": "string",
                     "description": "The unit_type parameter"
                 },
-                "nights": {
+                "listing_pricing_night": {
                     "type": "integer",
                     "description": "The nights parameter"
                 },
@@ -257,6 +293,10 @@ def get_resort_price_schema() -> Dict[str, Any]:
                 "debug": {
                     "type": "boolean",
                     "description": "The debug parameter"
+                },
+                "price_sort": {
+                        "type": "string",
+                        "description": "Order to sort results by price. Use 'asc' for cheapest listings, 'desc' for most expensive listings."
                 }
             },
             "required": [],
@@ -426,27 +466,27 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                         "type": "integer",
                         "description": "The resort_id parameter"
                     },
-                    "check_in_date": {
+                    "listing_check_in": {
                         "type": "string",
                         "description": "Check-in date in YYYY-MM-DD format"
                     },
-                    "check_out_date": {
+                    "listing_check_out": {
                         "type": "string",
                         "description": "Check-out date in YYYY-MM-DD format"
                     },
-                    "nights": {
+                    "listing_price_night": {
                         "type": "integer",
                         "description": "Number of nights for the stay"
                     },
-                    "country": {
+                    "resort_country": {
                         "type": "string",
                         "description": "Country to search in"
                     },
-                    "city": {
+                    "resort_city": {
                         "type": "string",
                         "description": "City to search in"
                     },
-                    "state": {
+                    "resort_state": {
                         "type": "string",
                         "description": "State to search in"
                     },
@@ -516,7 +556,7 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
         search_resorts_by_amenities_schema(),
         test_database_connection_schema(),
         search_available_future_listings_enhanced_schema(),  # Enhanced version
-        get_availability_insights_schema(),  # New insights function
+        # get_availability_insights_schema(),  # New insights function
     ]
 
 
