@@ -88,7 +88,7 @@ st.markdown("""
     .chat-message {
         padding: 1rem;
         border-radius: -40px;
-        margin: 1rem 0;
+        margin: 1rem 0; 
         border-left: 4px solid #4ECDC4;
         background-color: #1a1a1a;
         color: #ffffff;
