@@ -31,7 +31,7 @@ def display_cost_info():
     st.markdown(f"""
     <div style="
         position: fixed;
-        top: 20px;
+        top: 100px;
         right: 20px;
         background-color: #2d2d2d;
         padding: 1rem;
@@ -82,7 +82,7 @@ st.markdown("""
         text-align: center;
         color: white;
         margin-bottom: 2rem;
-        margin-top:-140px 
+        margin-top:-80px 
     }
     
     .chat-message {
@@ -92,11 +92,13 @@ st.markdown("""
         border-left: 4px solid #4ECDC4;
         background-color: #1a1a1a;
         color: #ffffff;
+      
     }
     
     .user-message {
         background-color: #2d2d2d;
         border-left-color: #FF6B6B;
+        margin-top: 10px;
     }
     
     .assistant-message {
@@ -108,8 +110,9 @@ st.markdown("""
         background-color: #2a2a1a;
         border-left-color: #ffc107;
         font-family: monospace;
-        font-size: 0.9em;
+        font-size: 0.8em;
         color: #ffffff;
+        height : 8.5em;
         
     }
     
@@ -125,7 +128,7 @@ st.markdown("""
     }
     
     .function-call details {
-        margin-top: 0.5rem;
+        margin-top: 0.3rem;
     }
     
     .function-call summary {
