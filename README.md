@@ -201,6 +201,20 @@ python schema_generator.py
 python main.py
 ```
 
+# .env
+
+# MySQL Database Configuration
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=""
+MYSQL_DATABASE=koala_dev
+
+# OpenAI API Configuration
+OPENAI_API_KEY=REDACTED_SK_PROJ
+
+
+
+
 ## 📈 Advanced Features
 
 ### Automatic Schema Generation
