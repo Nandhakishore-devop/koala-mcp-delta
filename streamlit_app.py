@@ -26,6 +26,35 @@ def calculate_cost(prompt_tokens: int, completion_tokens: int) -> float:
     completion_cost = (completion_tokens / 1000) * GPT4_TURBO_COMPLETION_PRICE
     return prompt_cost + completion_cost
 
+def display_cost_info():
+    """Display cost information in a fixed position on the right side."""
+    st.markdown(f"""
+    <div style="
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #2d2d2d;
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 4px solid #4ECDC4;
+        z-index: 1000;
+        min-width: 200px;
+        color: #ffffff;
+        font-size: 0.9em;
+    ">
+        <h4 style="margin: 0 0 0.5rem 0; color: #4ECDC4;">💰 Usage Stats</h4>
+        <div style="margin: 0.3rem 0;">
+            <strong>Tokens:</strong> {st.session_state.total_tokens:,}
+        </div>
+        <div style="margin: 0.3rem 0;">
+            <strong>Cost:</strong> ${st.session_state.total_cost:.4f}
+        </div>
+        <div style="margin: 0.3rem 0;">
+            <strong>Messages:</strong> {len([m for m in st.session_state.messages if m['type'] == 'user'])}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 # Page configuration
 st.set_page_config(
     page_title="🏖️ koala_chat_bot_DM",
@@ -53,12 +82,12 @@ st.markdown("""
         text-align: center;
         color: white;
         margin-bottom: 2rem;
-        margin-top:-50px 
+        margin-top:-140px 
     }
     
     .chat-message {
         padding: 1rem;
-        border-radius: -10px;
+        border-radius: -40px;
         margin: 1rem 0;
         border-left: 4px solid #4ECDC4;
         background-color: #1a1a1a;
@@ -162,7 +191,48 @@ if 'client' not in st.session_state:
     else:
         st.session_state.client = None
 
-def process_function_call(function_call) -> str:
+def handle_simple_greetings(user_input: str) -> str:
+    """Handle simple greetings and common phrases without calling LLM."""
+    user_input_lower = user_input.lower().strip()
+    
+    # Define greeting patterns and responses
+    greeting_responses = {
+        # Basic greetings
+        'hi': "Hello! 👋 I'm your resort booking assistant. How can I help you find the perfect getaway today?",
+        'hello': "Hi there! 🏖️ Welcome to our resort booking service. What destination are you dreaming of?",
+        'hey': "Hey! 😊 Ready to plan your next vacation? I'm here to help you find amazing resorts!",
+        'good morning': "Good morning! ☀️ What a beautiful day to plan a resort getaway! How can I assist you?",
+        'good afternoon': "Good afternoon! 🌅 Hope you're having a great day! Let's find you an amazing resort experience.",
+        'good evening': "Good evening! 🌙 Perfect time to plan your next vacation! What can I help you with?",
+        
+        # Thank you responses
+        'thank you': "You're very welcome! 😊 Is there anything else I can help you with for your resort booking?",
+        'thanks': "My pleasure! 🌟 Feel free to ask if you need help with anything else!",
+        'thank u': "You're welcome! 💫 Happy to help with your resort needs anytime!",
+        'ty': "You're welcome! 🎉 Anything else I can assist you with?",
+        
+        # Other common phrases
+        'how are you': "I'm doing great, thank you for asking! 🤖 I'm here and ready to help you find the perfect resort. How are you doing?",
+        'what\'s up': "Not much, just here to help you plan an amazing vacation! 🏝️ What resort experience are you looking for?",
+        'whats up': "Just ready to help you book your dream resort! ✨ What destination interests you?",
+        'ok': "Great! 👍 What would you like to know about our resort options?",
+        'okay': "Perfect! 🌴 How can I help you with your resort booking today?",
+        'bye': "Goodbye! 👋 Thanks for using our resort booking service. Have a wonderful day!",
+        'goodbye': "Farewell! 🌊 Hope to help you plan your next amazing vacation soon!",
+        'see you': "See you later! 🏖️ Don't hesitate to come back when you're ready to book that perfect resort!"
+    }
+    
+    # Check for exact matches first
+    if user_input_lower in greeting_responses:
+        return greeting_responses[user_input_lower]
+    
+    # Check for partial matches
+    for greeting, response in greeting_responses.items():
+        if greeting in user_input_lower:
+            return response
+    
+    # Return None if no greeting pattern matches
+    return None
     """Process a function call from OpenAI and return the result."""
     function_name = function_call.name
     
@@ -216,6 +286,9 @@ def display_function_call(function_name, arguments, result=None):
     """, unsafe_allow_html=True)
 
 def main():
+    # Display cost information in sidebar
+    display_cost_info()
+    
     # Header
     st.markdown("""
     <div class="main-header">
@@ -242,15 +315,15 @@ def main():
                 message.get("result")
             )
     
-    # Initialize input value from session state
-    if 'current_input' not in st.session_state:
-        st.session_state.current_input = ""
+    # Initialize input counter for unique keys
+    if 'input_counter' not in st.session_state:
+        st.session_state.input_counter = 0
     
     # Chat input at the bottom
     user_input = st.text_input(
         "Ask me anything about resort bookings:",
-        value=st.session_state.current_input,
-        key="chat_input",
+        value="",
+        key=f"chat_input_{st.session_state.input_counter}",
         placeholder="Type your message here..."
     )
     
@@ -265,7 +338,22 @@ def main():
             "content": user_input
         })
         
-        # Add to thread
+        # Check if this is a simple greeting first
+        greeting_response = handle_simple_greetings(user_input)
+        
+        if greeting_response:
+            # Handle greeting locally without LLM call
+            st.session_state.messages.append({
+                "type": "assistant",
+                "content": greeting_response
+            })
+            
+            # Clear the input for next message by incrementing counter
+            st.session_state.input_counter += 1
+            st.rerun()
+            return
+        
+        # Add to thread for LLM processing
         st.session_state.thread.add_user_message(user_input)
         
         # Process with OpenAI
@@ -361,8 +449,8 @@ def main():
                             "content": assistant_message.content
                         })
                 
-                # Clear the input for next message
-                st.session_state.current_input = ""
+                # Clear the input for next message by incrementing counter
+                st.session_state.input_counter += 1
                 st.rerun()
                 
             except Exception as e:
