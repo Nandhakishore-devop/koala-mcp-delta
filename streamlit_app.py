@@ -112,7 +112,7 @@ st.markdown("""
         font-family: monospace;
         font-size: 0.8em;
         color: #ffffff;
-        height : 8.5em;
+        
         
     }
     
