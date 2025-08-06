@@ -215,29 +215,32 @@ def get_price_range_summary_schema() -> Dict[str, Any]:
     }
 }
 
-
 def get_resort_details_schema() -> Dict[str, Any]:
-    """Auto-generated schema for get_resort_details function."""
+    """Schema for get_resort_details function, supporting ID or Name and includes unit types."""
     return {
-    "type": "function",
-    "function": {
-        "name": "get_resort_details",
-        "description": "Get detailed information about a specific resort",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "resort_id": {
-                    "type": "integer",
-                    "description": "The resort_id parameter"
-                }
-            },
-            "required": [
-                "resort_id"
-            ],
-            "additionalProperties": False
+        "type": "function",
+        "function": {
+            "name": "get_resort_details",
+            "description": "Get detailed information about a specific resort using either ID or Name. Returns resort details including unit types, listing stats, and total bookings.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "resort_id": {
+                        "type": "integer",
+                        "description": "The ID of the resort to retrieve details for"
+                    },
+                    "resort_name": {
+                        "type": "string",
+                        "description": "The name of the resort to retrieve details for"
+                    }
+                    
+
+                },
+                "required": [],
+                "additionalProperties": False
+            }
         }
     }
-}
 
 
 def get_resort_price_schema() -> Dict[str, Any]:
