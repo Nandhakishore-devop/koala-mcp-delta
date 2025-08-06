@@ -370,19 +370,19 @@ def search_available_future_listings_enhanced(**filters) -> List[PtRtListing]:
         #     except ValueError as ve:
                 # print("Date parsing error:", ve)
 
-        price_sort = filters.get('price_sort');
+        price_sort = filters.get('price_sort')
         if price_sort != None:
             field = getattr(PtRtListing, 'listing_price_night')
             if price_sort == 'asc':
                 query = query.order_by(asc(field))
-                print('inside asc')
+                
             else:
                 query = query.order_by(desc(field))
 
         if filter_conditions:
             query = query.filter(and_(*filter_conditions))
 
-        # print(query)
+            print(query)
 
         results =  query.limit(50).all()
 
@@ -812,8 +812,6 @@ def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[st
             UnitType.has_deleted == 0
         ).all()
 
-        # Optional: print unit types for debugging
-        print("unit_types:", [ut.name for ut in unit_types])
 
         # --- Listings count by status ---
         statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']

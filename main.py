@@ -100,7 +100,7 @@ def chat_with_functions(user_message: str, max_iterations: int = 5) -> str:
         try:
             # Make API call with function definitions
             response = client.chat.completions.create(
-                model="gpt-4-turbo-preview",
+                model="gpt-3.5-turbo",
                 messages=messages,
                 tools=ALL_FUNCTION_SCHEMAS,
                 tool_choice="auto"
@@ -176,7 +176,7 @@ def main():
         print("-" * 40)
 
         response = client.chat.completions.create(
-            model="gpt-4-turbo-preview",
+            model="gpt-3.5-turbo",
             messages=thread.get_history(),
             tools=ALL_FUNCTION_SCHEMAS,
             tool_choice="auto"
@@ -222,7 +222,7 @@ def main():
             # Now, send the updated history to OpenAI to get the final assistant reply
             print("🧠 Generating final response...")
             response = client.chat.completions.create(
-                model="gpt-4-turbo-preview",
+                model="gpt-3.5-turbo",
                 messages=thread.get_history(),
                 tools=ALL_FUNCTION_SCHEMAS,
                 tool_choice="auto"

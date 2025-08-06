@@ -17,8 +17,8 @@ import time
 load_dotenv()
 
 # OpenAI pricing (as of 2024) - prices per 1K tokens
-GPT4_TURBO_PROMPT_PRICE = 0.01  # $0.01 per 1K prompt tokens
-GPT4_TURBO_COMPLETION_PRICE = 0.03  # $0.03 per 1K completion tokens
+GPT4_TURBO_PROMPT_PRICE = 0.0015  # $0.0015 per 1K prompt tokens 3.5
+GPT4_TURBO_COMPLETION_PRICE = 0.002  # $0.002 per 1K completion tokens 3.5
 
 def calculate_cost(prompt_tokens: int, completion_tokens: int) -> float:
     """Calculate the cost of OpenAI API usage."""
