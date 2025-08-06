@@ -266,7 +266,7 @@ class PtRtListing(Base):
     resort_google_rating_default = Column(String(8))
     r_featured_amenities = Column(String(600))
     resort_updated_at = Column(DateTime)
-    is_processed = Column(Boolean, default=False)
+    
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
   
@@ -347,7 +347,7 @@ def search_available_future_listings_enhanced(**filters) -> List[PtRtListing]:
             if value is not None and hasattr(PtRtListing, field_name):
                 column = getattr(PtRtListing, field_name)
 
-                # Case-insensitive partial match for strings
+                # Case-insensitive partial match for strings 
                 if isinstance(value, str):
                     filter_conditions.append(column.ilike(f"%{value.strip()}%"))
                 else:
