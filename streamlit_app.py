@@ -212,7 +212,7 @@ def handle_simple_greetings(user_input: str) -> str:
         'thank you': "You're very welcome! 😊 Is there anything else I can help you with for your resort booking?",
         'thanks': "My pleasure! 🌟 Feel free to ask if you need help with anything else!",
         'thank u': "You're welcome! 💫 Happy to help with your resort needs anytime!",
-        'ty': "You're welcome! 🎉 Anything else I can assist you with?",
+        
         
         # Other common phrases
         'how are you': "I'm doing great, thank you for asking! 🤖 I'm here and ready to help you find the perfect resort. How are you doing?",

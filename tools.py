@@ -325,6 +325,7 @@ DATABASE_URL = get_database_url()
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 def search_available_future_listings_enhanced(**filters) -> List[PtRtListing]:
     """
     Dynamically filters PtRtListing based on provided keyword arguments.
@@ -399,6 +400,9 @@ def search_available_future_listings_enhanced(**filters) -> List[PtRtListing]:
     finally:
         session.close()
 
+
+
+
 def model_to_dict(model_instance):
     return {column.name: getattr(model_instance, column.name) for column in model_instance.__table__.columns}
 
@@ -411,406 +415,6 @@ def deduplicate_by_resort_id(listings):
             unique_listings.append(listing)
     return unique_listings
 
-# def search_available_future_listings_enhanced(
-#     resort_id: int = None,
-#     check_in_date: str = None,
-#     check_out_date: str = None,
-#     nights: int = None,
-#     country: str = None,
-#     city: str = None,
-#     state: str = None,
-#     limit: int = 20,
-#     flexible_dates: bool = True,
-#     debug: bool = False
-# ) -> Dict[str, Any]:
-#     """
-#     Search for available resort listings with intelligent date handling and flexible search options.
-    
-#     This function searches the pt_rt_listings table for available future resort bookings that match 
-#     specified criteria. It provides comprehensive date-aware search capabilities with automatic 
-#     fallback options when exact matches aren't found.
-    
-#     Date Intelligence Features:
-#     - Automatically interprets relative date queries (e.g., "in 2 weeks", "next month")
-#     - Always considers the current year (2025) for date calculations
-#     - Supports flexible date matching (±7 days) when exact dates aren't available
-#     - Handles various date formats and converts to YYYY-MM-DD format
-#     - Provides alternative date suggestions when no matches are found
-    
-#     Search Capabilities:
-#     - Primary search with exact criteria matching
-#     - Flexible date fallback (±7 days from requested check-in)
-#     - Flexible duration fallback (±2 nights from requested stay length)
-#     - Location-only search when date constraints yield no results
-#     - Intelligent suggestions for alternative search parameters
-    
-#     Args:
-#         resort_id (int, optional): Specific resort ID to search within
-#         check_in_date (str, optional): Check-in date in YYYY-MM-DD format or relative description
-#         check_out_date (str, optional): Check-out date in YYYY-MM-DD format (used as upper bound)
-#         nights (int, optional): Number of nights for the stay
-#         country (str, optional): Country name (supports partial matching)
-#         city (str, optional): City name (supports partial matching)  
-#         state (str, optional): State/province name (supports partial matching)
-#         limit (int, default=20): Maximum number of results to return
-#         flexible_dates (bool, default=True): Enable automatic fallback searches with date flexibility
-#         debug (bool, default=False): Enable detailed search logging
-        
-#     Returns:
-#         Dict[str, Any]: Comprehensive search results containing:
-#             - results: List of matching resort listings with full details
-#             - total_found: Number of listings found
-#             - search_info: Metadata about searches performed and suggestions
-#             - has_results: Boolean indicating if any results were found
-            
-#     Result Format:
-#         Each listing in results contains:
-#         - Basic info: resort_name, city, country, state, address
-#         - Unit details: unit_type, bedrooms, bathrooms, sleeps
-#         - Booking info: check_in/check_out (YYYY-MM-DD), nights, status
-#         - Pricing: price_per_night, currency_code, price_display
-#         - Additional: resort_rating, brand, exclusive/hot_deals flags
-        
-#     Example Usage:
-#         # Search for Florida resorts in 2 weeks
-#         results = search_available_future_listings_enhanced(
-#             state="Florida", 
-#             check_in_date="2025-08-14",  # 2 weeks from now
-#             nights=7
-#         )
-        
-#         # Flexible search for beach destinations
-#         results = search_available_future_listings_enhanced(
-#             country="USA",
-#             flexible_dates=True,
-#             limit=10
-#         )
-        
-#     Note:
-#         - All returned dates are in YYYY-MM-DD format for consistency
-#         - Function automatically filters for active, non-deleted, future listings
-#         - When flexible_dates=True, multiple search strategies are attempted automatically
-#         - Search suggestions are provided when no exact matches are found
-#     """
-#     session = SessionLocal()
-    
-#     try:
-#         current_date = datetime.now()
-#         results = []
-#         search_info = {
-#             "original_criteria": {
-#                 "resort_id": resort_id,
-#                 "check_in_date": check_in_date,
-#                 "check_out_date": check_out_date,
-#                 "nights": nights,
-#                 "country": country,
-#                 "city": city,
-#                 "state": state
-#             },
-#             "searches_performed": [],
-#             "suggestions": []
-#         }
-        
-#         if debug:
-#             print(f"Search criteria: resort_id={resort_id}, country={country}, state={state}, city={city}")
-#             print(f"Dates: check_in={check_in_date}, check_out={check_out_date}, nights={nights}")
-        
-#         # Primary search
-#         query = session.query(PtRtListing)\
-#             .filter(PtRtListing.listing_has_deleted == 0)\
-#             .filter(PtRtListing.listing_status.in_(['active', 'pending']))\
-#             .filter(PtRtListing.listing_type == 'prebook')\
-#             .filter(PtRtListing.listing_check_in >= current_date)
-        
-#         original_query = query
-        
-#         # Apply filters
-#         if resort_id:
-#             query = query.filter(PtRtListing.resort_id == resort_id)
-#             if debug:
-#                 print(f"Applied resort_id filter: {resort_id}")
-        
-#         if check_in_date:
-#             if isinstance(check_in_date, str):
-#                 target_date = datetime.strptime(check_in_date, "%Y-%m-%d")
-#             else:
-#                 target_date = check_in_date
-#             query = query.filter(PtRtListing.listing_check_in >= target_date)
-#             if debug:
-#                 print(f"Applied check_in_date filter: >= {target_date}")
-        
-#         if check_out_date:
-#             if isinstance(check_out_date, str):
-#                 end_date = datetime.strptime(check_out_date, "%Y-%m-%d")
-#             else:
-#                 end_date = check_out_date
-#             query = query.filter(PtRtListing.listing_check_out <= end_date)
-#             if debug:
-#                 print(f"Applied check_out_date filter: <= {end_date}")
-        
-#         if nights:
-#             query = query.filter(PtRtListing.listing_nights == nights)
-#             if debug:
-#                 print(f"Applied nights filter: {nights}")
-        
-#         if country:
-#             query = query.filter(PtRtListing.resort_country.ilike(f"%{country}%"))
-#             if debug:
-#                 print(f"Applied country filter: {country}")
-        
-#         # FIX: Add missing state filter
-#         if state:
-#             query = query.filter(PtRtListing.resort_state.ilike(f"%{state}%"))
-#             if debug:
-#                 print(f"Applied state filter: {state}")
-        
-#         # FIX: Add missing city filter
-#         if city:
-#             query = query.filter(PtRtListing.resort_city.ilike(f"%{city}%"))
-#             if debug:
-#                 print(f"Applied city filter: {city}")
-        
-#         # Execute primary search
-#         listings = query.order_by(PtRtListing.listing_check_in).limit(limit).all()
-#         search_info["searches_performed"].append({
-#             "type": "exact_match",
-#             "results_count": len(listings)
-#         })
-        
-#         if debug:
-#             print(f"Primary search found {len(listings)} listings")
-        
-#         # If no results and flexible_dates is True, try fallback searches
-#         if not listings and flexible_dates:
-#             fallback_searches = []
-            
-#             # Fallback 1: Relax date constraints (±7 days)
-#             if check_in_date:
-#                 target_date = datetime.strptime(check_in_date, "%Y-%m-%d") if isinstance(check_in_date, str) else check_in_date
-#                 date_range_start = target_date - timedelta(days=7)
-#                 date_range_end = target_date + timedelta(days=7)
-                
-#                 fallback_query = original_query
-#                 if resort_id:
-#                     fallback_query = fallback_query.filter(PtRtListing.resort_id == resort_id)
-#                 if country:
-#                     fallback_query = fallback_query.filter(PtRtListing.resort_country.ilike(f"%{country}%"))
-#                 # FIX: Add state filter to fallback
-#                 if state:
-#                     fallback_query = fallback_query.filter(PtRtListing.resort_state.ilike(f"%{state}%"))
-#                 # FIX: Add city filter to fallback
-#                 if city:
-#                     fallback_query = fallback_query.filter(PtRtListing.resort_city.ilike(f"%{city}%"))
-                
-#                 fallback_query = fallback_query.filter(
-#                     PtRtListing.listing_check_in >= date_range_start,
-#                     PtRtListing.listing_check_in <= date_range_end
-#                 )
-                
-#                 if nights:
-#                     fallback_query = fallback_query.filter(PtRtListing.listing_nights == nights)
-                
-#                 fallback_listings = fallback_query.order_by(PtRtListing.listing_check_in).limit(limit // 2).all()
-#                 if fallback_listings:
-#                     listings.extend(fallback_listings)
-#                     fallback_searches.append({
-#                         "type": "flexible_dates_7_days",
-#                         "results_count": len(fallback_listings)
-#                     })
-#                     if debug:
-#                         print(f"Fallback 1 (flexible dates) found {len(fallback_listings)} listings")
-            
-#             # Fallback 2: Relax nights constraint (±2 nights)
-#             if not listings and nights:
-#                 nights_options = [nights - 2, nights - 1, nights + 1, nights + 2]
-#                 nights_options = [n for n in nights_options if n > 0]
-                
-#                 for night_option in nights_options:
-#                     fallback_query = original_query
-#                     if resort_id:
-#                         fallback_query = fallback_query.filter(PtRtListing.resort_id == resort_id)
-#                     if country:
-#                         fallback_query = fallback_query.filter(PtRtListing.resort_country.ilike(f"%{country}%"))
-#                     # FIX: Add state filter to fallback
-#                     if state:
-#                         fallback_query = fallback_query.filter(PtRtListing.resort_state.ilike(f"%{state}%"))
-#                     # FIX: Add city filter to fallback
-#                     if city:
-#                         fallback_query = fallback_query.filter(PtRtListing.resort_city.ilike(f"%{city}%"))
-#                     if check_in_date:
-#                         target_date = datetime.strptime(check_in_date, "%Y-%m-%d") if isinstance(check_in_date, str) else check_in_date
-#                         fallback_query = fallback_query.filter(PtRtListing.listing_check_in >= target_date)
-                    
-#                     fallback_query = fallback_query.filter(PtRtListing.listing_nights == night_option)
-                    
-#                     night_listings = fallback_query.order_by(PtRtListing.listing_check_in).limit(5).all()
-#                     if night_listings:
-#                         listings.extend(night_listings)
-#                         fallback_searches.append({
-#                             "type": f"flexible_nights_{night_option}",
-#                             "results_count": len(night_listings)
-#                         })
-#                         if debug:
-#                             print(f"Fallback 2 (flexible nights {night_option}) found {len(night_listings)} listings")
-#                         break
-            
-#             # Fallback 3: Just location-based search (remove date constraints)
-#             if not listings and (country or state or city or resort_id):
-#                 location_query = original_query
-#                 if resort_id:
-#                     location_query = location_query.filter(PtRtListing.resort_id == resort_id)
-#                 if country:
-#                     location_query = location_query.filter(PtRtListing.resort_country.ilike(f"%{country}%"))
-#                 # FIX: Add state filter to fallback
-#                 if state:
-#                     location_query = location_query.filter(PtRtListing.resort_state.ilike(f"%{state}%"))
-#                 # FIX: Add city filter to fallback
-#                 if city:
-#                     location_query = location_query.filter(PtRtListing.resort_city.ilike(f"%{city}%"))
-                
-#                 location_listings = location_query.order_by(PtRtListing.listing_check_in).limit(limit).all()
-#                 if location_listings:
-#                     listings.extend(location_listings[:limit])
-#                     fallback_searches.append({
-#                         "type": "location_only",
-#                         "results_count": len(location_listings)
-#                     })
-#                     if debug:
-#                         print(f"Fallback 3 (location only) found {len(location_listings)} listings")
-            
-#             search_info["searches_performed"].extend(fallback_searches)
-        
-#         # Process results
-#         for listing in listings[:limit]:  # Ensure we don't exceed limit
-#             # Parse price safely
-#             price_per_night = None
-#             if listing.listing_price_night:
-#                 try:
-#                     clean_price = str(listing.listing_price_night).replace(',', '').replace('$', '').strip()
-#                     price_per_night = float(clean_price) if clean_price and clean_price.replace('.', '').isdigit() else None
-#                 except (ValueError, AttributeError):
-#                     price_per_night = None
-            
-#             results.append({
-#                 "id": listing.id,
-#                 "listing_id": listing.listing_id,
-#                 "resort_id": listing.resort_id,
-#                 "resort_name": listing.resort_name,
-#                 "resort_city": listing.resort_city,
-#                 "resort_country": listing.resort_country,
-#                 "resort_state": listing.resort_state,
-#                 "resort_address": listing.resort_address,
-#                 "unit_type": listing.unit_type_name,
-#                 "unit_bedrooms": listing.unit_bedrooms,
-#                 "unit_bathrooms": listing.unit_bathrooms,
-#                 "unit_sleeps": listing.unit_sleeps,
-#                 "nights": listing.listing_nights,
-#                 "check_in": listing.listing_check_in.strftime("%Y-%m-%d") if listing.listing_check_in else None,
-#                 "check_out": listing.listing_check_out.strftime("%Y-%m-%d") if listing.listing_check_out else None,
-#                 "status": listing.listing_status,
-#                 "price_per_night": price_per_night,
-#                 "price_display": f"{listing.listing_currency_code or '$'}{price_per_night:.2f}" if price_per_night else "Contact for pricing",
-#                 "currency_code": listing.listing_currency_code,
-#                 "listing_type": listing.listing_type,
-#                 "pt_or_rt": listing.pt_or_rt,
-#                 "hot_deals": listing.hot_deals,
-#                 "exclusive": listing.exclusive,
-#                 "resort_google_rating": listing.resort_google_rating,
-#                 "resort_brand": listing.resort_brand_name,
-#                 "has_weekend": bool(listing.has_weekend)
-#             })
-        
-#         # Generate suggestions based on what was found
-#         if not results:
-#             # Get some general availability info for suggestions
-#             general_query = session.query(PtRtListing)\
-#                 .filter(PtRtListing.listing_has_deleted == 0)\
-#                 .filter(PtRtListing.listing_status.in_(['active', 'pending']))\
-#                 .filter(PtRtListing.listing_check_in >= current_date)
-            
-#             # Apply location filters for suggestions
-#             if country:
-#                 general_query = general_query.filter(PtRtListing.resort_country.ilike(f"%{country}%"))
-#             if state:
-#                 general_query = general_query.filter(PtRtListing.resort_state.ilike(f"%{state}%"))
-#             if city:
-#                 general_query = general_query.filter(PtRtListing.resort_city.ilike(f"%{city}%"))
-            
-#             # Get date range suggestions
-#             future_listings = general_query.order_by(PtRtListing.listing_check_in).limit(50).all()
-            
-#             if future_listings:
-#                 # Suggest alternative dates
-#                 available_dates = [l.listing_check_in for l in future_listings if l.listing_check_in]
-#                 if available_dates:
-#                     next_available = min(available_dates)
-#                     search_info["suggestions"].append({
-#                         "type": "alternative_dates",
-#                         "message": f"Try searching for dates starting from {next_available.strftime('%Y-%m-%d')}"
-#                     })
-                
-#                 # Suggest popular night durations
-#                 night_counts = [l.listing_nights for l in future_listings if l.listing_nights]
-#                 if night_counts:
-#                     from collections import Counter
-#                     popular_nights = Counter(night_counts).most_common(3)
-#                     nights_list = [str(n[0]) for n in popular_nights]
-#                     search_info["suggestions"].append({
-#                         "type": "popular_durations",
-#                         "message": f"Popular stay durations: {', '.join(nights_list)} nights"
-#                     })
-                
-#                 # Suggest alternative locations
-#                 if not country and not state:
-#                     countries = [l.resort_country for l in future_listings if l.resort_country]
-#                     states = [l.resort_state for l in future_listings if l.resort_state]
-#                     if countries:
-#                         from collections import Counter
-#                         popular_countries = Counter(countries).most_common(3)
-#                         countries_list = [c[0] for c in popular_countries]
-#                         search_info["suggestions"].append({
-#                             "type": "popular_destinations",
-#                             "message": f"Popular destinations: {', '.join(countries_list)}"
-#                         })
-#                     if states:
-#                         from collections import Counter
-#                         popular_states = Counter(states).most_common(3)
-#                         states_list = [s[0] for s in popular_states]
-#                         search_info["suggestions"].append({
-#                             "type": "popular_states",
-#                             "message": f"Popular states: {', '.join(states_list)}"
-#                         })
-#             else:
-#                 # No listings found even with relaxed location filters
-#                 search_info["suggestions"].append({
-#                     "type": "no_availability",
-#                     "message": "No listings found matching your location criteria. Try expanding your search area."
-#                 })
-        
-#         if debug:
-#             print(f"Final results: {len(results)} listings")
-#             print(f"Search info: {search_info}")
-        
-#         return {
-#             "results": results,
-#             "total_found": len(results),
-#             "search_info": search_info,
-#             "has_results": len(results) > 0
-#         }
-        
-#     except Exception as e:
-#         print(f"Error in search_available_future_listings_enhanced: {str(e)}")
-#         import traceback
-#         traceback.print_exc()
-#         return {
-#             "results": [],
-#             "total_found": 0,
-#             "search_info": {"error": str(e)},
-#             "has_results": False
-#         }
-        
-#     finally:
-#         session.close()
 
 
 def get_user_bookings(user_email: str) -> List[Dict[str, Any]]:
@@ -1183,49 +787,54 @@ def get_resort_price(
 
 def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[str] = None) -> Dict[str, Any]:
     """Get detailed information about a specific resort by ID or Name."""
-    session = SessionLocal()
+    session: Session = SessionLocal()
 
     try:
-        if resort_id is None and resort_name is None:
+        if not resort_id and not resort_name:
             return {"error": "Please provide either resort_id or resort_name."}
 
-        # Fetch resort based on ID or Name
+        # --- Fetch resort based on ID or Name ---
         query = session.query(Resort).join(User, Resort.creator_id == User.id).filter(Resort.has_deleted == 0)
 
-        if resort_id is not None:
+        if resort_id:
             query = query.filter(Resort.id == resort_id)
-        elif resort_name is not None:
-            query = query.filter(Resort.name.ilike(f"%{resort_name}%"))  # case-insensitive match
+        else:
+            query = query.filter(Resort.name.ilike(f"%{resort_name.strip()}%"))
 
         resort = query.first()
 
         if not resort:
-            return {"error": f"Resort not found with given identifier."}
+            return {"error": "Resort not found with the given identifier."}
 
-        # Get unit types
-        unit_types = session.query(UnitType)\
-            .filter(UnitType.resort_id == resort.id)\
-            .filter(UnitType.has_deleted == 0)\
-            .all()
+        # --- Fetch unit types ---
+        unit_types = session.query(UnitType).filter(
+            UnitType.resort_id == resort.id,
+            UnitType.has_deleted == 0
+        ).all()
 
-        # Get listings count by status
-        listings_stats = {}
-        for status in ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']:
-            count = session.query(Listing)\
-                .filter(Listing.resort_id == resort.id)\
-                .filter(Listing.has_deleted == 0)\
-                .filter(Listing.status == status)\
-                .count()
-            listings_stats[status] = count
+        # Optional: print unit types for debugging
+        print("unit_types:", [ut.name for ut in unit_types])
 
-        # Total bookings
-        total_bookings = session.query(Booking)\
-            .join(Listing, Booking.listing_id == Listing.id)\
-            .filter(Listing.resort_id == resort.id)\
-            .count()
+        # --- Listings count by status ---
+        statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']
+        listings_stats = {
+            status: session.query(Listing).filter(
+                Listing.resort_id == resort.id,
+                Listing.has_deleted == 0,
+                Listing.status == status
+            ).count()
+            for status in statuses
+        }
 
-        # Final resort details
-        return {
+        # --- Total bookings ---
+        total_bookings = session.query(Booking).join(
+            Listing, Booking.listing_id == Listing.id
+        ).filter(
+            Listing.resort_id == resort.id
+        ).count()
+
+        # --- Construct final result ---
+        resort_details = {
             "id": resort.id,
             "name": resort.name,
             "slug": resort.slug,
@@ -1242,17 +851,94 @@ def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[st
             "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
             "creator_email": resort.creator.email,
             "status": resort.status,
-            "unit_types": [{"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types],
+            "unit_types": [
+                {"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types
+            ],
             "listings_by_status": listings_stats,
             "total_bookings": total_bookings
         }
 
+        return resort_details
+
     except Exception as e:
-        print(f"Error in get_resort_details: {str(e)}")
-        return {"error": f"Error retrieving resort details: {str(e)}"}
+        print(f"[ERROR] Failed to fetch resort details: {str(e)}")
+        return {"error": f"Exception occurred: {str(e)}"}
 
     finally:
         session.close()
+
+# def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[str] = None) -> Dict[str, Any]:
+#     """Get detailed information about a specific resort by ID or Name."""
+#     session = SessionLocal()
+
+#     try:
+#         if resort_id is None and resort_name is None:
+#             return {"error": "Please provide either resort_id or resort_name."}
+
+#         # Fetch resort based on ID or Name
+#         query = session.query(Resort).join(User, Resort.creator_id == User.id).filter(Resort.has_deleted == 0)
+
+#         if resort_id is not None:
+#             query = query.filter(Resort.id == resort_id)
+#         elif resort_name is not None:
+#             query = query.filter(Resort.name.ilike(f"%{resort_name}%"))  # case-insensitive match
+
+#         resort = query.first()
+
+#         if not resort:
+#             return {"error": f"Resort not found with given identifier."}
+
+#         # Get unit types
+#         unit_types = session.query(UnitType)\
+#             .filter(UnitType.resort_id == resort.id)\
+#             .filter(UnitType.has_deleted == 0)\
+#             .all()
+
+#         # Get listings count by status
+#         listings_stats = {}
+#         for status in ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']:
+#             count = session.query(Listing)\
+#                 .filter(Listing.resort_id == resort.id)\
+#                 .filter(Listing.has_deleted == 0)\
+#                 .filter(Listing.status == status)\
+#                 .count()
+#             listings_stats[status] = count
+
+#         # Total bookings
+#         total_bookings = session.query(Booking)\
+#             .join(Listing, Booking.listing_id == Listing.id)\
+#             .filter(Listing.resort_id == resort.id)\
+#             .count()
+
+#         # Final resort details
+#         return {
+#             "id": resort.id,
+#             "name": resort.name,
+#             "slug": resort.slug,
+#             "address": resort.address,
+#             "city": resort.city,
+#             "state": resort.state,
+#             "country": resort.country,
+#             "zip": resort.zip,
+#             "county": resort.county,
+#             "lattitude": resort.lattitude,
+#             "longitude": resort.longitude,
+#             "highlight_quote": resort.highlight_quote,
+#             "description": resort.description,
+#             "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
+#             "creator_email": resort.creator.email,
+#             "status": resort.status,
+#             "unit_types": [{"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types],
+#             "listings_by_status": listings_stats,
+#             "total_bookings": total_bookings
+#         }
+
+#     except Exception as e:
+#         print(f"Error in get_resort_details: {str(e)}")
+#         return {"error": f"Error retrieving resort details: {str(e)}"}
+
+#     finally:
+#         session.close()
 
 
 # def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[str] = None) -> Dict[str, Any]:
@@ -1338,6 +1024,10 @@ def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[st
 
 #     finally:
 #         session.close()
+
+
+
+
 
 
 # Also update the search_available_listings function to remove problematic relationships
