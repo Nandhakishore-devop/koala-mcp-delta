@@ -295,7 +295,7 @@ def main():
     # Header
     st.markdown("""
     <div class="main-header">
-        <h1>🏖️koala_chat_bot</h1>
+        <h1>🏖️Koala Chat Bot</h1>
         <p>Your AI-powered resort booking companion</p>
     </div>
     """, unsafe_allow_html=True)
