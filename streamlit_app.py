@@ -222,7 +222,8 @@ def handle_simple_greetings(user_input: str) -> str:
         'okay': "Perfect! 🌴 How can I help you with your resort booking today?",
         'bye': "Goodbye! 👋 Thanks for using our resort booking service. Have a wonderful day!",
         'goodbye': "Farewell! 🌊 Hope to help you plan your next amazing vacation soon!",
-        'see you': "See you later! 🏖️ Don't hesitate to come back when you're ready to book that perfect resort!"
+        'see you': "See you later! 🏖️ Don't hesitate to come back when you're ready to book that perfect resort!",
+        
     }
     
     # Check for exact matches first

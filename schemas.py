@@ -170,15 +170,15 @@ def get_price_range_summary_schema() -> Dict[str, Any]:
                     },
                     "listing_check_in": {
                         "type": "string",
-                        "description": "Check-in date in YYYY-MM-DD format"
+                        "description": "Check-in date in YYYY-MM-DD format  if there is not specified  date in  ptompt then give full avaliable  resort or ask the user define the  specify  the date "
                     },
                     "listing_check_out": {
                         "type": "string",
-                        "description": "Check-out date in YYYY-MM-DD format"
+                        "description": "Check-out date in YYYY-MM-DD format if there is not specified  date in  ptompt then give full avaliable  resort  or ask the user define the  specify  the date "
                     },
                     "listing_price_night": {
                         "type": "integer",
-                        "description": "Number of nights for the stay"
+                        "description": "Number of nights for the stay incase price is present in the prompt then call listing_price_night ar  ugement "
                     },
                     "resort_country": {
                         "type": "string",

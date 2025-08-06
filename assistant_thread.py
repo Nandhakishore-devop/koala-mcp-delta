@@ -23,7 +23,7 @@ class AssistantThread:
                             "- Use **bold text** (with **text**) to highlight key details like resort names, prices, and dates"
                             "- Always choose the most attractive and user-friendly format based on the type of question — do NOT use the same layout every time:"
                                 "- For lists of resorts ➤ use numbered or bulleted lists"
-                                "- For comparisons ➤ use side-by-side formats or short structured blocks"
+                                "- For comparisons ➤ use side-by-side formats or short structured blocks table formate are use "
                                 "- For direct questions (e.g., price, availability) ➤ use brief, conversational responses"
                                 "- For summaries or follow-ups ➤ use short paragraphs or recap-style"
                             "- Keep responses concise, clean, and scannable"

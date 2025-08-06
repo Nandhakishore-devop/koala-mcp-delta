@@ -266,7 +266,7 @@ class PtRtListing(Base):
     resort_google_rating_default = Column(String(8))
     r_featured_amenities = Column(String(600))
     resort_updated_at = Column(DateTime)
-    
+   
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
   
@@ -353,28 +353,29 @@ def search_available_future_listings_enhanced(**filters) -> List[PtRtListing]:
                 else:
                     filter_conditions.append(column == value)
 
-        # ✅ Handle check-in/check-out range filtering
-        # if filters.get('listing_check_in') and filters.get('listing_check_out'):
-        #     try:
-        #         check_in = datetime.strptime(filters['listing_check_in'], "%Y-%m-%d")
-        #         check_out = datetime.strptime(filters['listing_check_out'], "%Y-%m-%d")
+        # Handle check-in/check-out range filtering
+        if filters.get('listing_check_in') and filters.get('listing_check_out'):
+            try:
+                check_in = datetime.strptime(filters['listing_check_in'], "%Y-%m-%d")
+                check_out = datetime.strptime(filters['listing_check_out'], "%Y-%m-%d")
 
-        #         # Find listings that are available within the range
-        #         filter_conditions.append(PtRtListing.listing_check_in <= check_in)
-        #         filter_conditions.append(PtRtListing.listing_check_out >= check_out)
+                # Find listings that are available within the range
+                filter_conditions.append(PtRtListing.listing_check_in <= check_in)
+                filter_conditions.append(PtRtListing.listing_check_out >= check_out)
 
-        #         print("Date range filtering:")
-        #         print("check_in:", check_in)
-        #         print("check_out:", check_out)
+                print("Date range filtering:")
+                print("check_in:", check_in)
+                print("check_out:", check_out)
 
-        #     except ValueError as ve:
-                # print("Date parsing error:", ve)
-
+            except ValueError as ve:
+                print("Date parsing error:", ve)
+        # price_sort = None 
         price_sort = filters.get('price_sort')
         if price_sort != None:
             field = getattr(PtRtListing, 'listing_price_night')
             if price_sort == 'asc':
                 query = query.order_by(asc(field))
+                print(query)
                 
             else:
                 query = query.order_by(desc(field))
