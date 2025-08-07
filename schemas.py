@@ -429,7 +429,7 @@ def get_user_bookings_schema() -> Dict[str, Any]:
                 "Fetch upcoming and past bookings for a user by email. "
                 "specified only month means to year consider like current year eg: jun -> means jun current year (2025)"
                 "If no year/month/day is provided, limits of 3 bookings each for upcoming and past are applied. "
-                "If the number of bookings in a year is too high (e.g., over 15 to 1000+), the assistant may prompt the user "
+                "If the number of bookings in a year is too high (e.g., over 10 to 1000+), the assistant may prompt the user "
                 "to specify a month. The function also returns a summary of months with bookings per year."
             ),
             "parameters": {
@@ -603,10 +603,10 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                         "type": "string",
                         "description": "Check-in date in YYYY-MM-DD format"
                     },
-                    # "listing_check_out": {
-                    #     "type": "string",
-                    #     "description": "Check-out date in YYYY-MM-DD format"
-                    # },
+                    "listing_check_out": {
+                        "type": "string",
+                        "description": "Check-out date in YYYY-MM-DD format"
+                    },
                     "listing_price_night": {
                         "type": "integer",
                         "description": "Number of nights for the stay"
