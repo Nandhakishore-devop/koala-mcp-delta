@@ -201,8 +201,7 @@ def handle_simple_greetings(user_input: str) -> str:
     # Define greeting patterns and responses
     greeting_responses = {
         # Basic greetings
-        'hi': "Hello! 👋 I'm your resort booking assistant. How can I help you find the perfect getaway today?",
-        'hello': "Hi there! 🏖️ Welcome to our resort booking service. What destination are you dreaming of?",
+        
         'hey': "Hey! 😊 Ready to plan your next vacation? I'm here to help you find amazing resorts!",
         'good morning': "Good morning! ☀️ What a beautiful day to plan a resort getaway! How can I assist you?",
         'good afternoon': "Good afternoon! 🌅 Hope you're having a great day! Let's find you an amazing resort experience.",
@@ -218,7 +217,7 @@ def handle_simple_greetings(user_input: str) -> str:
         'how are you': "I'm doing great, thank you for asking! 🤖 I'm here and ready to help you find the perfect resort. How are you doing?",
         'what\'s up': "Not much, just here to help you plan an amazing vacation! 🏝️ What resort experience are you looking for?",
         'whats up': "Just ready to help you book your dream resort! ✨ What destination interests you?",
-        'ok': "Great! 👍 What would you like to know about our resort options?",
+        
         'okay': "Perfect! 🌴 How can I help you with your resort booking today?",
         'bye': "Goodbye! 👋 Thanks for using our resort booking service. Have a wonderful day!",
         'goodbye': "Farewell! 🌊 Hope to help you plan your next amazing vacation soon!",
@@ -318,10 +317,23 @@ def main():
                 message["arguments"], 
                 message.get("result")
             )
+
     
-    # Initialize input counter for unique keys
+
+    if 'schema_limit_counter' not in st.session_state:
+        st.session_state.schema_limit_counter = 0
+
+    if 'thread' not in st.session_state:
+        st.session_state.thread = Thread()
+
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
+
     if 'input_counter' not in st.session_state:
         st.session_state.input_counter = 0
+
+    # ... continue your app logic
+
     
     # Chat input at the bottom
     user_input = st.text_input(
@@ -330,6 +342,8 @@ def main():
         key=f"chat_input_{st.session_state.input_counter}",
         placeholder="Type your message here..."
     )
+
+    
     
     # Process input when user presses Enter
     if user_input and user_input.strip() and user_input != st.session_state.get('last_processed_input', ''):
@@ -363,6 +377,22 @@ def main():
         # Process with OpenAI
         with st.spinner("🤖 Processing your request..."):
             try:
+                # Decide whether to include schemas
+                include_schema = st.session_state.schema_limit_counter < 2
+
+                # Get message history
+                history = st.session_state.thread.get_history()
+
+                if include_schema:
+                    messages_to_send = history
+                    tools_to_send = ALL_FUNCTION_SCHEMAS
+                    st.session_state.schema_limit_counter += 1
+                else:
+                    schema_messages = history[:3]
+                    recent_messages = history[-6:]  # Last 3 user-assistant pairs
+                    messages_to_send = schema_messages + recent_messages
+                    tools_to_send = []
+
                 # First API call
                 response = st.session_state.client.chat.completions.create(
                     model="gpt-3.5-turbo",
@@ -416,7 +446,16 @@ def main():
                             "tool_call_id": tool_call.id,
                             "content": tool_result_str
                         })
-                    
+
+                    # Use same schema rule for final response (don’t include after limit)
+                    if st.session_state.schema_limit_counter < 2:
+                        final_messages_to_send = st.session_state.thread.get_history()
+                        final_tools_to_send = ALL_FUNCTION_SCHEMAS
+                    else:
+                        schema_messages = st.session_state.thread.get_history()[:3]
+                        recent_messages = st.session_state.thread.get_history()[-6:]
+                        final_messages_to_send = schema_messages + recent_messages
+                        final_tools_to_send = []
                     # Get final response
                     final_response = st.session_state.client.chat.completions.create(
                         model="gpt-3.5-turbo",
@@ -462,3 +501,183 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# def display_function_call(function_name, arguments, result=None):
+#     """Display function call information."""
+#     result_display = ""
+#     if result:
+#         if isinstance(result, str) and len(result) > 200:
+#             result_display = f'<br><strong> Result:</strong> <details><summary>Function executed successfully (click to view result)</summary><pre>{result}</pre></details>'
+#         else:
+#             result_display = f'<br><strong> Result:</strong> <pre>{result}</pre>'
+
+#     st.markdown(f"""
+#     <div class="chat-message function-call">
+#         <strong>Function Call:</strong> {function_name}<br>
+#         <strong>Arguments:</strong> {arguments}
+#         {result_display}
+#     </div>
+#     """, unsafe_allow_html=True)
+
+# def main():
+#     st.set_page_config(page_title="🏖️ Koala Chat Bot", layout="wide")
+
+#     # Initialize session state
+#     if 'schema_limit_counter' not in st.session_state:
+#         st.session_state.schema_limit_counter = 0
+#     if 'thread' not in st.session_state:
+#         st.session_state.thread = Thread()
+#     if 'client' not in st.session_state:
+#         st.session_state.client = None
+#     if 'chat_history' not in st.session_state:
+#         st.session_state.chat_history = []
+#     if 'input_counter' not in st.session_state:
+#         st.session_state.input_counter = 0
+#     if 'messages' not in st.session_state:
+#         st.session_state.messages = []
+#     if 'total_tokens' not in st.session_state:
+#         st.session_state.total_tokens = 0
+#     if 'total_cost' not in st.session_state:
+#         st.session_state.total_cost = 0
+
+#     display_cost_info()
+
+#     # Header
+#     st.markdown("""
+#     <div class="main-header">
+#         <h1>🏖️ Koala Chat Bot </h1>
+#         <p>Your AI-powered resort booking companion</p>
+#     </div>
+#     """, unsafe_allow_html=True)
+
+#     if not st.session_state.client:
+#         st.error(" OpenAI API key not found! Please set OPENAI_API_KEY.")
+#         return
+
+#     # Display previous messages
+#     for message in st.session_state.messages:
+#         if message["type"] == "user":
+#             display_message(message["content"], is_user=True)
+#         elif message["type"] == "assistant":
+#             display_message(message["content"], is_user=False)
+#         elif message["type"] == "function_call":
+#             display_function_call(message["function_name"], message["arguments"], message.get("result"))
+
+#     # Chat input
+#     user_input = st.text_input(
+#         "Ask me anything about resort bookings:",
+#         value="",
+#         key=f"chat_input_{st.session_state.input_counter}",
+#         placeholder="Type your message here..."
+#     )
+
+#     if user_input and user_input.strip() and user_input != st.session_state.get('last_processed_input', ''):
+#         st.session_state.last_processed_input = user_input
+#         st.session_state.messages.append({"type": "user", "content": user_input})
+
+#         greeting_response = handle_simple_greetings(user_input)
+#         if greeting_response:
+#             st.session_state.messages.append({"type": "assistant", "content": greeting_response})
+#             st.session_state.input_counter += 1
+#             st.rerun()
+#             return
+
+#         st.session_state.thread.add_user_message(user_input)
+
+#         with st.spinner("Processing your request..."):
+#             try:
+#                 include_schema = st.session_state.schema_limit_counter < 2
+#                 history = st.session_state.thread.get_history()
+
+#                 if include_schema:
+#                     messages_to_send = history
+#                     tools_to_send = ALL_FUNCTION_SCHEMAS
+#                     st.session_state.schema_limit_counter += 1
+#                 else:
+#                     schema_messages = history[:1]
+#                     recent_messages = history[-6:]
+#                     messages_to_send = schema_messages + recent_messages
+#                     tools_to_send = []
+
+#                 response = st.session_state.client.chat.completions.create(
+#                     model="gpt-3.5-turbo",
+#                     messages=messages_to_send,
+#                     tools=tools_to_send,
+#                     tool_choice="auto"
+#                 )
+
+#                 assistant_message = response.choices[0].message
+
+#                 if hasattr(response, 'usage'):
+#                     st.session_state.total_tokens += response.usage.total_tokens
+#                     st.session_state.total_cost += calculate_cost(
+#                         response.usage.prompt_tokens,
+#                         response.usage.completion_tokens
+#                     )
+
+#                 st.session_state.thread.add_assistant_message({
+#                     "role": "assistant",
+#                     "content": assistant_message.content,
+#                     "tool_calls": assistant_message.tool_calls
+#                 })
+
+#                 if assistant_message.tool_calls:
+#                     for tool_call in assistant_message.tool_calls:
+#                         fn = tool_call.function.name
+#                         args = tool_call.function.arguments
+#                         parsed_args = json.loads(args)
+#                         tool_result = call_tool(fn, **parsed_args)
+
+#                         result_str = json.dumps(tool_result, indent=2, default=str) if isinstance(tool_result, dict) else json.dumps({"result": tool_result}, indent=2, default=str)
+
+#                         st.session_state.messages.append({
+#                             "type": "function_call",
+#                             "function_name": fn,
+#                             "arguments": args,
+#                             "result": result_str
+#                         })
+
+#                         st.session_state.thread.add_assistant_message({
+#                             "role": "tool",
+#                             "tool_call_id": tool_call.id,
+#                             "content": result_str
+#                         })
+
+#                     final_response = st.session_state.client.chat.completions.create(
+#                         model="gpt-3.5-turbo",
+#                         messages=messages_to_send,
+#                         tools=tools_to_send,
+#                         tool_choice="auto"
+#                     )
+
+#                     final_message = final_response.choices[0].message
+
+#                     if hasattr(final_response, 'usage'):
+#                         st.session_state.total_tokens += final_response.usage.total_tokens
+#                         st.session_state.total_cost += calculate_cost(
+#                             final_response.usage.prompt_tokens,
+#                             final_response.usage.completion_tokens
+#                         )
+
+#                     st.session_state.thread.add_assistant_message({
+#                         "role": "assistant",
+#                         "content": final_message.content
+#                     })
+
+#                     if final_message.content:
+#                         st.session_state.messages.append({"type": "assistant", "content": final_message.content})
+#                 else:
+#                     if assistant_message.content:
+#                         st.session_state.messages.append({"type": "assistant", "content": assistant_message.content})
+
+#                 st.session_state.input_counter += 1
+#                 st.rerun()
+
+#             except Exception as e:
+#                 st.error(f" Error: {str(e)}")
+
+# if __name__ == "__main__":
+#     main()
+
+

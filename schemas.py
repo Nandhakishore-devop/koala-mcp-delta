@@ -243,94 +243,222 @@ def get_resort_details_schema() -> Dict[str, Any]:
     }
 
 
+# def get_resort_price_schema() -> Dict[str, Any]:
+#     """Auto-generated schema for get_resort_price function."""
+#     return {
+#     "type": "function",
+#     "function": {
+#         "name": "search_available_future_listings_enhanced",
+#         "description": "Enhanced version of get_resort_price with better debugging and flexible matching.",
+#         "parameters": {
+#             "type": "object",
+#             "properties": {
+#                 "resort_name": {
+#                     "type": "string",
+#                     "description": "The resort_name parameter"
+#                 },
+#                 "resort_country": {
+#                     "type": "string",
+#                     "description": "The country parameter"
+#                 },
+#                 "resort_city": {
+#                     "type": "string",
+#                     "description": "The city parameter"
+#                 },
+#                 "resort_state": {
+#                     "type": "string",
+#                     "description": "The state parameter"
+#                 },
+#                 "min_price": {
+#                     "type": "number",
+#                     "description": "The min_price parameter"
+#                 },
+#                 "max_price": {
+#                     "type": "number",
+#                     "description": "The max_price parameter"
+#                 },
+#                 "unit_type": {
+#                     "type": "string",
+#                     "description": "The unit_type parameter"
+#                 },
+#                 "listing_pricing_night": {
+#                     "type": "integer",
+#                     "description": "The nights parameter"
+#                 },
+#                 "currency_code": {
+#                     "type": "string",
+#                     "description": "The currency_code parameter"
+#                 },
+#                 "limit": {
+#                     "type": "integer",
+#                     "description": "The limit parameter"
+#                 },
+#                 "debug": {
+#                     "type": "boolean",
+#                     "description": "The debug parameter"
+#                 },
+#                 "price_sort": {
+#                         "type": "string",
+#                         "description": "Order to sort results by price. Use 'asc' for cheapest listings, 'desc' for most expensive listings."
+#                 }
+#             },
+#             "required": [],
+#             "additionalProperties": False
+#         }
+#     }
+# }
+
+
 def get_resort_price_schema() -> Dict[str, Any]:
-    """Auto-generated schema for get_resort_price function."""
+    """
+    Schema for the search_available_future_listings_enhanced function.
+    This enhanced version supports flexible filtering based on resort location, price range,
+    unit type, and other options. Also includes support for debugging and price sorting.
+    """
     return {
-    "type": "function",
-    "function": {
-        "name": "search_available_future_listings_enhanced",
-        "description": "Enhanced version of get_resort_price with better debugging and flexible matching.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "resort_name": {
-                    "type": "string",
-                    "description": "The resort_name parameter"
-                },
-                "resort_country": {
-                    "type": "string",
-                    "description": "The country parameter"
-                },
-                "resort_city": {
-                    "type": "string",
-                    "description": "The city parameter"
-                },
-                "resort_state": {
-                    "type": "string",
-                    "description": "The state parameter"
-                },
-                "min_price": {
-                    "type": "number",
-                    "description": "The min_price parameter"
-                },
-                "max_price": {
-                    "type": "number",
-                    "description": "The max_price parameter"
-                },
-                "unit_type": {
-                    "type": "string",
-                    "description": "The unit_type parameter"
-                },
-                "listing_pricing_night": {
-                    "type": "integer",
-                    "description": "The nights parameter"
-                },
-                "currency_code": {
-                    "type": "string",
-                    "description": "The currency_code parameter"
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "The limit parameter"
-                },
-                "debug": {
-                    "type": "boolean",
-                    "description": "The debug parameter"
-                },
-                "price_sort": {
+        "type": "function",
+        "function": {
+            "name": "search_available_future_listings_enhanced",
+            "description": (
+                "Search for available future resort listings with advanced filters. "
+                "Supports location (country, state, city), price range, unit type, nights, "
+                "currency code, sorting by price, and debugging options."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "resort_name": {
                         "type": "string",
-                        "description": "Order to sort results by price. Use 'asc' for cheapest listings, 'desc' for most expensive listings."
-                }
-            },
-            "required": [],
-            "additionalProperties": False
+                        "description": "Name of the resort to search for (optional if location is provided)."
+                    },
+                    "resort_country": {
+                        "type": "string",
+                        "description": "Country where the resort is located."
+                    },
+                    "resort_state": {
+                        "type": "string",
+                        "description": "State or province where the resort is located."
+                    },
+                    "resort_city": {
+                        "type": "string",
+                        "description": "City where the resort is located."
+                    },
+                    "min_price": {
+                        "type": "number",
+                        "description": "Minimum price per night to filter listings."
+                    },
+                    "max_price": {
+                        "type": "number",
+                        "description": "Maximum price per night to filter listings."
+                    },
+                    "unit_type": {
+                        "type": "string",
+                        "description": "Specific unit type to filter (e.g., Studio, 1 Bedroom, Suite)."
+                    },
+                    "listing_pricing_night": {
+                        "type": "integer",
+                        "description": "Number of nights for the booking (used for total price calculation)."
+                    },
+                    "currency_code": {
+                        "type": "string",
+                        "description": "Currency code for price (e.g., USD, EUR, INR)."
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of listings to return."
+                    },
+                    "debug": {
+                        "type": "boolean",
+                        "description": "Enable verbose output for debugging (optional)."
+                    },
+                    "price_sort": {
+                        "type": "string",
+                        "description": "Sort results by price. Use 'asc' for lowest to highest, 'desc' for highest to lowest."
+                    }
+                },
+                "required": [],
+                "additionalProperties": False
+            }
         }
     }
-}
+
+
+
+
+# def get_user_bookings_schema() -> Dict[str, Any]:
+#     """Schema for get_user_bookings function with optional date filters."""
+#     return {
+#         "type": "function",
+#         "function": {
+#             "name": "get_user_bookings",
+#             "description": "Fetch upcoming and filtered past bookings for a user by email. You can optionally filter past bookings by year, month, or day of check-in date.",
+#             "parameters": {
+#                 "type": "object",
+#                 "properties": {
+#                     "user_email": {
+#                         "type": "string",
+#                         "description": "Email address of the user."
+#                     },
+#                     "year": {
+#                         "type": "integer",
+#                         "description": "Filter past and upcoming  bookings by check-in year (e.g., 2023)."
+#                     },
+#                     "month": {
+#                         "type": "integer",
+#                         "description": "Filter past  and upcoming bookings by check-in month (1-12)."
+#                     },
+#                     "day": {
+#                         "type": "integer",
+#                         "description": "Filter past and upcoming bookings by check-in day of month (1-31)."
+#                     }
+#                 },
+#                 "required": ["user_email"],
+#                 "additionalProperties": False
+#             }
+#         }
+#     }
 
 
 def get_user_bookings_schema() -> Dict[str, Any]:
-    """Auto-generated schema for get_user_bookings function."""
+    """Schema for get_user_bookings function with optional filters by check-in date (year, month, day)."""
     return {
-    "type": "function",
-    "function": {
-        "name": "get_user_bookings",
-        "description": "Fetch all bookings for a user by name",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "user_email": {
-                    "type": "string",
-                    "description": "The user_email parameter"
-                }
-            },
-            "required": [
-                "user_email"
-            ],
-            "additionalProperties": False
+        "type": "function",
+        "function": {
+            "name": "get_user_bookings",
+            "description": (
+                "Fetch upcoming and past bookings for a user by email. "
+                "specified only month means to year consider like current year eg: jun -> means jun current year (2025)"
+                "If no year/month/day is provided, limits of 3 bookings each for upcoming and past are applied. "
+                "If the number of bookings in a year is too high (e.g., over 15 to 1000+), the assistant may prompt the user "
+                "to specify a month. The function also returns a summary of months with bookings per year."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "user_email": {
+                        "type": "string",
+                        "description": "Email address of the user whose bookings are being fetched."
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Optional filter for the check-in year (e.g., 2028)."
+                    },
+                    "month": {
+                        "type": "integer",
+                        "description": "Optional filter for the check-in month (1-12). month only provide means take current year"
+                    },
+                    "day": {
+                        "type": "integer",
+                        "description": "Optional filter for the check-in day of the month (1-31)."
+                    }
+                },
+                "required": ["user_email"],
+                "additionalProperties": False
+            }
         }
     }
-}
+
+
 
 
 def get_user_profile_schema() -> Dict[str, Any]:
@@ -455,6 +583,8 @@ def test_database_connection_schema() -> Dict[str, Any]:
         }
     }
 }
+
+
 def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
     """Auto-generated schema for search_available_future_listings_enhanced function."""
     return {
@@ -473,10 +603,10 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                         "type": "string",
                         "description": "Check-in date in YYYY-MM-DD format"
                     },
-                    "listing_check_out": {
-                        "type": "string",
-                        "description": "Check-out date in YYYY-MM-DD format"
-                    },
+                    # "listing_check_out": {
+                    #     "type": "string",
+                    #     "description": "Check-out date in YYYY-MM-DD format"
+                    # },
                     "listing_price_night": {
                         "type": "integer",
                         "description": "Number of nights for the stay"
