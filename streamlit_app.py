@@ -207,21 +207,21 @@ def handle_simple_greetings(user_input: str) -> str:
         'good afternoon': "Good afternoon! 🌅 Hope you're having a great day! Let's find you an amazing resort experience.",
         'good evening': "Good evening! 🌙 Perfect time to plan your next vacation! What can I help you with?",
         
-        # Thank you responses
-        'thank you': "You're very welcome! 😊 Is there anything else I can help you with for your resort booking?",
-        'thanks': "My pleasure! 🌟 Feel free to ask if you need help with anything else!",
-        'thank u': "You're welcome! 💫 Happy to help with your resort needs anytime!",
+        # # Thank you responses
+        # 'thank you': "You're very welcome! 😊 Is there anything else I can help you with for your resort booking?",
+        # 'thanks': "My pleasure! 🌟 Feel free to ask if you need help with anything else!",
+        # 'thank u': "You're welcome! 💫 Happy to help with your resort needs anytime!",
         
         
-        # Other common phrases
-        'how are you': "I'm doing great, thank you for asking! 🤖 I'm here and ready to help you find the perfect resort. How are you doing?",
-        'what\'s up': "Not much, just here to help you plan an amazing vacation! 🏝️ What resort experience are you looking for?",
-        'whats up': "Just ready to help you book your dream resort! ✨ What destination interests you?",
+        # # Other common phrases
+        # 'how are you': "I'm doing great, thank you for asking! 🤖 I'm here and ready to help you find the perfect resort. How are you doing?",
+        # 'what\'s up': "Not much, just here to help you plan an amazing vacation! 🏝️ What resort experience are you looking for?",
+        # 'whats up': "Just ready to help you book your dream resort! ✨ What destination interests you?",
         
-        'okay': "Perfect! 🌴 How can I help you with your resort booking today?",
-        'bye': "Goodbye! 👋 Thanks for using our resort booking service. Have a wonderful day!",
-        'goodbye': "Farewell! 🌊 Hope to help you plan your next amazing vacation soon!",
-        'see you': "See you later! 🏖️ Don't hesitate to come back when you're ready to book that perfect resort!",
+        # 'okay': "Perfect! 🌴 How can I help you with your resort booking today?",
+        # 'bye': "Goodbye! 👋 Thanks for using our resort booking service. Have a wonderful day!",
+        # 'goodbye': "Farewell! 🌊 Hope to help you plan your next amazing vacation soon!",
+        # 'see you': "See you later! 🏖️ Don't hesitate to come back when you're ready to book that perfect resort!",
         
     }
     

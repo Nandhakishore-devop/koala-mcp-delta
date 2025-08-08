@@ -426,11 +426,12 @@ def get_user_bookings_schema() -> Dict[str, Any]:
         "function": {
             "name": "get_user_bookings",
             "description": (
-                "Fetch upcoming and past bookings for a user by email. "
-                "specified only month means to year consider like current year eg: jun -> means jun current year (2025)"
+                "Fetch upcoming and past bookings for a user by email, including total_listing_price and total_booking_price. "
+                "If only the month is specified, the year defaults to the current year (e.g., month=6 means June of the current year). "
                 "If no year/month/day is provided, limits of 3 bookings each for upcoming and past are applied. "
-                "If the number of bookings in a year is too high (e.g., over 10 to 1000+), the assistant may prompt the user "
+                "If the number of bookings in a year is too high (e.g., over 5 to 1000+), the assistant may prompt the user "
                 "to specify a month. The function also returns a summary of months with bookings per year."
+                "resort_name,booker or user name ,check_in,check_out,reservation_no,total_booking_price,nights,unit_type,listing_status"
             ),
             "parameters": {
                 "type": "object",
@@ -445,7 +446,7 @@ def get_user_bookings_schema() -> Dict[str, Any]:
                     },
                     "month": {
                         "type": "integer",
-                        "description": "Optional filter for the check-in month (1-12). month only provide means take current year"
+                        "description": "Optional filter for the check-in month (1-12). If only month is provided, the year defaults to current year."
                     },
                     "day": {
                         "type": "integer",
@@ -457,7 +458,6 @@ def get_user_bookings_schema() -> Dict[str, Any]:
             }
         }
     }
-
 
 
 
