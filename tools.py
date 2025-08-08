@@ -425,7 +425,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 
-
+#in live 
 def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
     """
     Enhanced dynamic filtering for PtRtListing.
@@ -491,7 +491,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
         # 🔐 Enforce minimum results check (optional)
         enforce_minimum = filters.get('enforce_minimum', True)
-        minimum_required = filters.get('minimum_required', 10)
+        minimum_required = filters.get('minimum_required', 1)
         if enforce_minimum and len(unique_results) < minimum_required:
             print(f"Only {len(unique_results)} listings found. Minimum of {minimum_required} required.")
             return []
@@ -512,6 +512,95 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
 
 
+# def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
+#     """
+#     Enhanced dynamic filtering for PtRtListing.
+
+#     Features:
+#     - Dynamic filter by keyword arguments
+#     - Check-in/check-out filtering (single date or full month expansion)
+#     - Optional price sorting (asc or desc)
+#     - Deduplication by resort_id
+#     - Conditional result limiting (if enough results found)
+#     """
+#     session = SessionLocal()
+
+#     try:
+#         query = session.query(PtRtListing).distinct()
+#         filter_conditions = []
+
+#         # Apply field-based filters dynamically
+#         for field_name, value in filters.items():
+#             if value is not None and hasattr(PtRtListing, field_name):
+#                 column = getattr(PtRtListing, field_name)
+#                 if isinstance(value, str):
+#                     filter_conditions.append(column.ilike(f"%{value.strip()}%"))
+#                 else:
+#                     filter_conditions.append(column == value)
+
+#         # 🔍 Check-in date range handling
+#         check_in_from = filters.get('listing_check_in')
+#         check_in_to = filters.get('listing_check_out')
+
+#         if check_in_from:
+#             try:
+#                 check_in_start = datetime.strptime(check_in_from, "%Y-%m-%d")
+
+#                 if not check_in_to:
+#                     # Auto expand to end of the month
+#                     last_day = monthrange(check_in_start.year, check_in_start.month)[1]
+#                     check_in_end = check_in_start.replace(day=last_day)
+#                 else:
+#                     check_in_end = datetime.strptime(check_in_to, "%Y-%m-%d")
+
+#                 filter_conditions.append(PtRtListing.listing_check_in >= check_in_start)
+#                 filter_conditions.append(PtRtListing.listing_check_in <= check_in_end)
+
+#             except ValueError as ve:
+#                 print("Date parsing error:", ve)
+
+#         # Apply filter conditions
+#         if filter_conditions:
+#             query = query.filter(and_(*filter_conditions))
+
+#         # 📊 Optional price sort
+#         price_sort = filters.get('price_sort')
+#         if price_sort:
+#             price_col = getattr(PtRtListing, 'listing_price_night')
+#             query = query.order_by(asc(price_col)) if price_sort == 'asc' else query.order_by(desc(price_col))
+
+#         # 🔎 Fetch all (no hard limit yet)
+#         results = query.all()
+
+#         # ✨ Deduplicate by resort_id
+#         unique_results = deduplicate_by_resort_id(results)
+
+#         # 🔐 Enforce minimum results check (optional)
+#         enforce_minimum = filters.get('enforce_minimum', True)
+#         minimum_required = filters.get('minimum_required', 10)
+#         if enforce_minimum and len(unique_results) < minimum_required:
+#             print(f"Only {len(unique_results)} listings found. Minimum of {minimum_required} required.")
+#             return []
+
+#         # 🔢 Apply optional final limit (e.g., top N)
+#         limit = filters.get('limit')
+#         if limit is not None:
+#             unique_results = unique_results[:limit]
+
+#         return [model_to_dict(listing) for listing in unique_results]
+
+#     except Exception as e:
+#         print(f"Error in search_available_future_listings_enhanced: {str(e)}")
+#         return []
+
+#     finally:
+#         session.close()
+
+
+
+
+
+
 
 
 def model_to_dict(model_instance):
@@ -525,7 +614,6 @@ def deduplicate_by_resort_id(listings):
             seen.add(listing.resort_id)
             unique_listings.append(listing)
     return unique_listings
-
 
 
 # def get_user_bookings(
