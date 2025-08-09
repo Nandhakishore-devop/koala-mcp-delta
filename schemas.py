@@ -587,6 +587,7 @@ def test_database_connection_schema() -> Dict[str, Any]:
 
 def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
     """Auto-generated schema for search_available_future_listings_enhanced function."""
+    "If only the month is specified, the year defaults to the current year or resquest (e.g., month=6 means June of the current year). "
     return {
         "type": "function",
         "function": {
@@ -619,13 +620,17 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                         "type": "string",
                         "description": "City to search in"
                     },
+                    "month": {
+                        "type": "integer",
+                        "description": "Optional filter for the check-in month (1-12). If only month is provided, the year defaults to current year."
+                    },
                     "resort_state": {
                         "type": "string",
                         "description": "State to search in"
                     },
                     "limit": {
                         "type": "integer",
-                        "description": "Maximum number of results to return (default: 20)"
+                        "description": "Maximum number of results to return (default: 30)"
                     },
                     "flexible_dates": {
                         "type": "boolean",
