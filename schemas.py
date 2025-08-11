@@ -215,164 +215,32 @@ def get_price_range_summary_schema() -> Dict[str, Any]:
     }
 }
 
-# details_with_out imag
-
-# def get_resort_details_schema() -> Dict[str, Any]:
-#     """Schema for get_resort_details function, supporting ID or Name and includes unit types."""
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "get_resort_details",
-#             "description": "Get detailed information about a specific resort using either ID or Name. Returns resort details including unit types, listing stats, and total bookings.",
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "resort_id": {
-#                         "type": "integer",
-#                         "description": "The ID of the resort to retrieve details for"
-#                     },
-#                     "resort_name": {
-#                         "type": "string",
-#                         "description": "The name of the resort to retrieve details for"
-#                     }
-                    
-
-#                 },
-#                 "required": [],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
-# with img
-# def get_resort_details_schema() -> Dict[str, Any]:
-#     """Schema for get_resort_details function, supporting ID or Name and including amenities, unit types, listings, and top image."""
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "get_resort_details",
-#             "description": (
-#                 "List of amenity names to search for. Must match all provided amenities."
-#                 "Get detailed information about a specific resort using either ID or Name. "
-#                 "Returns resort details including amenities, unit types, listing stats, total bookings, "
-#                 "and the top resort image (only the image filename, no URL)."
-#                 "Search for resorts that have all the specified amenities. "
-#                 "Matches are case-insensitive. "
-#                 "Returns resort details along with their amenities."
-#             ),
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "resort_id": {
-#                         "type": "integer",
-#                         "description": "The ID of the resort to retrieve details for."
-#                     },
-#                     "resort_name": {
-#                         "type": "string",
-#                         "description": "The name of the resort to retrieve details for."
-#                     }
-#                 },
-#                 "required": [],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
-
-# def get_resort_details_schema() -> Dict[str, Any]:
-#     """Unified schema for get_resort_details to handle search by ID, Name, or Amenities."""
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "get_resort_details",
-#             "description": (
-#                 "Get resort details or search for resorts by amenities.\n"
-#                 "Modes:\n"
-#                 "1. Provide resort_id or resort_name → returns details for that resort.\n"
-#                 "2. Provide amenities_list → returns resorts that have ALL those amenities.\n"
-#                 "Case-insensitive matching is used for amenities.\n"
-#                 "Results include resort info, amenities, unit types, listings, and top image."
-#             ),
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "resort_id": {
-#                         "type": "integer",
-#                         "description": "The ID of the resort to retrieve details for."
-#                     },
-#                     "resort_name": {
-#                         "type": "string",
-#                         "description": "The name of the resort to retrieve details for (case-insensitive partial match allowed)."
-#                     },
-#                     "amenities_list": {
-#                         "type": "array",
-#                         "items": {"type": "string"},
-#                         "description": (
-#                             "List of amenity names to search for. "
-#                             "Must match all provided amenities (case-insensitive)."
-#                         )
-#                     },
-#                     "amenities_only": {
-#                         "type": "boolean",
-#                         "description": "If true, returns only the amenities for the given resort_id or resort_name."
-#                     },
-#                     "list_resorts_with_amenities": {
-#                         "type": "boolean",
-#                         "description": "If true, lists all resorts with their amenities."
-#                     },
-#                     "limit": {
-#                         "type": "integer",
-#                         "description": "Maximum number of resorts to return. Defaults to 10."
-#                     }
-#                 },
-#                 "required": [],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
 def get_resort_details_schema() -> Dict[str, Any]:
-    """Compact schema for get_resort_details to handle ID, Name, or Amenities search."""
+    """Schema for get_resort_details function, supporting ID or Name and includes unit types."""
     return {
         "type": "function",
         "function": {
             "name": "get_resort_details",
-            "description": (
-                "Retrieve resort details by ID or name, or search resorts by amenities. "
-                "Amenities search matches all given amenities (case-insensitive)."
-            ),
+            "description": "Get detailed information about a specific resort using either ID or Name. Returns resort details including unit types, listing stats, and total bookings.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "resort_id": {
                         "type": "integer",
-                        "description": "ID of the resort."
+                        "description": "The ID of the resort to retrieve details for"
                     },
                     "resort_name": {
                         "type": "string",
-                        "description": "Name of the resort (case-insensitive partial match allowed)."
-                    },
-                    "amenities_list": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Amenities to match (all must be present)."
-                    },
-                    "amenities_only": {
-                        "type": "boolean",
-                        "description": "If true, returns only amenities for the given resort."
-                    },
-                    "list_resorts_with_amenities": {
-                        "type": "boolean",
-                        "description": "If true, lists all resorts with amenities."
-                    },
-                    "limit": {
-                        "type": "integer",
-                        "description": "Max number of resorts to return."
+                        "description": "The name of the resort to retrieve details for"
                     }
+                    
+
                 },
                 "required": [],
                 "additionalProperties": False
             }
         }
     }
-
 
 
 # def get_resort_price_schema() -> Dict[str, Any]:
@@ -668,71 +536,36 @@ def search_listings_by_type_schema() -> Dict[str, Any]:
         }
     }
 }
-# in live 
-# def search_resorts_by_amenities_schema() -> Dict[str, Any]:
-#     """Auto-generated schema for search_resorts_by_amenities function."""
-#     return {
-#     "type": "function",
-#     "function": {
-#         "name": "search_resorts_by_amenities",
-#         "description": "Search for resorts that have specific amenities.",
-#         "parameters": {
-#             "type": "object",
-#             "properties": {
-#                 "amenities": {
-#                     "type": "array",
-#                     "items": {
-#                         "type": "string"
-#                     },
-#                     "description": "The amenities parameter"
-#                 },
-#                 "limit": {
-#                     "type": "integer",
-#                     "description": "The limit parameter"
-#                 }
-#             },
-#             "required": [
-#                 "amenities"
-#             ],
-#             "additionalProperties": False
-#         }
-#     }
-# }
 
-
-# def search_resorts_by_amenities_schema() -> Dict[str, Any]:
-#     """Schema for search_resorts_by_amenities function."""
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "search_resorts_by_amenities",
-#             "description": (
-#                 "Search for resorts that have all the specified amenities. "
-#                 "Matches are case-insensitive. "
-#                 "Returns resort details along with their amenities."
-#             ),
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "amenities": {
-#                         "type": "array",
-#                         "items": {
-#                             "type": "string"
-#                         },
-#                         "description": "List of amenity names to search for. Must match all provided amenities."
-#                     },
-#                     "limit": {
-#                         "type": "integer",
-#                         "description": "Maximum number of resorts to return. Defaults to 10."
-#                     }
-#                 },
-#                 "required": ["amenities"],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
-
-
+def search_resorts_by_amenities_schema() -> Dict[str, Any]:
+    """Auto-generated schema for search_resorts_by_amenities function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "search_resorts_by_amenities",
+        "description": "Search for resorts that have specific amenities.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "amenities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The amenities parameter"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "The limit parameter"
+                }
+            },
+            "required": [
+                "amenities"
+            ],
+            "additionalProperties": False
+        }
+    }
+}
 
 
 def test_database_connection_schema() -> Dict[str, Any]:
@@ -900,7 +733,7 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
         get_user_profile_schema(),
         get_weekend_listings_schema(),
         search_listings_by_type_schema(),
-        # search_resorts_by_amenities_schema(),
+        search_resorts_by_amenities_schema(),
         test_database_connection_schema(),
         search_available_future_listings_enhanced_schema(),  # Enhanced version
         # get_availability_insights_schema(),  # New insights function

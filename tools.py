@@ -2,7 +2,7 @@
 Fixed Tool functions for resort booking system using SQLAlchemy with MySQL.
 """
 from typing import List, Dict, Any, Optional,Union
-from sqlalchemy import create_engine, Column, Integer,BigInteger, String, DateTime, ForeignKey, Text, Float, Boolean, and_, asc, desc , or_, func
+from sqlalchemy import create_engine, Column, Integer,BigInteger, String, DateTime, ForeignKey, Text, Float, Boolean, and_, asc, desc
 from sqlalchemy import create_engine, Column, Integer, BigInteger, String, DateTime, ForeignKey, Text, Float, Boolean
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 from collections import Counter, defaultdict
 import calendar
 from calendar import monthrange
-from sqlalchemy.orm import Session
 
 
 
@@ -67,9 +66,13 @@ class Amenity(Base):
     slug = Column(String(255))
     image = Column(String(255))
     status = Column(String(255), default='active')
+    has_deleted = Column(Integer, default=0)
+    created_by = Column(Integer, default=0)
+    updated_by = Column(Integer, default=0)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
     is_key_amenity = Column(Integer, default=0)
-    # Relationships
-    resort_amenities = relationship("ResortAmenity", back_populates="amenity")
+
 
 class ResortMigration(Base):
     __tablename__ = 'resort_migration'
@@ -184,8 +187,6 @@ class Resort(Base):
     creator = relationship("User", foreign_keys=[creator_id], back_populates="created_resorts")
     unit_types = relationship("UnitType", back_populates="resort")
     listings = relationship("Listing", back_populates="resort")
-    images = relationship("ResortImage",back_populates="resort")
-    resort_amenities = relationship("ResortAmenity", back_populates="resort")
     # Remove the problematic relationship - we'll handle this differently
 
 
@@ -321,29 +322,9 @@ class BookingMetrics(Base):
     booking = relationship("Booking", back_populates="booking_metrics")  # ✅
 
 
-class ResortImage(Base):
-    __tablename__ = 'resort_images'
-
-    id = Column(Integer, primary_key=True)
-    resort_id = Column(Integer, ForeignKey('resorts.id'), nullable=False)
-    image = Column(String(255), nullable=False)
-    height = Column(Integer)
-    width = Column(Integer)
-    aspect_ratio = Column(String(50))
-    image_order = Column(Integer, default=0)
-    resort = relationship("Resort", back_populates="images")
 
 
-class ResortAmenity(Base):
-    __tablename__ = "resort_amenities"
 
-    id = Column(Integer, primary_key=True)
-    resort_id = Column(Integer, ForeignKey("resorts.id"), nullable=False)
-    amenity_id = Column(Integer, ForeignKey("amenities.id"), nullable=False)
-    has_deleted = Column(Integer, default=0)
-    # Relationships
-    resort = relationship("Resort", back_populates="resort_amenities")
-    amenity = relationship("Amenity", back_populates="resort_amenities")
 
 # Database setup
 def get_database_url():
@@ -351,7 +332,7 @@ def get_database_url():
     host = os.getenv("MYSQL_HOST", "localhost")
     user = os.getenv("MYSQL_USER", "root")
     password = os.getenv("MYSQL_PASSWORD", "")
-    database = os.getenv("MYSQL_DATABASE", "koala_live_laravel")
+    database = os.getenv("MYSQL_DATABASE", "koala_dev")
     
     # Build MySQL URL
     if password:
@@ -363,8 +344,6 @@ def get_database_url():
 DATABASE_URL = get_database_url()
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
 
 # rubi _ tools
 # old def search_available_future_listings_enhanced _work per
@@ -442,6 +421,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 #     finally:
 #         session.close()
+
+
+
 
 #in live 
 # def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
@@ -646,7 +628,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 #     finally:
 #         session.close()
 
-#----------search_avaliable_future.....
+
 
 def get_month_year_range(month_input, year_input=None):
     """
@@ -687,6 +669,7 @@ def get_month_year_range(month_input, year_input=None):
     check_out = datetime(year, month_num, last_day).strftime("%Y-%m-%d")
 
     return check_in, check_out
+
 
 def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
     """
@@ -812,9 +795,6 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
     finally:
         session.close()
-
-#----------search_avaliable_future..... end 
-
 
 
 def model_to_dict(model_instance):
@@ -1611,291 +1591,90 @@ def get_resort_price(
         session.close()
 
 
+
+
 # Add to tools
 
-# in live
-# def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[str] = None) -> Dict[str, Any]:
-#     """Get detailed information about a specific resort by ID or Name."""
-#     session: Session = SessionLocal()
 
-#     try:
-#         if not resort_id and not resort_name:
-#             return {"error": "Please provide either resort_id or resort_name."}
-
-#         # --- Fetch resort based on ID or Name ---
-#         query = session.query(Resort).join(User, Resort.creator_id == User.id).filter(Resort.has_deleted == 0)
-
-#         if resort_id:
-#             query = query.filter(Resort.id == resort_id)
-#         else:
-#             query = query.filter(Resort.name.ilike(f"%{resort_name.strip()}%"))
-
-#         resort = query.first()
-
-#         if not resort:
-#             return {"error": "Resort not found with the given identifier."}
-
-#         # --- Fetch unit types ---
-#         unit_types = session.query(UnitType).filter(
-#             UnitType.resort_id == resort.id,
-#             UnitType.has_deleted == 0
-#         ).all()
-
-
-#         # --- Listings count by status ---
-#         statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']
-#         listings_stats = {
-#             status: session.query(Listing).filter(
-#                 Listing.resort_id == resort.id,
-#                 Listing.has_deleted == 0,
-#                 Listing.status == status
-#             ).count()
-#             for status in statuses
-#         }
-
-#         # --- Total bookings ---
-#         total_bookings = session.query(Booking).join(
-#             Listing, Booking.listing_id == Listing.id
-#         ).filter(
-#             Listing.resort_id == resort.id
-#         ).count()
-
-#         # --- Construct final result ---
-#         resort_details = {
-#             "id": resort.id,
-#             "name": resort.name,
-#             "slug": resort.slug,
-#             "address": resort.address,
-#             "city": resort.city,
-#             "state": resort.state,
-#             "country": resort.country,
-#             "zip": resort.zip,
-#             "county": resort.county,
-#             "lattitude": resort.lattitude,
-#             "longitude": resort.longitude,
-#             "highlight_quote": resort.highlight_quote,
-#             "description": resort.description,
-#             "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
-#             "creator_email": resort.creator.email,
-#             "status": resort.status,
-#             "unit_types": [
-#                 {"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types
-#             ],
-#             "listings_by_status": listings_stats,
-#             "total_bookings": total_bookings
-#         }
-
-#         return resort_details
-
-#     except Exception as e:
-#         print(f"[ERROR] Failed to fetch resort details: {str(e)}")
-#         return {"error": f"Exception occurred: {str(e)}"}
-
-#     finally:
-#         session.close()
-
-
-
-
-
-
-BASE_URL = "https://dev.go-koala.com/uploads/resorts"
-
-def get_resort_details(
-    resort_id: Optional[int] = None,
-    resort_name: Optional[str] = None,
-    amenities_list: Optional[List[str]] = None,
-    amenities_only: bool = False,
-    list_resorts_with_amenities: bool = False,
-    limit: int = 5
-) -> Dict[str, Any]:
-    """
-    Get resort details or filter resorts by amenities.
-    """
+def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[str] = None) -> Dict[str, Any]:
+    """Get detailed information about a specific resort by ID or Name."""
     session: Session = SessionLocal()
+
     try:
-        # -------------------------
-        # CASE 1: All resorts with amenities
-        # -------------------------
-        if list_resorts_with_amenities:
-            resorts = session.query(Resort).filter(Resort.has_deleted == 0).all()
-            return {
-                "resorts_with_amenities": [
-                    {
-                        "resort_id": r.id,
-                        "resort_name": r.name,
-                        "amenities": [
-                            {"id": a.id, "name": a.name}
-                            for a in session.query(Amenity.id, Amenity.name)
-                            .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
-                            .filter(
-                                ResortAmenity.resort_id == r.id,
-                                or_(*[Amenity.name.ilike(f"%{amenity}%") for amenity in amenities_list])
-                                if amenities_list else True
-                            )
-                            .all()
-                        ]
-                    }
-                    for r in resorts
-                ]
-            }
+        if not resort_id and not resort_name:
+            return {"error": "Please provide either resort_id or resort_name."}
 
-        # -------------------------
-        # CASE 2: Single resort details by ID or Name
-        # -------------------------
-        elif resort_id or resort_name:
-            query = (
-                session.query(Resort)
-                .join(User, Resort.creator_id == User.id)
-                .filter(Resort.has_deleted == 0)
-            )
-            if resort_id:
-                query = query.filter(Resort.id == resort_id)
-            else:
-                query = query.filter(Resort.name.ilike(f"%{resort_name.strip()}%"))
+        # --- Fetch resort based on ID or Name ---
+        query = session.query(Resort).join(User, Resort.creator_id == User.id).filter(Resort.has_deleted == 0)
 
-            resort = query.first()
-            if not resort:
-                return {"error": "Resort not found with the given identifier."}
+        if resort_id:
+            query = query.filter(Resort.id == resort_id)
+        else:
+            query = query.filter(Resort.name.ilike(f"%{resort_name.strip()}%"))
 
-            amenities_data = [
-                {"id": a.id, "name": a.name}
-                for a in session.query(Amenity.id, Amenity.name)
-                .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
-                .filter(ResortAmenity.resort_id == resort.id)
-                .all()
-            ]
+        resort = query.first()
 
-            if amenities_only:
-                return {
-                    "resort_id": resort.id,
-                    "resort_name": resort.name,
-                    "amenities": amenities_data
-                }
+        if not resort:
+            return {"error": "Resort not found with the given identifier."}
 
-            # Top image
-            top_image = (
-                session.query(ResortImage)
-                .filter(ResortImage.resort_id == resort.id)
-                .order_by(ResortImage.image_order.asc())
-                .first()
-            )
-            image_data = (
-                {
-                    "id": top_image.id,
-                    "filename": top_image.image,
-                    "image_order": top_image.image_order,
-                    "url": f"{BASE_URL}/{resort.id}/{top_image.image}"
-                }
-                if top_image and top_image.image
-                else None
-            )
+        # --- Fetch unit types ---
+        unit_types = session.query(UnitType).filter(
+            UnitType.resort_id == resort.id,
+            UnitType.has_deleted == 0
+        ).all()
 
-            # Unit types
-            unit_types = session.query(UnitType).filter(
-                UnitType.resort_id == resort.id, UnitType.has_deleted == 0
-            ).all()
 
-            # Listings by status
-            statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']
-            listings_stats = {
-                status: session.query(Listing).filter(
-                    Listing.resort_id == resort.id,
-                    Listing.has_deleted == 0,
-                    Listing.status == status
-                ).count()
-                for status in statuses
-            }
+        # --- Listings count by status ---
+        statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']
+        listings_stats = {
+            status: session.query(Listing).filter(
+                Listing.resort_id == resort.id,
+                Listing.has_deleted == 0,
+                Listing.status == status
+            ).count()
+            for status in statuses
+        }
 
-            # Total bookings
-            total_bookings = session.query(Booking).join(
-                Listing, Booking.listing_id == Listing.id
-            ).filter(Listing.resort_id == resort.id).count()
+        # --- Total bookings ---
+        total_bookings = session.query(Booking).join(
+            Listing, Booking.listing_id == Listing.id
+        ).filter(
+            Listing.resort_id == resort.id
+        ).count()
 
-            return {
-                "id": resort.id,
-                "name": resort.name,
-                "slug": resort.slug,
-                "address": resort.address,
-                "city": resort.city,
-                "state": resort.state,
-                "country": resort.country,
-                "zip": resort.zip,
-                "county": resort.county,
-                "lattitude": resort.lattitude,
-                "longitude": resort.longitude,
-                "highlight_quote": resort.highlight_quote,
-                "description": resort.description,
-                "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
-                "creator_email": resort.creator.email,
-                "status": resort.status,
-                "unit_types": [
-                    {"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types
-                ],
-                "listings_by_status": listings_stats,
-                "total_bookings": total_bookings,
-                "top_image": image_data,
-                "amenities": amenities_data
-            }
+        # --- Construct final result ---
+        resort_details = {
+            "id": resort.id,
+            "name": resort.name,
+            "slug": resort.slug,
+            "address": resort.address,
+            "city": resort.city,
+            "state": resort.state,
+            "country": resort.country,
+            "zip": resort.zip,
+            "county": resort.county,
+            "lattitude": resort.lattitude,
+            "longitude": resort.longitude,
+            "highlight_quote": resort.highlight_quote,
+            "description": resort.description,
+            "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
+            "creator_email": resort.creator.email,
+            "status": resort.status,
+            "unit_types": [
+                {"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types
+            ],
+            "listings_by_status": listings_stats,
+            "total_bookings": total_bookings
+        }
 
-        # -------------------------
-        # CASE 3: Amenities-only search
-        # -------------------------
-        elif amenities_list:
-            # Step 1: Find amenity IDs (case-insensitive)
-            amenity_ids = [
-                a[0]
-                for a in session.query(Amenity.id)
-                .filter(func.lower(Amenity.name).in_([name.lower() for name in amenities_list]))
-                .all()
-            ]
-            if not amenity_ids:
-                return {"error": "No amenities found for the given names."}
-
-            # Step 2: Resorts with ALL those amenities
-            resort_ids = [
-                r[0]
-                for r in session.query(ResortAmenity.resort_id)
-                .filter(ResortAmenity.amenity_id.in_(amenity_ids))
-                .group_by(ResortAmenity.resort_id)
-                .having(func.count(ResortAmenity.amenity_id) == len(amenity_ids))
-                .all()
-            ]
-            if not resort_ids:
-                return {"error": "No resorts found with the given amenities."}
-
-            # Step 3: Fetch resort details
-            resorts = session.query(Resort).filter(
-                Resort.id.in_(resort_ids), Resort.has_deleted == 0
-            ).limit(limit).all()
-
-            return {
-                "resorts": [
-                    {
-                        "resort_id": r.id,
-                        "resort_name": r.name,
-                        "amenities": [
-                            {"id": a.id, "name": a.name}
-                            for a in session.query(Amenity.id, Amenity.name)
-                            .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
-                            .filter(ResortAmenity.resort_id == r.id)
-                            .all()
-                        ]
-                    }
-                    for r in resorts
-                ]
-            }
-
-        return {"error": "Please provide either resort_id, resort_name, or amenities_list."}
+        return resort_details
 
     except Exception as e:
-        print(f"[ERROR] Failed to fetch resort details: {e}")
-        return {"error": f"Exception occurred: {e}"}
+        print(f"[ERROR] Failed to fetch resort details: {str(e)}")
+        return {"error": f"Exception occurred: {str(e)}"}
 
     finally:
         session.close()
-
-
 
 #rubi
 
@@ -2056,6 +1835,8 @@ def get_resort_details(
 
 #     finally:
 #         session.close()
+
+
 
 
 
@@ -2381,7 +2162,7 @@ def get_weekend_listings(limit: int = 10) -> List[Dict[str, Any]]:
     finally:
         session.close()
 
-# in live 
+
 def search_resorts_by_amenities(amenities: List[str], limit: int = 10) -> List[Dict[str, Any]]:
     """
     Search for resorts that have specific amenities.
@@ -2456,7 +2237,6 @@ def search_resorts_by_amenities(amenities: List[str], limit: int = 10) -> List[D
         
     finally:
         session.close()
-
 
 
 def get_price_range_summary(country: str = None, state: str = None) -> Dict[str, Any]:
@@ -2536,6 +2316,8 @@ def get_price_range_summary(country: str = None, state: str = None) -> Dict[str,
         
     finally:
         session.close()
+
+
 
 
 # Tool function registry for easy lookup
