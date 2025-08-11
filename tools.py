@@ -331,12 +331,6 @@ class ResortImage(Base):
     width = Column(Integer)
     aspect_ratio = Column(String(50))
     image_order = Column(Integer, default=0)
-    is_vrbo = Column(Integer, default=0)
-    is_copied = Column(Integer, default=0)
-    vrbo_processed = Column(Integer, default=0)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
-
     resort = relationship("Resort", back_populates="images")
 
 
@@ -1699,6 +1693,8 @@ def get_resort_price(
 
 #     finally:
 #         session.close()
+
+
 
 
 
