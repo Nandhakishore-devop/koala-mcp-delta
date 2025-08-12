@@ -1899,9 +1899,9 @@ def get_resort_price(
 #         session.close()
 
 
+BASE_URL = "https://koalaadmin-prod.s3.us-east-2.amazonaws.com/uploads" #live url
 
-
-BASE_URL = "https://dev.go-koala.com/uploads/resorts"
+# BASE_URL = "https://dev.go-koala.com/uploads/resorts"
 
 def get_resort_details(
     resort_id: Optional[int] = None,
