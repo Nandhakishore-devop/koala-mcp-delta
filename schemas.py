@@ -337,6 +337,7 @@ def get_resort_details_schema() -> Dict[str, Any]:
             "description": (
                 "Retrieve resort details by ID or name, or search resorts by amenities. "
                 "Amenities search matches all given amenities (case-insensitive)."
+                "resort name with price based question means to call in this tool  search_available_future_listings_enhanced "
             ),
             "parameters": {
                 "type": "object",
@@ -841,6 +842,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                 "If only the month is provided (no year), the system applies special rules based on today's date: "
                 "Jun, Jul, Oct → year = 2026; Sep, Nov → year = 2025; Aug → current year (starting from today’s day if in Aug); "
                 "All other months → current year unless the month has already passed, in which case next year is used."
+                "resort name with price based question means to call in this tool  search_available_future_listings_enhanced "
             ),
             "parameters": {
                 "type": "object",
