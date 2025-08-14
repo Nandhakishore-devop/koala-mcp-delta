@@ -201,16 +201,6 @@ python schema_generator.py
 python main.py
 ```
 
-# .env
-
-# MySQL Database Configuration
-MYSQL_HOST=localhost
-MYSQL_USER=root
-MYSQL_PASSWORD=""
-MYSQL_DATABASE=koala_dev
-
-# OpenAI API Configuration
-OPENAI_API_KEY=REDACTED_SK_PROJ
 
 
 
@@ -277,3 +267,28 @@ This project is for educational purposes and demonstrates OpenAI function callin
 - pip install streamlit
 
 streamlit run streamlit_app.py
+
+
+# simpel-steps -ruban
+
+
+
+MCP/
+├── venv/                    # Virtual environment
+├── requirements.txt         # Python dependencies
+├── schemas.py              # OpenAI function schemas (manual)
+├── tools.py                # Tool functions with SQLAlchemy
+├── main.py                 # Main application with OpenAI integration
+└── README.md               # This file
+
+
+# .env
+
+# MySQL Database Configuration
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=""
+MYSQL_DATABASE=koala_dev
+
+# OpenAI API Configuration
+OPENAI_API_KEY=REDACTED_SK_PROJ

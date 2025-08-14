@@ -337,7 +337,8 @@ def get_resort_details_schema() -> Dict[str, Any]:
             "description": (
                 "Retrieve resort details by ID or name, or search resorts by amenities. "
                 "Amenities search matches all given amenities (case-insensitive)."
-                "resort name with price based question means to call in this tool  search_available_future_listings_enhanced "
+                "resort name with price based question means to call in this tool search_available_future_listings_enhanced "
+                "if asking any specify resort details means the image must show"
             ),
             "parameters": {
                 "type": "object",

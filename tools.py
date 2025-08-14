@@ -902,7 +902,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
         if filter_conditions:
             query = query.filter(and_(*filter_conditions))
 
-       # Sorting / Price filtering
+        # Sorting / Price filtering
         price_sort = filters.get('price_sort', 'asc')
 
         # Cast to numeric before using ABS
@@ -910,34 +910,38 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
         if price_sort == 'asc':
             query = query.order_by(asc(func.abs(price_col_numeric)))
+            print("Query:",query)
 
         elif price_sort == 'desc':
             query = query.order_by(desc(func.abs(price_col_numeric)))
+            print("Query:",query)
 
         elif price_sort == 'avg_price':
-            avg_price_col = func.avg(func.abs(price_col_numeric)).label('avg_price')
+            avg_price_col = func.avg(price_col_numeric).label('avg_price')
             avg_query = session.query(
                 PtRtListing.resort_id,
                 func.min(PtRtListing.resort_name).label('resort_name'),
                 avg_price_col
             )
 
+            print("Query:",query)
+
             # Filter by month/year for accurate average
             if month:
                 avg_query = avg_query.filter(extract('month', PtRtListing.listing_check_in) == int(month))
             if year:
                 avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == int(year))
-
+  
             query = avg_query.group_by(PtRtListing.resort_id).order_by(asc(avg_price_col))
 
         elif price_sort == 'cheapest':
-            query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
+            query = query.filter(price_col <= 333).order_by(asc(price_col))
 
         elif price_sort == 'average':
-            query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
+            query = query.filter(price_col.between(334, 666)).order_by(asc(price_col))
 
         elif price_sort == 'highest':
-            query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
+            query = query.filter(price_col >= 667).order_by(desc(price_col))
 
         # Limit
         limit = int(filters.get('limit', 5))
@@ -973,6 +977,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 print(f"⚠ Fallback search failed: {e}")
 
         return [model_to_dict(listing) for listing in unique_results[:limit]]
+        print("Listing")
 
     except Exception as e:
         print(f"❌ Error in search_available_future_listings_enhanced: {str(e)}")
@@ -2065,9 +2070,9 @@ def get_resort_price(
         session.close()
 
 
-BASE_URL = "https://koalaadmin-prod.s3.us-east-2.amazonaws.com/uploads/resorts" #live url
+# BASE_URL = "https://koalaadmin-prod.s3.us-east-2.amazonaws.com/uploads/resorts" # live url
 
-# BASE_URL = "https://dev.go-koala.com/uploads/resorts"
+BASE_URL = "https://dev.go-koala.com/uploads/resorts"
 
 def get_resort_details(
     resort_id: Optional[int] = None,
