@@ -910,29 +910,47 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
         if price_sort == 'asc':
             query = query.order_by(asc(func.abs(price_col_numeric)))
-            print("Query:",query)
+            # print("Query:",query)
 
         elif price_sort == 'desc':
             query = query.order_by(desc(func.abs(price_col_numeric)))
-            print("Query:",query)
+            # print("Query:",query)
 
         elif price_sort == 'avg_price':
-            avg_price_col = func.avg(price_col_numeric).label('avg_price')
-            avg_query = session.query(
-                PtRtListing.resort_id,
-                func.min(PtRtListing.resort_name).label('resort_name'),
-                avg_price_col
+            # Calculate overall average price
+            overall_avg = session.query(func.avg(price_col_numeric)).scalar()
+
+            # Subquery with price difference from avg
+            subquery = (
+                session.query(
+                    PtRtListing.resort_id,
+                    PtRtListing.resort_name,
+                    price_col_numeric.label("price"),
+                    func.abs(price_col_numeric - overall_avg).label("price_diff"),
+                    PtRtListing.listing_check_in
+                )
+                .subquery()
             )
 
-            print("Query:",query)
+            # Main query: pick closest prices around average
+            avg_query = (
+                session.query(
+                    subquery.c.resort_id,
+                    subquery.c.resort_name,
+                    subquery.c.price
+                )
+            )
 
-            # Filter by month/year for accurate average
+            # Apply month/year filter if given
             if month:
-                avg_query = avg_query.filter(extract('month', PtRtListing.listing_check_in) == int(month))
+                avg_query = avg_query.filter(extract('month', subquery.c.listing_check_in) == int(month))
             if year:
-                avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == int(year))
-  
-            query = avg_query.group_by(PtRtListing.resort_id).order_by(asc(avg_price_col))
+                avg_query = avg_query.filter(extract('year', subquery.c.listing_check_in) == int(year))
+
+            # Order by closeness to average and apply limit
+            query = avg_query.order_by(subquery.c.price_diff.asc()).limit(limit)
+
+            # print("Query:", query)
 
         elif price_sort == 'cheapest':
             query = query.filter(price_col <= 333).order_by(asc(price_col))
@@ -2070,9 +2088,9 @@ def get_resort_price(
         session.close()
 
 
-# BASE_URL = "https://koalaadmin-prod.s3.us-east-2.amazonaws.com/uploads/resorts" # live url
+BASE_URL = "https://koalaadmin-prod.s3.us-east-2.amazonaws.com/uploads/resorts" # live url
 
-BASE_URL = "https://dev.go-koala.com/uploads/resorts"
+# BASE_URL = "https://dev.go-koala.com/uploads/resorts"
 
 def get_resort_details(
     resort_id: Optional[int] = None,
