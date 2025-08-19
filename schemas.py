@@ -31,7 +31,8 @@ def get_available_resorts_schema() -> Dict[str, Any]:
     "type": "function",
     "function": {
         "name": "get_available_resorts",
-        "description": "List all available resorts with their basic information",
+        "description": "List all available resorts with their basic information"
+                        "the count of activate listings, and the total number of bookings. it manditory",
         "parameters": {
             "type": "object",
             "properties": {
@@ -108,26 +109,26 @@ def get_database_url_schema() -> Dict[str, Any]:
 }
 
 
-def get_featured_listings_schema() -> Dict[str, Any]:
-    """Auto-generated schema for get_featured_listings function."""
-    return {
-    "type": "function",
-    "function": {
-        "name": "get_featured_listings",
-        "description": "Get featured listings.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer",
-                    "description": "The limit parameter"
-                }
-            },
-            "required": [],
-            "additionalProperties": False
-        }
-    }
-}
+# def get_featured_listings_schema() -> Dict[str, Any]:
+#     """Auto-generated schema for get_featured_listings function."""
+#     return {
+#     "type": "function",
+#     "function": {
+#         "name": "get_featured_listings",
+#         "description": "Get featured listings.",
+#         "parameters": {
+#             "type": "object",
+#             "properties": {
+#                 "limit": {
+#                     "type": "integer",
+#                     "description": "The limit parameter"
+#                 }
+#             },
+#             "required": [],
+#             "additionalProperties": False
+#         }
+#     }
+# }
 
 
 def get_listing_details_schema() -> Dict[str, Any]:
@@ -619,26 +620,26 @@ def get_user_profile_schema() -> Dict[str, Any]:
 }
 
 
-def get_weekend_listings_schema() -> Dict[str, Any]:
-    """Auto-generated schema for get_weekend_listings function."""
-    return {
-    "type": "function",
-    "function": {
-        "name": "get_weekend_listings",
-        "description": "Get listings with weekend availability.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer",
-                    "description": "The limit parameter"
-                }
-            },
-            "required": [],
-            "additionalProperties": False
-        }
-    }
-}
+# def get_weekend_listings_schema() -> Dict[str, Any]:
+#     """Auto-generated schema for get_weekend_listings function."""
+#     return {
+#     "type": "function",
+#     "function": {
+#         "name": "get_weekend_listings",
+#         "description": "Get listings with weekend availability.",
+#         "parameters": {
+#             "type": "object",
+#             "properties": {
+#                 "limit": {
+#                     "type": "integer",
+#                     "description": "The limit parameter"
+#                 }
+#             },
+#             "required": [],
+#             "additionalProperties": False
+#         }
+#     }
+# }
 
 
 
@@ -910,14 +911,14 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
         get_available_resorts_schema(),
         get_booking_details_schema(),
         get_database_url_schema(),
-        get_featured_listings_schema(),
+        # get_featured_listings_schema(),
         get_listing_details_schema(),
         get_resort_details_schema(),
         get_price_range_summary_schema(),
         get_resort_price_schema(),
         get_user_bookings_schema(),
         get_user_profile_schema(),
-        get_weekend_listings_schema(),
+        # get_weekend_listings_schema(),
         search_listings_by_type_schema(),
         # search_resorts_by_amenities_schema(),
         test_database_connection_schema(),

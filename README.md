@@ -269,9 +269,14 @@ This project is for educational purposes and demonstrates OpenAI function callin
 streamlit run streamlit_app.py
 
 
+
+
+
+
+
+
+
 # simpel-steps -ruban
-
-
 
 MCP/
 ├── venv/                    # Virtual environment
@@ -280,7 +285,6 @@ MCP/
 ├── tools.py                # Tool functions with SQLAlchemy
 ├── main.py                 # Main application with OpenAI integration
 └── README.md               # This file
-
 
 # .env
 
@@ -292,3 +296,14 @@ MYSQL_DATABASE=koala_dev
 
 # OpenAI API Configuration
 OPENAI_API_KEY=REDACTED_SK_PROJ
+
+# git clone...
+git clone https://github.com/dsignzmedia/koala-mcp-beta
+
+python -m venv venv
+venv\Scripts\activate
+
+pip install -r requirements.txt
+
+# run app 
+streamlit run streamlit_app.py

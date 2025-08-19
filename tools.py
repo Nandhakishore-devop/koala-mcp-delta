@@ -2770,34 +2770,34 @@ def search_listings_by_type(listing_type: str, limit: int = 10) -> List[Dict[str
         session.close()
 
 
-def get_featured_listings(limit: int = 10) -> List[Dict[str, Any]]:
-    """Get featured listings."""
-    session = SessionLocal()
-    try:
-        listings = session.query(PtRtListing)\
-            .filter(PtRtListing.resort_is_featured == 1)\
-            .limit(limit).all()
-        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
-    except Exception as e:
-        print(f"Error in get_featured_listings: {str(e)}")
-        return []
-    finally:
-        session.close()
+# def get_featured_listings(limit: int = 10) -> List[Dict[str, Any]]:
+#     """Get featured listings."""
+#     session = SessionLocal()
+#     try:
+#         listings = session.query(PtRtListing)\
+#             .filter(PtRtListing.resort_is_featured == 1)\
+#             .limit(limit).all()
+#         return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+#     except Exception as e:
+#         print(f"Error in get_featured_listings: {str(e)}")
+#         return []
+#     finally:
+#         session.close()
 
 
-def get_weekend_listings(limit: int = 10) -> List[Dict[str, Any]]:
-    """Get listings with weekend availability."""
-    session = SessionLocal()
-    try:
-        listings = session.query(PtRtListing)\
-            .filter(PtRtListing.has_weekend == 1)\
-            .limit(limit).all()
-        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
-    except Exception as e:
-        print(f"Error in get_weekend_listings: {str(e)}")
-        return []
-    finally:
-        session.close()
+# def get_weekend_listings(limit: int = 10) -> List[Dict[str, Any]]:
+#     """Get listings with weekend availability."""
+#     session = SessionLocal()
+#     try:
+#         listings = session.query(PtRtListing)\
+#             .filter(PtRtListing.has_weekend == 1)\
+#             .limit(limit).all()
+#         return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+#     except Exception as e:
+#         print(f"Error in get_weekend_listings: {str(e)}")
+#         return []
+#     finally:
+#         session.close()
 
 # in live 
 # def search_resorts_by_amenities(amenities: List[str], limit: int = 10) -> List[Dict[str, Any]]:
@@ -3024,9 +3024,9 @@ AVAILABLE_TOOLS = {
     "get_listing_details": get_listing_details,
     "get_amenity_details": get_amenity_details,
     "search_listings_by_type": search_listings_by_type,
-    "get_featured_listings": get_featured_listings,
-    "get_weekend_listings": get_weekend_listings,
-    "get_weekend_listings": get_weekend_listings,
+    # "get_featured_listings": get_featured_listings,
+    # "get_weekend_listings": get_weekend_listings,
+    
     "get_resort_price": get_resort_price,
     "search_resorts_by_amenities": search_resorts_by_amenities,
     "get_price_range_summary": get_price_range_summary

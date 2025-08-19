@@ -72,7 +72,7 @@ st.markdown("""
     }
     
     .stApp {
-        background-color: #000000;
+        background-color: black;
     }
     
     .main-header {
@@ -87,7 +87,7 @@ st.markdown("""
     
     .chat-message {
         padding: 1rem;
-        border-radius: -40px;
+        border-radius: -70px;
         margin: 1rem 0; 
         border-left: 4px solid #4ECDC4;
         background-color: #1a1a1a;
@@ -138,17 +138,27 @@ st.markdown("""
     }
     
     .stTextInput > div > div > input {
-        background-color: #2d2d2d;
-        color: #ffffff;
-        border: 1px solid #4ECDC4;
+        background-color: black;
+        color: white;
+        border: 2.5px solid red;
         border-radius: 10px;
         padding: 0.5rem;
+        box-shadow: 0 0 12px 3px rgba(0, 255, 0, 0.6); /* permanent green glow */
     }
+
     
     .stTextInput > div > div > input:focus {
-        border-color: #FF6B6B;
-        box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2);
+        border-color: red; /* bright green */
+       
+        outline: none; /* removes browser's default blue outline */
     }
+
+
+    .stTextInput > div > div > input::placeholder {
+        color: #E6E5DE;   /* Light gray placeholder */
+        opacity: 1;       /* Ensures color is applied in all browsers */
+    }
+
     
     .stTextInput label {
         color: #ffffff !important;
@@ -159,7 +169,7 @@ st.markdown("""
     }
     
     .stSpinner > div {
-        border-color: #4ECDC4;
+        border-color: blue;
     }
     
     .stError {
