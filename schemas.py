@@ -278,57 +278,6 @@ def get_price_range_summary_schema() -> Dict[str, Any]:
 #         }
 #     }
 
-# def get_resort_details_schema() -> Dict[str, Any]:
-#     """Unified schema for get_resort_details to handle search by ID, Name, or Amenities."""
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "get_resort_details",
-#             "description": (
-#                 "Get resort details or search for resorts by amenities.\n"
-#                 "Modes:\n"
-#                 "1. Provide resort_id or resort_name → returns details for that resort.\n"
-#                 "2. Provide amenities_list → returns resorts that have ALL those amenities.\n"
-#                 "Case-insensitive matching is used for amenities.\n"
-#                 "Results include resort info, amenities, unit types, listings, and top image."
-#             ),
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "resort_id": {
-#                         "type": "integer",
-#                         "description": "The ID of the resort to retrieve details for."
-#                     },
-#                     "resort_name": {
-#                         "type": "string",
-#                         "description": "The name of the resort to retrieve details for (case-insensitive partial match allowed)."
-#                     },
-#                     "amenities_list": {
-#                         "type": "array",
-#                         "items": {"type": "string"},
-#                         "description": (
-#                             "List of amenity names to search for. "
-#                             "Must match all provided amenities (case-insensitive)."
-#                         )
-#                     },
-#                     "amenities_only": {
-#                         "type": "boolean",
-#                         "description": "If true, returns only the amenities for the given resort_id or resort_name."
-#                     },
-#                     "list_resorts_with_amenities": {
-#                         "type": "boolean",
-#                         "description": "If true, lists all resorts with their amenities."
-#                     },
-#                     "limit": {
-#                         "type": "integer",
-#                         "description": "Maximum number of resorts to return. Defaults to 10."
-#                     }
-#                 },
-#                 "required": [],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
 def get_resort_details_schema() -> Dict[str, Any]:
     """Compact schema for get_resort_details to handle ID, Name, or Amenities search."""
     return {
@@ -376,72 +325,6 @@ def get_resort_details_schema() -> Dict[str, Any]:
         }
     }
 
-
-
-# def get_resort_price_schema() -> Dict[str, Any]:
-#     """Auto-generated schema for get_resort_price function."""
-#     return {
-#     "type": "function",
-#     "function": {
-#         "name": "search_available_future_listings_enhanced",
-#         "description": "Enhanced version of get_resort_price with better debugging and flexible matching.",
-#         "parameters": {
-#             "type": "object",
-#             "properties": {
-#                 "resort_name": {
-#                     "type": "string",
-#                     "description": "The resort_name parameter"
-#                 },
-#                 "resort_country": {
-#                     "type": "string",
-#                     "description": "The country parameter"
-#                 },
-#                 "resort_city": {
-#                     "type": "string",
-#                     "description": "The city parameter"
-#                 },
-#                 "resort_state": {
-#                     "type": "string",
-#                     "description": "The state parameter"
-#                 },
-#                 "min_price": {
-#                     "type": "number",
-#                     "description": "The min_price parameter"
-#                 },
-#                 "max_price": {
-#                     "type": "number",
-#                     "description": "The max_price parameter"
-#                 },
-#                 "unit_type": {
-#                     "type": "string",
-#                     "description": "The unit_type parameter"
-#                 },
-#                 "listing_pricing_night": {
-#                     "type": "integer",
-#                     "description": "The nights parameter"
-#                 },
-#                 "currency_code": {
-#                     "type": "string",
-#                     "description": "The currency_code parameter"
-#                 },
-#                 "limit": {
-#                     "type": "integer",
-#                     "description": "The limit parameter"
-#                 },
-#                 "debug": {
-#                     "type": "boolean",
-#                     "description": "The debug parameter"
-#                 },
-#                 "price_sort": {
-#                         "type": "string",
-#                         "description": "Order to sort results by price. Use 'asc' for cheapest listings, 'desc' for most expensive listings."
-#                 }
-#             },
-#             "required": [],
-#             "additionalProperties": False
-#         }
-#     }
-# }
 
 
 def get_resort_price_schema() -> Dict[str, Any]:
@@ -518,42 +401,6 @@ def get_resort_price_schema() -> Dict[str, Any]:
     }
 
 
-
-
-# def get_user_bookings_schema() -> Dict[str, Any]:
-#     """Schema for get_user_bookings function with optional date filters."""
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "get_user_bookings",
-#             "description": "Fetch upcoming and filtered past bookings for a user by email. You can optionally filter past bookings by year, month, or day of check-in date.",
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "user_email": {
-#                         "type": "string",
-#                         "description": "Email address of the user."
-#                     },
-#                     "year": {
-#                         "type": "integer",
-#                         "description": "Filter past and upcoming  bookings by check-in year (e.g., 2023)."
-#                     },
-#                     "month": {
-#                         "type": "integer",
-#                         "description": "Filter past  and upcoming bookings by check-in month (1-12)."
-#                     },
-#                     "day": {
-#                         "type": "integer",
-#                         "description": "Filter past and upcoming bookings by check-in day of month (1-31)."
-#                     }
-#                 },
-#                 "required": ["user_email"],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
-
-
 def get_user_bookings_schema() -> Dict[str, Any]:
     """Schema for get_user_bookings function with optional filters by check-in date (year, month, day)."""
     return {
@@ -593,7 +440,6 @@ def get_user_bookings_schema() -> Dict[str, Any]:
             }
         }
     }
-
 
 
 def get_user_profile_schema() -> Dict[str, Any]:
@@ -641,10 +487,6 @@ def get_user_profile_schema() -> Dict[str, Any]:
 #     }
 # }
 
-
-
-
-
 def search_listings_by_type_schema() -> Dict[str, Any]:
     """Auto-generated schema for search_listings_by_type function."""
     return {
@@ -671,36 +513,8 @@ def search_listings_by_type_schema() -> Dict[str, Any]:
         }
     }
 }
-# in live 
-# def search_resorts_by_amenities_schema() -> Dict[str, Any]:
-#     """Auto-generated schema for search_resorts_by_amenities function."""
-#     return {
-#     "type": "function",
-#     "function": {
-#         "name": "search_resorts_by_amenities",
-#         "description": "Search for resorts that have specific amenities.",
-#         "parameters": {
-#             "type": "object",
-#             "properties": {
-#                 "amenities": {
-#                     "type": "array",
-#                     "items": {
-#                         "type": "string"
-#                     },
-#                     "description": "The amenities parameter"
-#                 },
-#                 "limit": {
-#                     "type": "integer",
-#                     "description": "The limit parameter"
-#                 }
-#             },
-#             "required": [
-#                 "amenities"
-#             ],
-#             "additionalProperties": False
-#         }
-#     }
-# }
+
+
 
 def search_resorts_by_amenities_schema() -> Dict[str, Any]:
     """Schema for search_resorts_by_amenities function."""
@@ -771,67 +585,6 @@ def test_database_connection_schema() -> Dict[str, Any]:
 }
 
 #-----1
-# def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
-#     """Auto-generated schema for search_available_future_listings_enhanced function."""
-#     "If only the month is specified, the year defaults to the current year or resquest (e.g., month=6 means June of the current year). "
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "search_available_future_listings_enhanced",
-#             "description": "Enhanced search for available future listings with fallback options and better user guidance. Returns both results and suggestions for alternative searches when no exact matches are found.",
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "resort_id": {
-#                         "type": "integer",
-#                         "description": "The resort_id parameter"
-#                     },
-#                     "listing_check_in": {
-#                         "type": "string",
-#                         "description": "Check-in date in YYYY-MM-DD format"
-#                     },
-#                     "listing_check_out": {
-#                         "type": "string",
-#                         "description": "Check-out date in YYYY-MM-DD format"
-#                     },
-#                     "listing_price_night": {
-#                         "type": "integer",
-#                         "description": "Number of nights for the stay"
-#                     },
-#                     "resort_country": {
-#                         "type": "string",
-#                         "description": "Country to search in"
-#                     },
-#                     "resort_city": {
-#                         "type": "string",
-#                         "description": "City to search in"
-#                     },
-#                     "month": {
-#                         "type": "integer",
-#                         "description": "Optional filter for the check-in month (1-12). If only month is provided, the year defaults to current year."
-#                     },
-#                     "resort_state": {
-#                         "type": "string",
-#                         "description": "State to search in"
-#                     },
-#                     "limit": {
-#                         "type": "integer",
-#                         "description": "Maximum number of results to return (default: 30)"
-#                     },
-#                     "flexible_dates": {
-#                         "type": "boolean",
-#                         "description": "Whether to search for alternative dates if exact dates not available (default: true)"
-#                     },
-#                     "debug": {
-#                         "type": "boolean",
-#                         "description": "Enable debug output (default: false)"
-#                     }
-#                 },
-#                 "required": [],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
 
 def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
     """Auto-generated schema for search_available_future_listings_enhanced function."""
@@ -840,35 +593,39 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
         "function": {
             "name": "search_available_future_listings_enhanced",
             "description": (
-                "Enhanced search for available future listings with fallback options and better user guidance. "
-                "If only the month is provided (no year), the system applies special rules based on today's date: "
-                "Jun, Jul, Oct → year = 2026; Sep, Nov → year = 2025; Aug → current year (starting from today’s day if in Aug); "
-                "All other months → current year unless the month has already passed, in which case next year is used."
-                "resort name with price based question means to call in this tool  search_available_future_listings_enhanced "
+                "to check the today date first and then check the month and year"
+                "Enhanced search for available future listings. "
+                "Always ensures check-in/check-out dates are in the future. "
+                "If only month is provided (no year), applies rules: "
+                "Jun, Jul, Oct → year = next year; "
+                "Sep, Nov → current year if future, otherwise next year; "
+                "Aug → current year starting from today; "
+                "Other months → current year if still upcoming, otherwise next year. "
+                "This guarantees results are only for future dates."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "resort_id": {"type": "integer", "description": "The resort_id parameter"},
-                    "listing_check_in": {"type": "string", "description": "Check-in date in YYYY-MM-DD format"},
-                    "listing_check_out": {"type": "string", "description": "Check-out date in YYYY-MM-DD format"},
+                    "listing_check_in": {"type": "string", "description": "Check-in date in YYYY-MM-DD format (auto-adjusted to future)"},
+                    "listing_check_out": {"type": "string", "description": "Check-out date in YYYY-MM-DD format (auto-adjusted to future)"},
                     "listing_price_night": {"type": "integer", "description": "Number of nights for the stay"},
                     "resort_country": {"type": "string", "description": "Country to search in"},
                     "resort_city": {"type": "string", "description": "City to search in"},
                     "month": {
                         "type": "integer",
                         "description": (
-                            "Optional filter for the check-in month (1-12). "
-                            "If provided without year, uses special mapping rules based on current date."
+                            "Optional filter for check-in month (1-12). "
+                            "If year not provided, applies future-mapping rules."
                         )
                     },
                     "year": {
                         "type": "integer",
-                        "description": "Optional filter for the check-in year (overrides special rules if provided)"
+                        "description": "Optional filter for check-in year. Overrides default rules if provided."
                     },
                     "resort_state": {"type": "string", "description": "State to search in"},
                     "limit": {"type": "integer", "description": "Maximum number of results to return (default: 30)"},
-                    "flexible_dates": {"type": "boolean", "description": "Whether to search for alternative dates if exact dates not available (default: true)"},
+                    "flexible_dates": {"type": "boolean", "description": "Search for alternative dates if exact not available (default: true)"},
                     "debug": {"type": "boolean", "description": "Enable debug output (default: false)"}
                 },
                 "required": [],
@@ -902,7 +659,6 @@ def get_availability_insights_schema() -> Dict[str, Any]:
         }
     }
 
-
 # Updated get_all_function_schemas to include the new functions
 def get_all_function_schemas() -> List[Dict[str, Any]]:
     """Get all auto-generated OpenAI-compatible function schemas including enhanced versions."""
@@ -923,10 +679,8 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
         # search_resorts_by_amenities_schema(),
         test_database_connection_schema(),
         search_available_future_listings_enhanced_schema(),  # Enhanced version
-        # get_availability_insights_schema(),  # New insights function
+        
     ]
-
-
 
 # Export all schemas as a list
 ALL_FUNCTION_SCHEMAS = get_all_function_schemas()

@@ -645,10 +645,14 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 #----------search_avaliable_future.....
 
-def get_month_year_range(month_input, year_input=None):
+
+from datetime import datetime, timedelta
+import calendar
+
+def get_month_year_range(month_input: str, year_input: int = None):
     """
     Convert month (and optional year) into check-in and check-out date strings.
-    Automatically determines year based on today's date if year not provided.
+    Always ensures the returned range is in the future (relative to today).
     """
     today = datetime.today()
     month_str = str(month_input).strip().lower()
@@ -662,173 +666,24 @@ def get_month_year_range(month_input, year_input=None):
     except ValueError:
         raise ValueError(f"Invalid month: {month_input}")
 
-    # Determine year
+    # Decide year
     if year_input:
-        year = int(year_input)
+        year = year_input
     else:
-        if month_num < today.month:
-            year = today.year + 1  # Month passed this year → next year
-        else:
-            year = today.year      # Month still upcoming this year
+        year = today.year
+        # If month has already passed this year, push to next year
+        if month_num < today.month or (month_num == today.month and today.day > 1):
+            year += 1
 
-    # Start day
-    if month_num == today.month and year == today.year and today.day > 1:
-        start_day = today.day
-    else:
-        start_day = 1
+    # First and last day of the target month
+    first_day = datetime(year, month_num, 1)
+    last_day = datetime(year, month_num, calendar.monthrange(year, month_num)[1])
 
-    # End day
-    _, last_day = monthrange(year, month_num)
+    # Ensure check-in is always in the future
+    if first_day < today:
+        first_day = today + timedelta(days=1)
 
-    check_in = datetime(year, month_num, start_day).strftime("%Y-%m-%d")
-    check_out = datetime(year, month_num, last_day).strftime("%Y-%m-%d")
-
-    return check_in, check_out
-
-# def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
-#     """
-#     Dynamically filters PtRtListing based on provided keyword arguments.
-
-#     Features:
-#       - Keyword-based search (case-insensitive for strings)
-#       - Date range or year/month/day filtering (auto month-year detection)
-#       - Sorting and limiting results
-#       - Optional update of matching rows via 'update_fields' dict
-#       - Fallback to cheapest listings for the month if no exact match
-#     """
-#     session = SessionLocal()
-
-#     try:
-#         query = session.query(PtRtListing).distinct()
-#         filter_conditions = []
-
-#         # Non-date filters
-#         skip_fields = {
-#             'year', 'month', 'day', 'listing_check_in', 'listing_check_out',
-#             'price_sort', 'limit', 'update_fields'
-#         }
-#         for field_name, value in filters.items():
-#             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
-#                 column = getattr(PtRtListing, field_name)
-#                 if isinstance(value, str):
-#                     filter_conditions.append(column.ilike(f"%{value.strip()}%"))
-#                 else:
-#                     filter_conditions.append(column == value)
-
-#         # Date filters
-#         exact_date_filter = False
-#         check_in_str = filters.get('listing_check_in')
-#         check_out_str = filters.get('listing_check_out')
-#         year, month, day = filters.get('year'), filters.get('month'), filters.get('day')
-
-#         try:
-#             if check_in_str and check_out_str:
-#                 check_in_start = datetime.strptime(check_in_str, "%Y-%m-%d")
-#                 check_in_end = datetime.strptime(check_out_str, "%Y-%m-%d")
-#                 filter_conditions.extend([
-#                     PtRtListing.listing_check_in >= check_in_start,
-#                     PtRtListing.listing_check_in <= check_in_end
-#                 ])
-#                 exact_date_filter = True
-#             elif month and not check_in_str and not check_out_str:
-#                 # Auto-generate check-in/out based on month/year
-#                 ci_str, co_str = get_month_year_range(month, year)
-#                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
-#                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
-#                 filter_conditions.extend([
-#                     PtRtListing.listing_check_in >= check_in_start,
-#                     PtRtListing.listing_check_in <= check_in_end
-#                 ])
-#                 exact_date_filter = True
-#             elif year or day:
-#                 col = PtRtListing.listing_check_in
-#                 if year and month and day:
-#                     filter_conditions.append(and_(
-#                         extract('year', col) == int(year),
-#                         extract('month', col) == int(month),
-#                         extract('day', col) == int(day)
-#                     ))
-#                 elif year and month:
-#                     filter_conditions.append(and_(
-#                         extract('year', col) == int(year),
-#                         extract('month', col) == int(month)
-#                     ))
-#                 elif year:
-#                     filter_conditions.append(extract('year', col) == int(year))
-#                 elif day:
-#                     filter_conditions.append(extract('day', col) == int(day))
-#                 exact_date_filter = True
-#         except ValueError as ve:
-#             print(f"⚠ Date parsing error: {ve}")
-
-#         # Apply filters
-#         if filter_conditions:
-#             query = query.filter(and_(*filter_conditions))
-
-#         from sqlalchemy import asc, desc, func, case
-
-#     # Sorting / Price Filtering
-#     price_sort = filters.get('price_sort', 'asc')
-#     price_col = PtRtListing.listing_price_night
-
-#     if price_sort == 'asc':
-#         query = query.order_by(asc(price_col))
-
-#     elif price_sort == 'desc':
-#         query = query.order_by(desc(price_col))
-
-#     elif price_sort == 'avg_price':
-#         avg_price_col = func.avg(price_col).label('avg_price')
-#         query = query.group_by(PtRtListing.resort_id).order_by(asc(avg_price_col))
-
-#     elif price_sort == 'cheapest':
-#         query = query.filter(price_col <= 333).order_by(asc(price_col))
-
-#     elif price_sort == 'average':
-#         query = query.filter(price_col.between(334, 666)).order_by(asc(price_col))
-
-#     elif price_sort == 'highest':
-#         query = query.filter(price_col >= 667).order_by(desc(price_col))
-
-#         # Limit
-#         limit = int(filters.get('limit', 5))
-#         results = query.limit(limit * 20).all()
-
-#         # Optional update
-#         update_fields = filters.get('update_fields')
-#         if update_fields and isinstance(update_fields, dict) and results:
-#             for listing in results:
-#                 for field, value in update_fields.items():
-#                     if hasattr(listing, field):
-#                         setattr(listing, field, value)
-#             session.commit()
-#             print(f"✅ Updated {len(results)} listings.")
-
-#         # Deduplicate
-#         unique_results = deduplicate_by_resort_id(results)
-
-#         # Fallback if no results
-#         if not unique_results and exact_date_filter:
-#             try:
-#                 ci_date = datetime.strptime(ci_str if check_in_str is None else check_in_str, "%Y-%m-%d")
-#                 fallback_query = session.query(PtRtListing).filter(
-#                     extract('month', PtRtListing.listing_check_in) == ci_date.month,
-#                     extract('year', PtRtListing.listing_check_in) == ci_date.year
-#                 ).order_by(asc(price_col)).limit(limit * 10)
-#                 unique_results = deduplicate_by_resort_id(fallback_query.all())
-#                 print("⚠ No exact matches found. Fallback results returned.")
-#             except Exception as e:
-#                 print(f"⚠ Fallback search failed: {e}")
-
-#         return [model_to_dict(listing) for listing in unique_results[:limit]]
-
-#     except Exception as e:
-#         print(f"❌ Error in search_available_future_listings_enhanced: {str(e)}")
-#         session.rollback()
-#         return []
-
-#     finally:
-#         session.close()
+    return first_day.strftime("%Y-%m-%d"), last_day.strftime("%Y-%m-%d")
 
 
 
@@ -860,6 +715,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
         try:
             if check_in_str and check_out_str:
+                # Explicit date range
                 check_in_start = datetime.strptime(check_in_str, "%Y-%m-%d")
                 check_in_end = datetime.strptime(check_out_str, "%Y-%m-%d")
                 filter_conditions.extend([
@@ -869,6 +725,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 exact_date_filter = True
 
             elif month and not check_in_str and not check_out_str:
+                # Use helper to get future month/year range
                 ci_str, co_str = get_month_year_range(month, year)
                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
@@ -879,6 +736,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 exact_date_filter = True
 
             elif year or day:
+                # Direct year/month/day extraction
                 col = PtRtListing.listing_check_in
                 if year and month and day:
                     filter_conditions.append(and_(
@@ -896,6 +754,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 elif day:
                     filter_conditions.append(extract('day', col) == int(day))
                 exact_date_filter = True
+
         except ValueError as ve:
             print(f"⚠ Date parsing error: {ve}")
 
@@ -904,62 +763,40 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
         # Sorting / Price filtering
         price_sort = filters.get('price_sort', 'asc')
-
-        # Cast to numeric before using ABS
         price_col_numeric = cast(PtRtListing.listing_price_night, Numeric)
 
         if price_sort == 'asc':
             query = query.order_by(asc(func.abs(price_col_numeric)))
-            # print("Query:",query)
 
         elif price_sort == 'desc':
             query = query.order_by(desc(func.abs(price_col_numeric)))
-            # print("Query:",query)
 
         elif price_sort == 'avg_price':
-            # Calculate overall average price
-            overall_avg = session.query(func.avg(price_col_numeric)).scalar()
-
-            # Subquery with price difference from avg
-            subquery = (
-                session.query(
-                    PtRtListing.resort_id,
-                    PtRtListing.resort_name,
-                    price_col_numeric.label("price"),
-                    func.abs(price_col_numeric - overall_avg).label("price_diff"),
-                    PtRtListing.listing_check_in
-                )
-                .subquery()
+            avg_price_col = func.avg(func.abs(price_col_numeric)).label('avg_price')
+            avg_query = session.query(
+                PtRtListing.resort_id,
+                func.min(PtRtListing.resort_name).label('resort_name'),
+                avg_price_col
             )
-
-            # Main query: pick closest prices around average
-            avg_query = (
-                session.query(
-                    subquery.c.resort_id,
-                    subquery.c.resort_name,
-                    subquery.c.price
-                )
-            )
-
-            # Apply month/year filter if given
+            # Filter by month/year
             if month:
-                avg_query = avg_query.filter(extract('month', subquery.c.listing_check_in) == int(month))
-            if year:
-                avg_query = avg_query.filter(extract('year', subquery.c.listing_check_in) == int(year))
+                ci_str, _ = get_month_year_range(month, year)
+                ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
+                avg_query = avg_query.filter(extract('month', PtRtListing.listing_check_in) == ci_date.month)
+                avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == ci_date.year)
+            elif year:
+                avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == int(year))
 
-            # Order by closeness to average and apply limit
-            query = avg_query.order_by(subquery.c.price_diff.asc()).limit(limit)
-
-            # print("Query:", query)
+            query = avg_query.group_by(PtRtListing.resort_id).order_by(asc(avg_price_col))
 
         elif price_sort == 'cheapest':
-            query = query.filter(price_col <= 333).order_by(asc(price_col))
+            query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
 
         elif price_sort == 'average':
-            query = query.filter(price_col.between(334, 666)).order_by(asc(price_col))
+            query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
 
         elif price_sort == 'highest':
-            query = query.filter(price_col >= 667).order_by(desc(price_col))
+            query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
 
         # Limit
         limit = int(filters.get('limit', 5))
@@ -975,27 +812,27 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
             session.commit()
             print(f"✅ Updated {len(results)} listings.")
 
-        # Deduplicate (only for non-avg_price case)
+        # Deduplicate
         if price_sort != 'avg_price':
             unique_results = deduplicate_by_resort_id(results)
         else:
-            unique_results = results  # already grouped by resort_id
+            unique_results = results
 
-        # Fallback
+        # Fallback if no matches
         if not unique_results and exact_date_filter:
             try:
-                ci_date = datetime.strptime(ci_str if check_in_str is None else check_in_str, "%Y-%m-%d")
+                ci_str, _ = get_month_year_range(month or datetime.today().month, year)
+                ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
                 fallback_query = session.query(PtRtListing).filter(
                     extract('month', PtRtListing.listing_check_in) == ci_date.month,
                     extract('year', PtRtListing.listing_check_in) == ci_date.year
-                ).order_by(asc(price_col)).limit(limit * 10)
+                ).order_by(asc(func.abs(price_col_numeric))).limit(limit * 10)
                 unique_results = deduplicate_by_resort_id(fallback_query.all())
                 print("⚠ No exact matches found. Fallback results returned.")
             except Exception as e:
                 print(f"⚠ Fallback search failed: {e}")
 
         return [model_to_dict(listing) for listing in unique_results[:limit]]
-        print("Listing")
 
     except Exception as e:
         print(f"❌ Error in search_available_future_listings_enhanced: {str(e)}")
@@ -1004,6 +841,8 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
     finally:
         session.close()
+
+
 
 
 #----------search_avaliable_future..... end 
@@ -2770,34 +2609,34 @@ def search_listings_by_type(listing_type: str, limit: int = 10) -> List[Dict[str
         session.close()
 
 
-# def get_featured_listings(limit: int = 10) -> List[Dict[str, Any]]:
-#     """Get featured listings."""
-#     session = SessionLocal()
-#     try:
-#         listings = session.query(PtRtListing)\
-#             .filter(PtRtListing.resort_is_featured == 1)\
-#             .limit(limit).all()
-#         return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
-#     except Exception as e:
-#         print(f"Error in get_featured_listings: {str(e)}")
-#         return []
-#     finally:
-#         session.close()
+def get_featured_listings(limit: int = 10) -> List[Dict[str, Any]]:
+    """Get featured listings."""
+    session = SessionLocal()
+    try:
+        listings = session.query(PtRtListing)\
+            .filter(PtRtListing.resort_is_featured == 1)\
+            .limit(limit).all()
+        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+    except Exception as e:
+        print(f"Error in get_featured_listings: {str(e)}")
+        return []
+    finally:
+        session.close()
 
 
-# def get_weekend_listings(limit: int = 10) -> List[Dict[str, Any]]:
-#     """Get listings with weekend availability."""
-#     session = SessionLocal()
-#     try:
-#         listings = session.query(PtRtListing)\
-#             .filter(PtRtListing.has_weekend == 1)\
-#             .limit(limit).all()
-#         return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
-#     except Exception as e:
-#         print(f"Error in get_weekend_listings: {str(e)}")
-#         return []
-#     finally:
-#         session.close()
+def get_weekend_listings(limit: int = 10) -> List[Dict[str, Any]]:
+    """Get listings with weekend availability."""
+    session = SessionLocal()
+    try:
+        listings = session.query(PtRtListing)\
+            .filter(PtRtListing.has_weekend == 1)\
+            .limit(limit).all()
+        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+    except Exception as e:
+        print(f"Error in get_weekend_listings: {str(e)}")
+        return []
+    finally:
+        session.close()
 
 # in live 
 # def search_resorts_by_amenities(amenities: List[str], limit: int = 10) -> List[Dict[str, Any]]:
@@ -3024,9 +2863,9 @@ AVAILABLE_TOOLS = {
     "get_listing_details": get_listing_details,
     "get_amenity_details": get_amenity_details,
     "search_listings_by_type": search_listings_by_type,
-    # "get_featured_listings": get_featured_listings,
-    # "get_weekend_listings": get_weekend_listings,
-    
+    "get_featured_listings": get_featured_listings,
+    "get_weekend_listings": get_weekend_listings,
+    "get_weekend_listings": get_weekend_listings,
     "get_resort_price": get_resort_price,
     "search_resorts_by_amenities": search_resorts_by_amenities,
     "get_price_range_summary": get_price_range_summary
