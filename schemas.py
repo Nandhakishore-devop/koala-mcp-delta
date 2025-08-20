@@ -593,16 +593,13 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
         "function": {
             "name": "search_available_future_listings_enhanced",
             "description": (
-                "to check the today date first and then check the month and year"
                 "Enhanced search for available future listings. "
                 "Always ensures check-in/check-out dates are in the future. "
-                "If only month is provided (no year), applies rules: "
-                "Jun, Jul, Oct → year = next year; "
-                "Sep, Nov → current year if future, otherwise next year; "
-                "Aug → current year starting from today; "
-                "Other months → current year if still upcoming, otherwise next year. "
-                "This guarantees results are only for future dates."
-            ),
+                "If only month is provided (no year), the system automatically selects "
+                "the *next upcoming occurrence of that month*. "
+                "If year is also provided, that exact year is used (even if past)."
+            ),  
+
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -628,6 +625,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                     "flexible_dates": {"type": "boolean", "description": "Search for alternative dates if exact not available (default: true)"},
                     "debug": {"type": "boolean", "description": "Enable debug output (default: false)"}
                 },
+                
                 "required": [],
                 "additionalProperties": False
             }

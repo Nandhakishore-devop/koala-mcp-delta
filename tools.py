@@ -835,7 +835,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
         return [model_to_dict(listing) for listing in unique_results[:limit]]
 
     except Exception as e:
-        print(f"❌ Error in search_available_future_listings_enhanced: {str(e)}")
+        print(f"❌ Error rub: in search_available_future_listings_enhanced: {str(e)}")
         session.rollback()
         return []
 
