@@ -266,20 +266,13 @@ This project is for educational purposes and demonstrates OpenAI function callin
 ## To run streamlit
 - pip install streamlit
 
-streamlit run streamlit_app.py
-
-
-
-
-
-
-
+    streamlit run streamlit_app.py
 
 
 # simpel-steps -ruban
 
 MCP/
-├── venv/                    # Virtual environment
+├── venv/                    # Virtual environment  
 ├── requirements.txt         # Python dependencies
 ├── schemas.py              # OpenAI function schemas (manual)
 ├── tools.py                # Tool functions with SQLAlchemy
