@@ -646,9 +646,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 #----------search_avaliable_future.....
 
 
-from datetime import datetime, timedelta
-import calendar
-
 def get_month_year_range(month_input: str, year_input: int = None):
     """
     Convert month (and optional year) into check-in and check-out date strings.
@@ -1728,8 +1725,6 @@ def get_resort_price(
 #     finally:
 #         session.close()
 
-
-
 # BASE_URL = "https://dev.go-koala.com/uploads/resorts"
 
 # def get_resort_details(
@@ -1740,197 +1735,202 @@ def get_resort_price(
 #     list_resorts_with_amenities: bool = False,
 #     limit: int = 5
 # ) -> Dict[str, Any]:
-    """
-    Get resort details or filter resorts by amenities.
-    """
-    session: Session = SessionLocal()
-    try:
-        # -------------------------
-        # CASE 1: All resorts with amenities
-        # -------------------------
-        if list_resorts_with_amenities:
-            resorts = session.query(Resort).filter(Resort.has_deleted == 0).all()
-            return {
-                "resorts_with_amenities": [
-                    {
-                        "resort_id": r.id,
-                        "resort_name": r.name,
-                        "amenities": [
-                            {"id": a.id, "name": a.name}
-                            for a in session.query(Amenity.id, Amenity.name)
-                            .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
-                            .filter(
-                                ResortAmenity.resort_id == r.id,
-                                or_(*[Amenity.name.ilike(f"%{amenity}%") for amenity in amenities_list])
-                                if amenities_list else True
-                            )
-                            .all()
-                        ]
-                    }
-                    for r in resorts
-                ]
-            }
 
-        # -------------------------
-        # CASE 2: Single resort details by ID or Name
-        # -------------------------
-        elif resort_id or resort_name:
-            query = (
-                session.query(Resort)
-                .join(User, Resort.creator_id == User.id)
-                .filter(Resort.has_deleted == 0)
-            )
-            if resort_id:
-                query = query.filter(Resort.id == resort_id)
-            else:
-                query = query.filter(Resort.name.ilike(f"%{resort_name.strip()}%"))
+#     """
+#     Get resort details or filter resorts by amenities.
+#     """
+#     session: Session = SessionLocal()
+#     try:
+#         # -------------------------
+#         # CASE 1: All resorts with amenities
+#         # -------------------------
+#         if list_resorts_with_amenities:
+#             resorts = session.query(Resort).filter(Resort.has_deleted == 0).all()
+#             return {
+#                 "resorts_with_amenities": [
+#                     {
+#                         "resort_id": r.id,
+#                         "resort_name": r.name,
+#                         "amenities": [
+#                             {"id": a.id, "name": a.name}
+#                             for a in session.query(Amenity.id, Amenity.name)
+#                             .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
+#                             .filter(
+#                                 ResortAmenity.resort_id == r.id,
+#                                 or_(*[Amenity.name.ilike(f"%{amenity}%") for amenity in amenities_list])
+#                                 if amenities_list else True
+#                             )
+#                             .all()
+#                         ]
+#                     }
+#                     for r in resorts
+#                 ]
+#             }
 
-            resort = query.first()
-            if not resort:
-                return {"error": "Resort not found with the given identifier."}
+#         # -------------------------
+#         # CASE 2: Single resort details by ID or Name
+#         # -------------------------
+#         elif resort_id or resort_name:
+#             query = (
+#                 session.query(Resort)
+#                 .join(User, Resort.creator_id == User.id)
+#                 .filter(Resort.has_deleted == 0)
+#             )
+#             if resort_id:
+#                 query = query.filter(Resort.id == resort_id)
+#             else:
+#                 query = query.filter(Resort.name.ilike(f"%{resort_name.strip()}%"))
 
-            amenities_data = [
-                {"id": a.id, "name": a.name}
-                for a in session.query(Amenity.id, Amenity.name)
-                .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
-                .filter(ResortAmenity.resort_id == resort.id)
-                .all()
-            ]
+#             resort = query.first()
+#             if not resort:
+#                 return {"error": "Resort not found with the given identifier."}
 
-            if amenities_only:
-                return {
-                    "resort_id": resort.id,
-                    "resort_name": resort.name,
-                    "amenities": amenities_data
-                }
+#             amenities_data = [
+#                 {"id": a.id, "name": a.name}
+#                 for a in session.query(Amenity.id, Amenity.name)
+#                 .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
+#                 .filter(ResortAmenity.resort_id == resort.id)
+#                 .all()
+#             ]
 
-            # Top image
-            top_image = (
-                session.query(ResortImage)
-                .filter(ResortImage.resort_id == resort.id)
-                .order_by(ResortImage.image_order.asc())
-                .first()
-            )
-            image_data = (
-                {
-                    "id": top_image.id,
-                    "filename": top_image.image,
-                    "image_order": top_image.image_order,
-                    "url": f"{BASE_URL}/{resort.id}/{top_image.image}"
-                }
-                if top_image and top_image.image
-                else None
-            )
+#             if amenities_only:
+#                 return {
+#                     "resort_id": resort.id,
+#                     "resort_name": resort.name,
+#                     "amenities": amenities_data
+#                 }
 
-            # Unit types
-            unit_types = session.query(UnitType).filter(
-                UnitType.resort_id == resort.id, UnitType.has_deleted == 0
-            ).all()
+#             # Top image
+#             top_image = (
+#                 session.query(ResortImage)
+#                 .filter(ResortImage.resort_id == resort.id)
+#                 .order_by(ResortImage.image_order.asc())
+#                 .first()
+#             )
+#             image_data = (
+#                 {
+#                     "id": top_image.id,
+#                     "filename": top_image.image,
+#                     "image_order": top_image.image_order,
+#                     "url": f"{BASE_URL}/{resort.id}/{top_image.image}"
+#                 }
+#                 if top_image and top_image.image
+#                 else None
+#             )
 
-            # Listings by status
-            statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']
-            listings_stats = {
-                status: session.query(Listing).filter(
-                    Listing.resort_id == resort.id,
-                    Listing.has_deleted == 0,
-                    Listing.status == status
-                ).count()
-                for status in statuses
-            }
+#             # Unit types
+#             unit_types = session.query(UnitType).filter(
+#                 UnitType.resort_id == resort.id, UnitType.has_deleted == 0
+#             ).all()
 
-            # Total bookings
-            total_bookings = session.query(Booking).join(
-                Listing, Booking.listing_id == Listing.id
-            ).filter(Listing.resort_id == resort.id).count()
+#             # Listings by status
+#             statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']
+#             listings_stats = {
+#                 status: session.query(Listing).filter(
+#                     Listing.resort_id == resort.id,
+#                     Listing.has_deleted == 0,
+#                     Listing.status == status
+#                 ).count()
+#                 for status in statuses
+#             }
 
-            return {
-                "id": resort.id,
-                "name": resort.name,
-                "slug": resort.slug,
-                "address": resort.address,
-                "city": resort.city,
-                "state": resort.state,
-                "country": resort.country,
-                "zip": resort.zip,
-                "county": resort.county,
-                "lattitude": resort.lattitude,
-                "longitude": resort.longitude,
-                "highlight_quote": resort.highlight_quote,
-                "description": resort.description,
-                "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
-                "creator_email": resort.creator.email,
-                "status": resort.status,
-                "unit_types": [
-                    {"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types
-                ],
-                "listings_by_status": listings_stats,
-                "total_bookings": total_bookings,
-                "top_image": image_data,
-                "amenities": amenities_data
-            }
+#             # Total bookings
+#             total_bookings = session.query(Booking).join(
+#                 Listing, Booking.listing_id == Listing.id
+#             ).filter(Listing.resort_id == resort.id).count()
 
-        # -------------------------
-        # CASE 3: Amenities-only search
-        # -------------------------
-        elif amenities_list:
-            # Step 1: Find amenity IDs (case-insensitive)
-            amenity_ids = [
-                a[0]
-                for a in session.query(Amenity.id)
-                .filter(func.lower(Amenity.name).in_([name.lower() for name in amenities_list]))
-                .all()
-            ]
-            if not amenity_ids:
-                return {"error": "No amenities found for the given names."}
+#             return {
+#                 "id": resort.id,
+#                 "name": resort.name,
+#                 "slug": resort.slug,
+#                 "address": resort.address,
+#                 "city": resort.city,
+#                 "state": resort.state,
+#                 "country": resort.country,
+#                 "zip": resort.zip,
+#                 "county": resort.county,
+#                 "lattitude": resort.lattitude,
+#                 "longitude": resort.longitude,
+#                 "highlight_quote": resort.highlight_quote,
+#                 "description": resort.description,
+#                 "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
+#                 "creator_email": resort.creator.email,
+#                 "status": resort.status,
+#                 "unit_types": [
+#                     {"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types
+#                 ],
+#                 "listings_by_status": listings_stats,
+#                 "total_bookings": total_bookings,
+#                 "top_image": image_data,
+#                 "amenities": amenities_data
+#             }
 
-            # Step 2: Resorts with ALL those amenities
-            resort_ids = [
-                r[0]
-                for r in session.query(ResortAmenity.resort_id)
-                .filter(ResortAmenity.amenity_id.in_(amenity_ids))
-                .group_by(ResortAmenity.resort_id)
-                .having(func.count(ResortAmenity.amenity_id) == len(amenity_ids))
-                .all()
-            ]
-            if not resort_ids:
-                return {"error": "No resorts found with the given amenities."}
+#         # -------------------------
+#         # CASE 3: Amenities-only search
+#         # -------------------------
+#         elif amenities_list:
+#             # Step 1: Find amenity IDs (case-insensitive)
+#             amenity_ids = [
+#                 a[0]
+#                 for a in session.query(Amenity.id)
+#                 .filter(func.lower(Amenity.name).in_([name.lower() for name in amenities_list]))
+#                 .all()
+#             ]
+#             if not amenity_ids:
+#                 return {"error": "No amenities found for the given names."}
 
-            # Step 3: Fetch resort details
-            resorts = session.query(Resort).filter(
-                Resort.id.in_(resort_ids), Resort.has_deleted == 0
-            ).limit(limit).all()
+#             # Step 2: Resorts with ALL those amenities
+#             resort_ids = [
+#                 r[0]
+#                 for r in session.query(ResortAmenity.resort_id)
+#                 .filter(ResortAmenity.amenity_id.in_(amenity_ids))
+#                 .group_by(ResortAmenity.resort_id)
+#                 .having(func.count(ResortAmenity.amenity_id) == len(amenity_ids))
+#                 .all()
+#             ]
+#             if not resort_ids:
+#                 return {"error": "No resorts found with the given amenities."}
 
-            return {
-                "resorts": [
-                    {
-                        "resort_id": r.id,
-                        "resort_name": r.name,
-                        "amenities": [
-                            {"id": a.id, "name": a.name}
-                            for a in session.query(Amenity.id, Amenity.name)
-                            .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
-                            .filter(ResortAmenity.resort_id == r.id)
-                            .all()
-                        ]
-                    }
-                    for r in resorts
-                ]
-            }
+#             # Step 3: Fetch resort details
+#             resorts = session.query(Resort).filter(
+#                 Resort.id.in_(resort_ids), Resort.has_deleted == 0
+#             ).limit(limit).all()
 
-        return {"error": "Please provide either resort_id, resort_name, or amenities_list."}
+#             return {
+#                 "resorts": [
+#                     {
+#                         "resort_id": r.id,
+#                         "resort_name": r.name,
+#                         "amenities": [
+#                             {"id": a.id, "name": a.name}
+#                             for a in session.query(Amenity.id, Amenity.name)
+#                             .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
+#                             .filter(ResortAmenity.resort_id == r.id)
+#                             .all()
+#                         ]
+#                     }
+#                     for r in resorts
+#                 ]
+#             }
 
-    except Exception as e:
-        print(f"[ERROR] Failed to fetch resort details: {e}")
-        return {"error": f"Exception occurred: {e}"}
+#         return {"error": "Please provide either resort_id, resort_name, or amenities_list."}
 
-    finally:
-        session.close()
+#     except Exception as e:
+#         print(f"[ERROR] Failed to fetch resort details: {e}")
+#         return {"error": f"Exception occurred: {e}"}
+
+#     finally:
+#         session.close()
 
 
-BASE_URL = "https://koalaadmin-prod.s3.us-east-2.amazonaws.com/uploads/resorts" # live url
+
+
+
+
+
 
 # BASE_URL = "https://dev.go-koala.com/uploads/resorts"
-
+BASE_URL = "https://koalaadmin-prod.s3.us-east-2.amazonaws.com/uploads/resorts" # live url
 def get_resort_details(
     resort_id: Optional[int] = None,
     resort_name: Optional[str] = None,  
@@ -2313,7 +2313,6 @@ def get_resort_details(
 
 #     finally:
 #         session.close()
-
 
 
 
