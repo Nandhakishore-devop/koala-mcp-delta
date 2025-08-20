@@ -16,6 +16,7 @@ class AssistantThread:
                     "-If today’s date is past that month in the current year, interpret it as that month in the next year."
                     "-If today’s date is before or during that month, interpret it as that month in the current year."
                     "-Never return a past date"
+                    
 
                     "Follow these instructions:"
 
