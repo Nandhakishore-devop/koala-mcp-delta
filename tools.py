@@ -646,10 +646,63 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 #----------search_avaliable_future.....
 
 
+# def get_month_year_range(month_input: str, year_input: int = None):
+#     """
+#     Convert month (and optional year) into check-in and check-out date strings.
+#     Always ensures the returned range is in the future (relative to today).
+#     """
+#     today = datetime.today()
+#     month_str = str(month_input).strip().lower()
+
+#     # Convert month name/abbr/number to month number
+#     try:
+#         if month_str.isdigit():
+#             month_num = int(month_str)
+#         else:
+#             month_num = datetime.strptime(month_str[:3], "%b").month
+#     except ValueError:
+#         raise ValueError(f"Invalid month: {month_input}")
+
+#     # Decide year
+#     if year_input:
+#         year = year_input
+#     else:
+#         year = today.year
+#         # If month has already passed this year, push to next year
+#         if month_num < today.month or (month_num == today.month and today.day > 1):
+#             year += 1
+
+#     # First and last day of the target month
+#     first_day = datetime(year, month_num, 1)
+#     last_day = datetime(year, month_num, calendar.monthrange(year, month_num)[1])
+
+#     # Ensure check-in is always in the future
+#     if first_day < today:
+#         first_day = today + timedelta(days=1)
+
+#     return first_day.strftime("%Y-%m-%d"), last_day.strftime("%Y-%m-%d")
+
+
+def normalize_future_dates(check_in_str: str, check_out_str: str):
+    """
+    Ensure dates are always in the future relative to system's real date.
+    If GPT sends old year (e.g., 2023), bump them forward until >= today.
+    """
+    today = datetime.today()
+    ci = datetime.strptime(check_in_str, "%Y-%m-%d")
+    co = datetime.strptime(check_out_str, "%Y-%m-%d")
+
+    # If both are in the past, push forward year by year
+    while co < today:
+        ci = ci.replace(year=ci.year + 1)
+        co = co.replace(year=co.year + 1)
+
+    return ci.strftime("%Y-%m-%d"), co.strftime("%Y-%m-%d")
+    
 def get_month_year_range(month_input: str, year_input: int = None):
     """
     Convert month (and optional year) into check-in and check-out date strings.
-    Always ensures the returned range is in the future (relative to today).
+    Always resolves to the next occurrence of that month in the future.
     """
     today = datetime.today()
     month_str = str(month_input).strip().lower()
@@ -669,20 +722,29 @@ def get_month_year_range(month_input: str, year_input: int = None):
     else:
         year = today.year
         # If month has already passed this year, push to next year
-        if month_num < today.month or (month_num == today.month and today.day > 1):
+        if month_num < today.month:
             year += 1
+
+    # # First and last day of the target month
+    # first_day = datetime(year, month_num, 1)
+    # last_day = datetime(year, month_num, calendar.monthrange(year, month_num)[1])
+
+    # return first_day.strftime("%Y-%m-%d"), last_day.strftime("%Y-%m-%d")
 
     # First and last day of the target month
     first_day = datetime(year, month_num, 1)
     last_day = datetime(year, month_num, calendar.monthrange(year, month_num)[1])
 
-    # Ensure check-in is always in the future
-    if first_day < today:
-        first_day = today + timedelta(days=1)
+    # ✅ Ensure not in the past
+    ci_str, co_str = normalize_future_dates(
+        first_day.strftime("%Y-%m-%d"),
+        last_day.strftime("%Y-%m-%d"),
+        
+    )
+    # print(f"Month/Year Range: {ci_str} to {co_str}")
+    return ci_str, co_str
 
-    return first_day.strftime("%Y-%m-%d"), last_day.strftime("%Y-%m-%d")
-
-
+     
 
 def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
     session = SessionLocal()
@@ -711,15 +773,27 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
         year, month, day = filters.get('year'), filters.get('month'), filters.get('day')
 
         try:
+            # if check_in_str and check_out_str:
+            #     # Explicit date range
+            #     check_in_start = datetime.strptime(check_in_str, "%Y-%m-%d")
+            #     check_in_end = datetime.strptime(check_out_str, "%Y-%m-%d")
+            #     filter_conditions.extend([
+            #         PtRtListing.listing_check_in >= check_in_start,
+            #         PtRtListing.listing_check_in <= check_in_end
+            #     ])
+            #     exact_date_filter = True
+
             if check_in_str and check_out_str:
                 # Explicit date range
-                check_in_start = datetime.strptime(check_in_str, "%Y-%m-%d")
-                check_in_end = datetime.strptime(check_out_str, "%Y-%m-%d")
+                ci_str, co_str = normalize_future_dates(check_in_str, check_out_str)
+                check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
+                check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
                 filter_conditions.extend([
                     PtRtListing.listing_check_in >= check_in_start,
                     PtRtListing.listing_check_in <= check_in_end
                 ])
                 exact_date_filter = True
+
 
             elif month and not check_in_str and not check_out_str:
                 # Use helper to get future month/year range

@@ -1,7 +1,14 @@
 import uuid
+import datetime
 
+def get_current_year():
+    return datetime.datetime.now().year
+   
 class AssistantThread:
     def __init__(self):
+        current_year = get_current_year()
+        today = datetime.datetime.now()
+        # print(f"Current year is {current_year}")
         self.thread_id = str(uuid.uuid4())
         self.messages = [
             {                                
@@ -12,13 +19,13 @@ class AssistantThread:
                     "Your role is to guide users in finding and booking resorts in a way that is clear, engaging, and easy to understand."
 
                     "Rule"
-                    "Whenever the user asks for data by month (e.g., “fetch July data”), always resolve it to the next occurrence of that month in the future relative to today’s date."
-                    "-If today’s date is past that month in the current year, interpret it as that month in the next year."
+                    "today's date is {today}, current year is {current_year}."
+                    "When the user asks for data by month (e.g., “fetch July data”), always resolve it to the next occurrence of that month in the future relative to today’s date."
+                   "-If today’s date is past that month in the current year, interpret it as that month in the next year."
                     "-If today’s date is before or during that month, interpret it as that month in the current year."
-                    # "If today’s date is within that same month, resolve to the remaining days of the month starting from tomorrow (today+1) up to the end of that month".
-                     "-Never return a past date"
+                    "-Never return a past date"
 
-                    "Follow these instructions:"
+                    "Follow these instructions:"  
                      "- if any url dont print  the url, just print the resort image"
                      "- limit the response min 3 to max 10 resorts any thing details  default = 3 ,example : ask for 5 resorts, then return 5 resorts , if comman question like 'show me resort or resorts singlur or pural both are same' then return 3 resorts"
                     "- and emoji as per the category of the resort, use emojis to make responses visually appealing, grouped by category:"
