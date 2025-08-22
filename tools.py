@@ -2,7 +2,7 @@
 Fixed Tool functions for resort booking system using SQLAlchemy with MySQL.
 """
 from typing import List, Dict, Any, Optional,Union
-from sqlalchemy import create_engine, Column, Integer,BigInteger, String, DateTime, ForeignKey, Text, Float, Boolean, and_, asc, desc , or_, func,cast, Numeric
+from sqlalchemy import create_engine, Column, Integer,BigInteger, String, DateTime, ForeignKey, Text, Float, Boolean, and_, asc, desc ,extract, or_, func,cast, Numeric
 from sqlalchemy import create_engine, Column, Integer, BigInteger, String, DateTime, ForeignKey, Text, Float, Boolean
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -14,6 +14,8 @@ from collections import Counter, defaultdict
 import calendar
 from calendar import monthrange
 from sqlalchemy.orm import Session
+import random
+
 
 # Load environment variables
 load_dotenv()
@@ -233,16 +235,13 @@ class PtRtListing(Base):
     l_last_activated_at = Column(DateTime)
     pt_or_rt = Column(String(10))
     unit_rate_id = Column(Integer, default=0)
-    unit_type_id = Column(Integer, default=0)
-    pro_unit_type_id = Column(Integer, default=0)
-    unit_has_deleted = Column(Integer, default=0)
-    unit_type_slug = Column(String(255))
-    unit_type_name = Column(String(255))
-    unit_bedrooms = Column(String(5))
-    unit_bathrooms = Column(String(7))
-    unit_sleeps = Column(Integer, default=0)
-    unit_kitchenate = Column(String(255))
-    unit_status = Column(String(255))
+    unit_type_id = Column(Integer, ForeignKey('unit_types.id'), nullable=True)
+    # pro_unit_type_id = Column(Integer, default=0)
+    # unit_has_deleted = Column(Integer, default=0)
+    # unit_type_slug = Column(String(255))
+    # unit_type_name = Column(String(255))
+    # unit_kitchenate = Column(String(255))
+    # unit_status = Column(String(255))
     unit_cancelation_policy_option = Column(String(255))
     resort_id = Column(Integer, default=0)  # This is NOT a foreign key - it's just data
     resort_lattitude = Column(String(255))
@@ -270,6 +269,11 @@ class PtRtListing(Base):
    
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+
+    # Relationships
+    unit_type = relationship("UnitType", back_populates="pt_rt_listings")
+    # In PtRtListing
+
   
     # Remove the problematic relationships since resort_id is not a real foreign key
     # If you need to join with Resort table, do it manually in queries
@@ -283,10 +287,19 @@ class UnitType(Base):
     name = Column(String(200), nullable=False)
     has_deleted = Column(Integer, default=0)  # 0 = active, 1 = deleted
     status = Column(String(20), default='active')  # active/pending
-    
+    sleeps = Column(String(50))  # Changed to String to match possible formats
+
     # Relationships
     resort = relationship("Resort", back_populates="unit_types")
     listings = relationship("Listing", back_populates="unit_type")
+    # pt_rt_listings = relationship("PtRtListing", back_populates="unit_type")
+
+    pt_rt_listings = relationship(
+        "PtRtListing",
+        primaryjoin="UnitType.resort_id == foreign(PtRtListing.resort_id)",
+        back_populates="unit_type"
+    )
+
     # Remove pt_rt_listings relationship
 
 
@@ -364,323 +377,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 # rubi _ tools
-# old def search_available_future_listings_enhanced _work per
-# def search_available_future_listings_enhanced(**filters) -> List[PtRtListing]:
-#     """
-#     Dynamically filters PtRtListing based on provided keyword arguments.
-
-#     Args:
-#         **filters: Key-value pairs for filtering (e.g., resort_city="Orlando", listing_status="active")
-
-#     Returns:   
-#         List of filtered PtRtListing objects
-#     """
-#     session = SessionLocal()
-
-#     try:
-#         query = session.query(PtRtListing).distinct()
-
-#         # Apply filters dynamically
-#         filter_conditions = []
-#         for field_name, value in filters.items():
-#             if value is not None and hasattr(PtRtListing, field_name):
-#                 column = getattr(PtRtListing, field_name)
-
-#                 # Case-insensitive partial match for strings 
-#                 if isinstance(value, str):
-#                     filter_conditions.append(column.ilike(f"%{value.strip()}%"))
-#                 else:
-#                     filter_conditions.append(column == value)
-
-#         # Handle check-in/check-out range filtering
-#         if filters.get('listing_check_in') and filters.get('listing_check_out'):
-#             try:
-#                 check_in = datetime.strptime(filters['listing_check_in'], "%Y-%m-%d")
-#                 check_out = datetime.strptime(filters['listing_check_out'], "%Y-%m-%d")
-
-#                 # Find listings that are available within the range
-#                 filter_conditions.append(PtRtListing.listing_check_in <= check_in)
-#                 filter_conditions.append(PtRtListing.listing_check_out >= check_out)
-
-#                 print("Date range filtering:")
-#                 print("check_in:", check_in)
-#                 print("check_out:", check_out)
-
-#             except ValueError as ve:
-#                 print("Date parsing error:", ve)
-#         # price_sort = None
-#         price_sort = filters.get('price_sort')
-#         if price_sort != None:
-#             field = getattr(PtRtListing, 'listing_price_night')
-#             if price_sort == 'asc':
-#                 query = query.order_by(asc(field))
-               
-                
-#             else:
-#                 query = query.order_by(desc(field))
-
-#         if filter_conditions:
-#             query = query.filter(and_(*filter_conditions))
-
-            
-
-#         results =  query.limit(50).all()
-
-#         unique_results = deduplicate_by_resort_id(results)
-
-#         final_results = unique_results[:10]
-
-#         listings = [model_to_dict(listing) for listing in final_results]
-#         return listings
-
-#     except Exception as e:
-#         print(f"Error in get_pt_rt_listings: {str(e)}")
-#         return []
-
-#     finally:
-#         session.close()
-
-#in live 
-# def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
-#     """
-#     Enhanced dynamic filtering for PtRtListing.
-
-#     Features:
-#     - Dynamic filter by keyword arguments
-#     - Check-in/check-out filtering (single date or full month expansion)
-#     - Optional price sorting (asc or desc)
-#     - Deduplication by resort_id
-#     - Conditional result limiting (if enough results found)
-#     """
-#     session = SessionLocal()
-
-#     try:
-#         query = session.query(PtRtListing).distinct()
-#         filter_conditions = []
-
-#         # Apply field-based filters dynamically
-#         for field_name, value in filters.items():
-#             if value is not None and hasattr(PtRtListing, field_name):
-#                 column = getattr(PtRtListing, field_name)
-#                 if isinstance(value, str):
-#                     filter_conditions.append(column.ilike(f"%{value.strip()}%"))
-#                 else:
-#                     filter_conditions.append(column == value)
-
-#         # 🔍 Check-in date range handling
-#         check_in_from = filters.get('listing_check_in')
-#         check_in_to = filters.get('listing_check_out')
-
-#         if check_in_from:
-#             try:
-#                 check_in_start = datetime.strptime(check_in_from, "%Y-%m-%d")
-
-#                 if not check_in_to:
-#                     # Auto expand to end of the month
-#                     last_day = monthrange(check_in_start.year, check_in_start.month)[1]
-#                     check_in_end = check_in_start.replace(day=last_day)
-#                 else:
-#                     check_in_end = datetime.strptime(check_in_to, "%Y-%m-%d")
-
-#                 filter_conditions.append(PtRtListing.listing_check_in >= check_in_start)
-#                 filter_conditions.append(PtRtListing.listing_check_in <= check_in_end)
-
-#             except ValueError as ve:
-#                 print("Date parsing error:", ve)
-
-#         # Apply filter conditions
-#         if filter_conditions:
-#             query = query.filter(and_(*filter_conditions))
-
-#         # 📊 Optional price sort
-#         price_sort = filters.get('price_sort')
-#         if price_sort:
-#             price_col = getattr(PtRtListing, 'listing_price_night')
-#             query = query.order_by(asc(price_col)) if price_sort == 'asc' else query.order_by(desc(price_col))
-
-#         # 🔎 Fetch all (no hard limit yet)
-#         results = query.all()
-
-#         # ✨ Deduplicate by resort_id
-#         unique_results = deduplicate_by_resort_id(results)
-
-#         # 🔐 Enforce minimum results check (optional)
-#         enforce_minimum = filters.get('enforce_minimum', True)
-#         minimum_required = filters.get('minimum_required', 10)
-#         if enforce_minimum and len(unique_results) < minimum_required:
-#             print(f"Only {len(unique_results)} listings found. Minimum of {minimum_required} required.")
-#             return []
-
-#         # 🔢 Apply optional final limit (e.g., top N)
-#         limit = filters.get('limit')
-#         if limit is not None:
-#             unique_results = unique_results[:limit]
-
-#         return [model_to_dict(listing) for listing in unique_results]
-
-#     except Exception as e:
-#         print(f"Error in search_available_future_listings_enhanced: {str(e)}")
-#         return []
-
-#     finally:
-#         session.close()
-
-# ----------1
-# def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
-#     """
-#     Dynamically filters PtRtListing based on provided keyword arguments.
-
-#     Features:
-#       - Keyword-based search (case-insensitive for strings)
-#       - Date range or year/month/day filtering
-#       - Sorting and limiting results
-#       - Optional update of matching rows via 'update_fields' dict
-#       - Fallback to cheapest listings for the month if no exact match
-#     """
-#     session = SessionLocal()
-
-#     try:
-#         query = session.query(PtRtListing).distinct()
-#         filter_conditions = []
-
-#         # Non-date filters
-#         skip_fields = {
-#             'year', 'month', 'day', 'listing_check_in', 'listing_check_out',
-#             'price_sort', 'limit', 'update_fields'
-#         }
-#         for field_name, value in filters.items():
-#             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
-#                 column = getattr(PtRtListing, field_name)
-#                 if isinstance(value, str):
-#                     filter_conditions.append(column.ilike(f"%{value.strip()}%"))
-#                 else:
-#                     filter_conditions.append(column == value)
-
-#         # Date filters
-#         exact_date_filter = False
-#         check_in_str = filters.get('listing_check_in')
-#         check_out_str = filters.get('listing_check_out')
-#         year, month, day = filters.get('year'), filters.get('month'), filters.get('day')
-
-#         try:
-#             if check_in_str and check_out_str:
-#                 check_in_start = datetime.strptime(check_in_str, "%Y-%m-%d")
-#                 check_in_end = datetime.strptime(check_out_str, "%Y-%m-%d")
-#                 filter_conditions.extend([
-#                     PtRtListing.listing_check_in >= check_in_start,
-#                     PtRtListing.listing_check_in <= check_in_end
-#                 ])
-#                 exact_date_filter = True
-#             elif year or month or day:
-#                 col = PtRtListing.listing_check_in
-#                 if year and month and day:
-#                     filter_conditions.append(and_(
-#                         extract('year', col) == year,
-#                         extract('month', col) == month,
-#                         extract('day', col) == day
-#                     ))
-#                 elif year and month:
-#                     filter_conditions.append(and_(
-#                         extract('year', col) == year,
-#                         extract('month', col) == month
-#                     ))
-#                 elif year:
-#                     filter_conditions.append(extract('year', col) == year)
-#                 elif month:
-#                     filter_conditions.append(extract('month', col) == month)
-#                 elif day:
-#                     filter_conditions.append(extract('day', col) == day)
-#                 exact_date_filter = True
-#         except ValueError as ve:
-#             print(f"⚠ Date parsing error: {ve}")
-
-#         # Apply filters
-#         if filter_conditions:
-#             query = query.filter(and_(*filter_conditions))
-
-#         # Sorting
-#         price_sort = filters.get('price_sort', 'asc')
-#         price_col = PtRtListing.listing_price_night
-#         query = query.order_by(asc(price_col) if price_sort == 'asc' else desc(price_col))
-
-#         # Limit
-#         limit = int(filters.get('limit', 5))
-#         results = query.limit(limit * 30).all()
-
-#         # Optional update
-#         update_fields = filters.get('update_fields')
-#         if update_fields and isinstance(update_fields, dict) and results:
-#             for listing in results:
-#                 for field, value in update_fields.items():
-#                     if hasattr(listing, field):
-#                         setattr(listing, field, value)
-#             session.commit()
-#             print(f"✅ Updated {len(results)} listings.")
-
-#         # Deduplicate
-#         unique_results = deduplicate_by_resort_id(results)
-
-#         # Fallback if no results
-#         if not unique_results and exact_date_filter and check_in_str:
-#             try:
-#                 ci_date = datetime.strptime(check_in_str, "%Y-%m-%d")
-#                 fallback_query = session.query(PtRtListing).filter(
-#                     extract('month', PtRtListing.listing_check_in) == ci_date.month,
-#                     extract('year', PtRtListing.listing_check_in) == ci_date.year
-#                 ).order_by(asc(price_col)).limit(limit * 10)
-#                 unique_results = deduplicate_by_resort_id(fallback_query.all())
-#                 print("⚠ No exact matches found. Fallback results returned.")
-#             except Exception as e:
-#                 print(f"⚠ Fallback search failed: {e}")
-
-#         return [model_to_dict(listing) for listing in unique_results[:limit]]
-
-#     except Exception as e:
-#         print(f"❌ Error in search_available_future_listings_enhanced: {str(e)}")
-#         session.rollback()
-#         return []
-
-#     finally:
-#         session.close()
-
-#----------search_avaliable_future.....
-
-
-# def get_month_year_range(month_input: str, year_input: int = None):
-#     """
-#     Convert month (and optional year) into check-in and check-out date strings.
-#     Always ensures the returned range is in the future (relative to today).
-#     """
-#     today = datetime.today()
-#     month_str = str(month_input).strip().lower()
-
-#     # Convert month name/abbr/number to month number
-#     try:
-#         if month_str.isdigit():
-#             month_num = int(month_str)
-#         else:
-#             month_num = datetime.strptime(month_str[:3], "%b").month
-#     except ValueError:
-#         raise ValueError(f"Invalid month: {month_input}")
-
-#     # Decide year
-#     if year_input:
-#         year = year_input
-#     else:
-#         year = today.year
-#         # If month has already passed this year, push to next year
-#         if month_num < today.month or (month_num == today.month and today.day > 1):
-#             year += 1
-
-#     # First and last day of the target month
-#     first_day = datetime(year, month_num, 1)
-#     last_day = datetime(year, month_num, calendar.monthrange(year, month_num)[1])
-
-#     # Ensure check-in is always in the future
-#     if first_day < today:
-#         first_day = today + timedelta(days=1)
-
-#     return first_day.strftime("%Y-%m-%d"), last_day.strftime("%Y-%m-%d")
 
 
 def normalize_future_dates(check_in_str: str, check_out_str: str):
@@ -725,11 +421,6 @@ def get_month_year_range(month_input: str, year_input: int = None):
         if month_num < today.month:
             year += 1
 
-    # # First and last day of the target month
-    # first_day = datetime(year, month_num, 1)
-    # last_day = datetime(year, month_num, calendar.monthrange(year, month_num)[1])
-
-    # return first_day.strftime("%Y-%m-%d"), last_day.strftime("%Y-%m-%d")
 
     # First and last day of the target month
     first_day = datetime(year, month_num, 1)
@@ -746,17 +437,569 @@ def get_month_year_range(month_input: str, year_input: int = None):
 
      
 
+# def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
+#     session = SessionLocal()
+
+#     try:
+#         query = session.query(PtRtListing).distinct()
+#         filter_conditions = []
+
+#         # Non-date filters
+#         skip_fields = {
+#             'year', 'month', 'day', 'listing_check_in', 'listing_check_out',
+#             'price_sort', 'limit', 'update_fields'
+#         }
+#         for field_name, value in filters.items():
+#             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
+#                 column = getattr(PtRtListing, field_name)
+#                 if isinstance(value, str):
+#                     filter_conditions.append(column.ilike(f"%{value.strip()}%"))
+#                 else:
+#                     filter_conditions.append(column == value)
+
+#         # Date filters
+#         exact_date_filter = False
+#         check_in_str = filters.get('listing_check_in')
+#         check_out_str = filters.get('listing_check_out')
+#         year, month, day = filters.get('year'), filters.get('month'), filters.get('day')
+
+#         try:
+#             if check_in_str and check_out_str:
+#                 # Explicit date range
+#                 ci_str, co_str = normalize_future_dates(check_in_str, check_out_str)
+#                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
+#                 filter_conditions.extend([
+#                     PtRtListing.listing_check_in >= check_in_start,
+#                     PtRtListing.listing_check_in <= check_in_end
+#                 ])
+#                 exact_date_filter = True
+
+
+#             elif month and not check_in_str and not check_out_str:
+#                 # Use helper to get future month/year range
+#                 ci_str, co_str = get_month_year_range(month, year)
+#                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
+#                 filter_conditions.extend([
+#                     PtRtListing.listing_check_in >= check_in_start,
+#                     PtRtListing.listing_check_in <= check_in_end
+#                 ])
+#                 exact_date_filter = True
+
+#             elif year or day:
+#                 # Direct year/month/day extraction
+#                 col = PtRtListing.listing_check_in
+#                 if year and month and day:
+#                     filter_conditions.append(and_(
+#                         extract('year', col) == int(year),
+#                         extract('month', col) == int(month),
+#                         extract('day', col) == int(day)
+#                     ))
+#                 elif year and month:
+#                     filter_conditions.append(and_(
+#                         extract('year', col) == int(year),
+#                         extract('month', col) == int(month)
+#                     ))
+#                 elif year:
+#                     filter_conditions.append(extract('year', col) == int(year))
+#                 elif day:
+#                     filter_conditions.append(extract('day', col) == int(day))
+#                 exact_date_filter = True
+
+#         except ValueError as ve:
+#             print(f"⚠ Date parsing error: {ve}")
+
+#         if filter_conditions:
+#             query = query.filter(and_(*filter_conditions))
+
+#         # Sorting / Price filtering
+#         price_sort = filters.get('price_sort', 'asc')
+#         price_col_numeric = cast(PtRtListing.listing_price_night, Numeric)
+
+#         if price_sort == 'asc':
+#             query = query.order_by(asc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'desc':
+#             query = query.order_by(desc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'avg_price':
+#             avg_price_col = func.avg(func.abs(price_col_numeric)).label('avg_price')
+#             avg_query = session.query(
+#                 PtRtListing.resort_id,
+#                 func.min(PtRtListing.resort_name).label('resort_name'),
+#                 avg_price_col
+#             )
+#             # Filter by month/year
+#             if month:
+#                 ci_str, _ = get_month_year_range(month, year)
+#                 ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 avg_query = avg_query.filter(extract('month', PtRtListing.listing_check_in) == ci_date.month)
+#                 avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == ci_date.year)
+#             elif year:
+#                 avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == int(year))
+
+#             query = avg_query.group_by(PtRtListing.resort_id).order_by(asc(avg_price_col))
+
+#         elif price_sort == 'cheapest':
+#             query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'average':
+#             query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'highest':
+#             query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
+
+#         # Limit
+#         limit = int(filters.get('limit', 5))
+#         results = query.limit(limit * 50).all()
+
+#         # Optional update
+#         update_fields = filters.get('update_fields')
+#         if update_fields and isinstance(update_fields, dict) and results:
+#             for listing in results:
+#                 for field, value in update_fields.items():
+#                     if hasattr(listing, field):
+#                         setattr(listing, field, value)
+#             session.commit()
+#             print(f"✅ Updated {len(results)} listings.")
+
+#         # Deduplicate
+#         if price_sort != 'avg_price':
+#             unique_results = deduplicate_by_resort_id(results)
+#         else:
+#             unique_results = results
+
+
+#         # guest and sleeps filter (moved into SQL)
+#         min_guests = filters.get('min_guests')
+#         if min_guests is not None:
+#             try:
+#                 min_guests = int(min_guests)
+#                 query = query.join(PtRtListing.unit_type).filter(UnitType.sleeps >= min_guests)
+#             except ValueError:
+#                 print(f"⚠ Invalid min_guests value: {min_guests}")
+
+
+#         # Fallback if no matches
+#         if not unique_results and exact_date_filter:
+#             try:
+#                 ci_str, _ = get_month_year_range(month or datetime.today().month, year)
+#                 ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 fallback_query = session.query(PtRtListing).filter(
+#                     extract('month', PtRtListing.listing_check_in) == ci_date.month,
+#                     extract('year', PtRtListing.listing_check_in) == ci_date.year
+#                 ).order_by(asc(func.abs(price_col_numeric))).limit(limit * 10)
+#                 unique_results = deduplicate_by_resort_id(fallback_query.all())
+#                 print("⚠ No exact matches found. Fallback results returned.")
+#             except Exception as e:
+#                 print(f"⚠ Fallback search failed: {e}")
+
+#         return [model_to_dict(listing) for listing in unique_results[:limit]]
+
+#     except Exception as e:
+#         print(f"❌ Error rub: in search_available_future_listings_enhanced: {str(e)}")
+#         session.rollback()
+#         return []
+
+#     finally:
+#         session.close()
+
+
+# def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
+#     session = SessionLocal()
+
+#     try:
+#         query = session.query(PtRtListing).distinct()
+#         filter_conditions = []
+
+#         # Non-date filters
+#         skip_fields = {
+#             'year', 'month', 'day', 'listing_check_in', 'listing_check_out',
+#             'price_sort', 'limit', 'update_fields', 'min_guests'
+#         }
+#         for field_name, value in filters.items():
+#             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
+#                 column = getattr(PtRtListing, field_name)
+#                 if isinstance(value, str):
+#                     filter_conditions.append(column.ilike(f"%{value.strip()}%"))
+#                 else:
+#                     filter_conditions.append(column == value)
+
+#         # Date filters
+#         exact_date_filter = False
+#         check_in_str = filters.get('listing_check_in')
+#         check_out_str = filters.get('listing_check_out')
+#         year, month, day = filters.get('year'), filters.get('month'), filters.get('day')
+
+#         try:
+#             if check_in_str and check_out_str:
+#                 # Explicit date range
+#                 ci_str, co_str = normalize_future_dates(check_in_str, check_out_str)
+#                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
+#                 filter_conditions.extend([
+#                     PtRtListing.listing_check_in >= check_in_start,
+#                     PtRtListing.listing_check_in <= check_in_end
+#                 ])
+#                 exact_date_filter = True
+
+#             elif month and not check_in_str and not check_out_str:
+#                 # Use helper to get future month/year range
+#                 ci_str, co_str = get_month_year_range(month, year)
+#                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
+#                 filter_conditions.extend([
+#                     PtRtListing.listing_check_in >= check_in_start,
+#                     PtRtListing.listing_check_in <= check_in_end
+#                 ])
+#                 exact_date_filter = True
+
+#             elif year or day:
+#                 # Direct year/month/day extraction
+#                 col = PtRtListing.listing_check_in
+#                 if year and month and day:
+#                     filter_conditions.append(and_(
+#                         extract('year', col) == int(year),
+#                         extract('month', col) == int(month),
+#                         extract('day', col) == int(day)
+#                     ))
+#                 elif year and month:
+#                     filter_conditions.append(and_(
+#                         extract('year', col) == int(year),
+#                         extract('month', col) == int(month)
+#                     ))
+#                 elif year:
+#                     filter_conditions.append(extract('year', col) == int(year))
+#                 elif day:
+#                     filter_conditions.append(extract('day', col) == int(day))
+#                 exact_date_filter = True
+
+#         except ValueError as ve:
+#             print(f"⚠ Date parsing error: {ve}")
+
+#         if filter_conditions:
+#             query = query.filter(and_(*filter_conditions))
+
+#         # Guest and sleeps filter (moved into SQL)
+#         min_guests = filters.get('min_guests')
+#         if min_guests is not None:
+#             try:
+#                 min_guests = int(min_guests)
+#                 query = query.join(UnitType, PtRtListing.unit_type_id == UnitType.id).filter(func.abs(UnitType.sleeps) >= min_guests)
+#                 print(f"🔍 Filtering for min_guests >= {min_guests}")
+#                 print(str(query))
+#             except ValueError:
+#                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
+
+#         # Sorting / Price filtering
+#         price_sort = filters.get('price_sort', 'asc')
+#         price_col_numeric = cast(PtRtListing.listing_price_night, Numeric)
+
+#         if price_sort == 'asc':
+#             query = query.order_by(asc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'desc':
+#             query = query.order_by(desc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'avg_price':
+#             avg_price_col = func.avg(func.abs(price_col_numeric)).label('avg_price')
+#             avg_query = session.query(
+#                 PtRtListing.resort_id,
+#                 func.min(PtRtListing.resort_name).label('resort_name'),
+#                 avg_price_col
+#             )
+#             # Filter by month/year
+#             if month:
+#                 ci_str, _ = get_month_year_range(month, year)
+#                 ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 avg_query = avg_query.filter(extract('month', PtRtListing.listing_check_in) == ci_date.month)
+#                 avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == ci_date.year)
+#             elif year:
+#                 avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == int(year))
+
+#             query = avg_query.group_by(PtRtListing.resort_id).order_by(asc(avg_price_col))
+
+#         elif price_sort == 'cheapest':
+#             query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'average':
+#             query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'highest':
+#             query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
+
+#         # # Limit
+#         # limit = int(filters.get('limit', 5))
+#         # results = query.limit(limit * 15).all()
+
+#         # Limit (fetch more to account for deduplication)
+#         limit = int(filters.get('limit', 5))
+#         fetch_limit = limit * 50
+#         results = query.limit(fetch_limit).all()
+
+#         # Optional update (safer with whitelist)
+#         allowed_update_fields = {"status", "has_deleted", "listing_price_night"}
+#         update_fields = filters.get('update_fields')
+#         if update_fields and isinstance(update_fields, dict) and results:
+#             updated_count = 0
+#             for listing in results:
+#                 for field, value in update_fields.items():
+#                     if field in allowed_update_fields and hasattr(listing, field):
+#                         setattr(listing, field, value)
+#                         updated_count += 1
+#             if updated_count:
+#                 session.commit()
+#                 print(f"✅ Updated {updated_count} fields across {len(results)} listings.")
+
+#         # Deduplicate by resort_id if needed
+#         if price_sort != 'avg_price':
+#             unique_results = deduplicate_by_resort_id(results)
+#         else:
+#             unique_results = results
+
+#         # Final slice
+#         final_results = unique_results[:limit]
+
+#         # Fallback if no matches
+#         if not final_results and exact_date_filter:
+#             try:
+#                 ci_str, _ = get_month_year_range(month or datetime.today().month, year)
+#                 ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 fallback_query = session.query(PtRtListing).filter(
+#                     extract('month', PtRtListing.listing_check_in) == ci_date.month,
+#                     extract('year', PtRtListing.listing_check_in) == ci_date.year
+#                 ).order_by(asc(func.abs(price_col_numeric))).limit(fetch_limit)
+#                 fallback_results = deduplicate_by_resort_id(fallback_query.all())
+#                 final_results = fallback_results[:limit]
+#                 print("⚠ No exact matches found. Fallback results returned.")
+#             except Exception as e:
+#                 print(f"⚠ Fallback search failed: {e}")
+
+#         return [model_to_dict(listing) for listing in final_results]
+    
+#     except Exception as e:
+#         print(f"❌ Error rub: in search_available_future_listings_enhanced: {str(e)}")
+#         session.rollback()
+#         return []
+
+#     finally:
+#         session.close()
+
+# def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
+#     session = SessionLocal()
+
+#     try:
+#         query = session.query(PtRtListing).distinct()
+#         filter_conditions = []
+
+#         # ---------------- Non-date filters ----------------
+#         skip_fields = {
+#             'year', 'month', 'day', 'listing_check_in', 'listing_check_out',
+#             'price_sort', 'limit', 'update_fields', 'min_guests'
+#         }
+#         for field_name, value in filters.items():
+#             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
+#                 column = getattr(PtRtListing, field_name)
+#                 if isinstance(value, str):
+#                     filter_conditions.append(column.ilike(f"%{value.strip()}%"))
+#                 else:
+#                     filter_conditions.append(column == value)
+
+#         # ---------------- Date filters ----------------
+#         exact_date_filter = False
+#         check_in_str = filters.get('listing_check_in')
+#         check_out_str = filters.get('listing_check_out')
+#         year, month, day = filters.get('year'), filters.get('month'), filters.get('day')
+
+#         try:
+#             if check_in_str and check_out_str:
+#                 # Explicit date range
+#                 ci_str, co_str = normalize_future_dates(check_in_str, check_out_str)
+#                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
+#                 filter_conditions.extend([
+#                     PtRtListing.listing_check_in >= check_in_start,
+#                     PtRtListing.listing_check_in <= check_in_end
+#                 ])
+#                 exact_date_filter = True
+
+#             elif month and not check_in_str and not check_out_str:
+#                 # Use helper to get future month/year range
+#                 ci_str, co_str = get_month_year_range(month, year)
+#                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
+#                 filter_conditions.extend([
+#                     PtRtListing.listing_check_in >= check_in_start,
+#                     PtRtListing.listing_check_in <= check_in_end
+#                 ])
+#                 exact_date_filter = True
+
+#             elif year or day:
+#                 col = PtRtListing.listing_check_in
+#                 if year and month and day:
+#                     filter_conditions.append(and_(
+#                         extract('year', col) == int(year),
+#                         extract('month', col) == int(month),
+#                         extract('day', col) == int(day)
+#                     ))
+#                 elif year and month:
+#                     filter_conditions.append(and_(
+#                         extract('year', col) == int(year),
+#                         extract('month', col) == int(month)
+#                     ))
+#                 elif year:
+#                     filter_conditions.append(extract('year', col) == int(year))
+#                 elif day:
+#                     filter_conditions.append(extract('day', col) == int(day))
+#                 exact_date_filter = True
+
+#         except ValueError as ve:
+#             print(f"⚠ Date parsing error: {ve}")
+
+#         if filter_conditions:
+#             query = query.filter(and_(*filter_conditions))
+
+#         # ---------------- Guest / Sleeps filter ----------------
+#         min_guests = filters.get('min_guests')
+#         if min_guests is not None:
+#             try:
+#                 min_guests = int(min_guests)
+#                 query = query.join(UnitType, PtRtListing.unit_type_id == UnitType.id).filter(
+#                     func.abs(UnitType.sleeps) >= min_guests
+#                 )
+#             except ValueError:
+#                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
+
+#         # ---------------- Price sorting ----------------
+#         price_sort = filters.get('price_sort', 'asc')
+#         price_col_numeric = cast(PtRtListing.listing_price_night, Numeric)
+
+#         if price_sort == 'asc':
+#             query = query.order_by(asc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'desc':
+#             query = query.order_by(desc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'avg_price':
+#             avg_price_col = func.avg(func.abs(price_col_numeric)).label('avg_price')
+#             avg_query = session.query(
+#                 PtRtListing.resort_id,
+#                 func.min(PtRtListing.resort_name).label('resort_name'),
+#                 avg_price_col
+#             )
+#             # ✅ keep old logic → apply month/year filters
+#             if month:
+#                 ci_str, _ = get_month_year_range(month, year)
+#                 ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 avg_query = avg_query.filter(extract('month', PtRtListing.listing_check_in) == ci_date.month)
+#                 avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == ci_date.year)
+#             elif year:
+#                 avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == int(year))
+
+#             query = avg_query.group_by(PtRtListing.resort_id).order_by(asc(avg_price_col))
+
+#         elif price_sort == 'cheapest':
+#             query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'average':
+#             query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
+
+#         elif price_sort == 'highest':
+#             query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
+
+#         # ---------------- Limit / Fetch ----------------
+#         limit = int(filters.get('limit', 5))
+#         fetch_limit = limit * 50
+#         listings = query.limit(fetch_limit).all()
+
+#         # Random sample for variety
+#         if len(listings) > limit:
+#             listings = random.sample(listings, limit)
+
+#         # ---------------- Optional updates ----------------
+#         allowed_update_fields = {"status", "has_deleted", "listing_price_night"}
+#         update_fields = filters.get('update_fields')
+#         if update_fields and isinstance(update_fields, dict) and listings:
+#             updated_count = 0
+#             for listing in listings:
+#                 for field, value in update_fields.items():
+#                     if field in allowed_update_fields and hasattr(listing, field):
+#                         setattr(listing, field, value)
+#                         updated_count += 1
+#             if updated_count:
+#                 session.commit()
+#                 print(f"✅ Updated {updated_count} fields across {len(listings)} listings.")
+
+#         # ---------------- Deduplicate ----------------
+#         if price_sort != 'avg_price':
+#             unique_results = deduplicate_by_resort_id(listings)
+#         else:
+#             unique_results = listings
+
+#         final_results = unique_results[:limit]
+
+#         # ---------------- Fallback if no matches ----------------
+#         if not final_results and exact_date_filter:
+#             try:
+#                 ci_str, _ = get_month_year_range(month or datetime.today().month, year)
+#                 ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 fallback_query = session.query(PtRtListing).filter(
+#                     extract('month', PtRtListing.listing_check_in) == ci_date.month,
+#                     extract('year', PtRtListing.listing_check_in) == ci_date.year
+#                 ).order_by(asc(func.abs(price_col_numeric))).limit(fetch_limit)
+#                 fallback_results = deduplicate_by_resort_id(fallback_query.all())
+#                 final_results = fallback_results[:limit]
+#                 print("⚠ No exact matches found. Fallback results returned.")
+#             except Exception as e:
+#                 print(f"⚠ Fallback search failed: {e}")
+
+#         # ---------------- Build Structured Result ----------------
+#         results = []
+#         for listing in final_results:
+#             results.append({
+#                 "resort_name": listing.unit_type.resort.name,
+#                 "location": f"{listing.unit_type.resort.city}, {listing.unit_type.resort.state}",
+#                 "unit_type": listing.unit_type.name,
+#                 "sleeps": listing.unit_type.sleeps,
+#                 "check_in": listing.listing_check_in.strftime("%Y-%m-%d") if listing.listing_check_in else None,
+#                 "check_out": listing.listing_check_out.strftime("%Y-%m-%d") if listing.listing_check_out else None,
+#                 "price_per_night": listing.listing_price_night,
+#                 "brand": listing.unit_type.resort.brand,
+#                 "amenities": [a.name for a in getattr(listing, "amenities", [])]
+#             })
+
+#         return results
+
+#     except Exception as e:
+#         print(f"❌ Error in search_available_future_listings_enhanced: {str(e)}")
+#         session.rollback()
+#         return []
+
+#     finally:
+#         session.close()
+
+
+
+#final:
+CANCELLATION_POLICY_DESCRIPTIONS = {
+    "flexible": "Full refund if canceled at least 3 days before check-in.",
+    "relaxed": "Full refund if canceled at least 16 days before check-in.",
+    "moderate": "Full refund if canceled at least 32 days before check-in.",
+    "firm": "Full refund if canceled at least 62 days before check-in.",
+    "strict": "Booking is non-refundable"
+}
+
 def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
     session = SessionLocal()
-
     try:
         query = session.query(PtRtListing).distinct()
         filter_conditions = []
 
         # Non-date filters
         skip_fields = {
-            'year', 'month', 'day', 'listing_check_in', 'listing_check_out',
-            'price_sort', 'limit', 'update_fields'
+            "year", "month", "day", "listing_check_in", "listing_check_out",
+            "price_sort", "limit", "update_fields", "min_guests"
         }
         for field_name, value in filters.items():
             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
@@ -768,152 +1011,135 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
         # Date filters
         exact_date_filter = False
-        check_in_str = filters.get('listing_check_in')
-        check_out_str = filters.get('listing_check_out')
-        year, month, day = filters.get('year'), filters.get('month'), filters.get('day')
+        check_in_str, check_out_str = filters.get("listing_check_in"), filters.get("listing_check_out")
+        year, month, day = filters.get("year"), filters.get("month"), filters.get("day")
 
         try:
-            # if check_in_str and check_out_str:
-            #     # Explicit date range
-            #     check_in_start = datetime.strptime(check_in_str, "%Y-%m-%d")
-            #     check_in_end = datetime.strptime(check_out_str, "%Y-%m-%d")
-            #     filter_conditions.extend([
-            #         PtRtListing.listing_check_in >= check_in_start,
-            #         PtRtListing.listing_check_in <= check_in_end
-            #     ])
-            #     exact_date_filter = True
-
             if check_in_str and check_out_str:
                 # Explicit date range
                 ci_str, co_str = normalize_future_dates(check_in_str, check_out_str)
                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
-                filter_conditions.extend([
+                filter_conditions += [
                     PtRtListing.listing_check_in >= check_in_start,
-                    PtRtListing.listing_check_in <= check_in_end
-                ])
+                    PtRtListing.listing_check_in <= check_in_end,
+                ]
                 exact_date_filter = True
 
-
             elif month and not check_in_str and not check_out_str:
-                # Use helper to get future month/year range
+                # Month/year range
                 ci_str, co_str = get_month_year_range(month, year)
                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
-                filter_conditions.extend([
+                filter_conditions += [
                     PtRtListing.listing_check_in >= check_in_start,
-                    PtRtListing.listing_check_in <= check_in_end
-                ])
+                    PtRtListing.listing_check_in <= check_in_end,
+                ]
                 exact_date_filter = True
 
             elif year or day:
-                # Direct year/month/day extraction
                 col = PtRtListing.listing_check_in
                 if year and month and day:
                     filter_conditions.append(and_(
-                        extract('year', col) == int(year),
-                        extract('month', col) == int(month),
-                        extract('day', col) == int(day)
+                        extract("year", col) == int(year),
+                        extract("month", col) == int(month),
+                        extract("day", col) == int(day),
                     ))
                 elif year and month:
                     filter_conditions.append(and_(
-                        extract('year', col) == int(year),
-                        extract('month', col) == int(month)
+                        extract("year", col) == int(year),
+                        extract("month", col) == int(month),
                     ))
                 elif year:
-                    filter_conditions.append(extract('year', col) == int(year))
+                    filter_conditions.append(extract("year", col) == int(year))
                 elif day:
-                    filter_conditions.append(extract('day', col) == int(day))
+                    filter_conditions.append(extract("day", col) == int(day))
                 exact_date_filter = True
-
         except ValueError as ve:
             print(f"⚠ Date parsing error: {ve}")
 
         if filter_conditions:
             query = query.filter(and_(*filter_conditions))
 
-        # Sorting / Price filtering
-        price_sort = filters.get('price_sort', 'asc')
+        # Guests filter
+        min_guests = filters.get("min_guests")
+        if min_guests is not None:
+            try:
+                min_guests = int(min_guests)
+                query = query.join(UnitType, PtRtListing.unit_type_id == UnitType.id)\
+                             .filter(func.abs(UnitType.sleeps) >= min_guests)
+            except ValueError:
+                print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
+
+        # Price sorting
+        price_sort = filters.get("price_sort", "asc")
         price_col_numeric = cast(PtRtListing.listing_price_night, Numeric)
 
-        if price_sort == 'asc':
+        if price_sort == "asc":
             query = query.order_by(asc(func.abs(price_col_numeric)))
-
-        elif price_sort == 'desc':
+        elif price_sort == "desc":
             query = query.order_by(desc(func.abs(price_col_numeric)))
-
-        elif price_sort == 'avg_price':
-            avg_price_col = func.avg(func.abs(price_col_numeric)).label('avg_price')
+        elif price_sort == "avg_price":
+            avg_price_col = func.avg(func.abs(price_col_numeric)).label("avg_price")
             avg_query = session.query(
                 PtRtListing.resort_id,
-                func.min(PtRtListing.resort_name).label('resort_name'),
-                avg_price_col
+                func.min(PtRtListing.resort_name).label("resort_name"),
+                avg_price_col,
             )
-            # Filter by month/year
             if month:
                 ci_str, _ = get_month_year_range(month, year)
                 ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
-                avg_query = avg_query.filter(extract('month', PtRtListing.listing_check_in) == ci_date.month)
-                avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == ci_date.year)
+                avg_query = avg_query.filter(extract("month", PtRtListing.listing_check_in) == ci_date.month)
+                avg_query = avg_query.filter(extract("year", PtRtListing.listing_check_in) == ci_date.year)
             elif year:
-                avg_query = avg_query.filter(extract('year', PtRtListing.listing_check_in) == int(year))
-
+                avg_query = avg_query.filter(extract("year", PtRtListing.listing_check_in) == int(year))
             query = avg_query.group_by(PtRtListing.resort_id).order_by(asc(avg_price_col))
-
-        elif price_sort == 'cheapest':
+        elif price_sort == "cheapest":
             query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
-
-        elif price_sort == 'average':
+        elif price_sort == "average":
             query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
-
-        elif price_sort == 'highest':
+        elif price_sort == "highest":
             query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
 
-        # Limit
-        limit = int(filters.get('limit', 5))
-        results = query.limit(limit * 50).all()
+        # Fetch + deduplicate
+        limit = int(filters.get("limit", 5))
+        fetch_limit = limit * 50
+        results = query.limit(fetch_limit).all()
+        unique_results = deduplicate_by_resort_id(results) if price_sort != "avg_price" else results
+        final_results = unique_results[:limit]
 
-        # Optional update
-        update_fields = filters.get('update_fields')
-        if update_fields and isinstance(update_fields, dict) and results:
-            for listing in results:
-                for field, value in update_fields.items():
-                    if hasattr(listing, field):
-                        setattr(listing, field, value)
-            session.commit()
-            print(f"✅ Updated {len(results)} listings.")
-
-        # Deduplicate
-        if price_sort != 'avg_price':
-            unique_results = deduplicate_by_resort_id(results)
-        else:
-            unique_results = results
-
-        # Fallback if no matches
-        if not unique_results and exact_date_filter:
+        # Fallback if empty
+        if not final_results and exact_date_filter:
             try:
                 ci_str, _ = get_month_year_range(month or datetime.today().month, year)
                 ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
                 fallback_query = session.query(PtRtListing).filter(
-                    extract('month', PtRtListing.listing_check_in) == ci_date.month,
-                    extract('year', PtRtListing.listing_check_in) == ci_date.year
-                ).order_by(asc(func.abs(price_col_numeric))).limit(limit * 10)
-                unique_results = deduplicate_by_resort_id(fallback_query.all())
+                    extract("month", PtRtListing.listing_check_in) == ci_date.month,
+                    extract("year", PtRtListing.listing_check_in) == ci_date.year,
+                ).order_by(asc(func.abs(price_col_numeric))).limit(fetch_limit)
+                final_results = deduplicate_by_resort_id(fallback_query.all())[:limit]
                 print("⚠ No exact matches found. Fallback results returned.")
             except Exception as e:
                 print(f"⚠ Fallback search failed: {e}")
 
-        return [model_to_dict(listing) for listing in unique_results[:limit]]
+        # ✅ Convert + enrich with cancellation policy
+        output = []
+        for listing in final_results:
+            listing_dict = model_to_dict(listing)
+            policy_key = listing_dict.get("listing_cancelation_policy_option")
+            listing_dict["cancellation_policy_description"] = CANCELLATION_POLICY_DESCRIPTIONS.get(
+                policy_key, "Policy not specified"
+            )
+            output.append(listing_dict)
+
+        return output
 
     except Exception as e:
-        print(f"❌ Error rub: in search_available_future_listings_enhanced: {str(e)}")
+        print(f"❌ Error in search_available_future_listings_enhanced: {str(e)}")
         session.rollback()
         return []
-
     finally:
         session.close()
-
-
 
 
 #----------search_avaliable_future..... end 
@@ -933,136 +1159,7 @@ def deduplicate_by_resort_id(listings):
     return unique_listings
 
 
-# def get_user_bookings(
-#     user_email: str,
-#     upcoming_limit: int = 3,
-#     past_limit: int = 3,
-#     year: int = None,
-#     month: int = None,
-#     day: int = None
-# ) -> Dict[str, Any]:
-#     """
-#     Fetch bookings for a user by email, with optional filtering by year/month/day.
-#     If only the year is specified, show monthly counts if too many bookings.
-#     """
-#     session = SessionLocal()
 
-#     try:
-#         today = date.today()
-
-#         bookings = session.query(Booking) \
-#             .join(User, Booking.user_id == User.id) \
-#             .join(Listing, Booking.listing_id == Listing.id) \
-#             .join(Resort, Listing.resort_id == Resort.id) \
-#             .join(UnitType, Listing.unit_type_id == UnitType.id) \
-#             .filter(User.email == user_email) \
-#             .filter(User.has_deleted == 0) \
-#             .filter(Listing.has_deleted == 0) \
-#             .filter(Resort.has_deleted == 0) \
-#             .all()
-
-#         filtered = []
-#         monthly_count = defaultdict(int)
-
-#         for booking in bookings:
-#             check_in_dt = booking.listing.check_in
-#             check_in = check_in_dt.date() if hasattr(check_in_dt, "date") else check_in_dt
-
-#             # Count per month if only year is specified
-#             if year and not month and not day:
-#                 if check_in.year == year:
-#                     monthly_count[check_in.month] += 1
-#                 continue
-
-#             if year and check_in.year != year:
-#                 continue
-#             if month and check_in.month != month:
-#                 continue
-#             if day and check_in.day != day:
-#                 continue
-
-#             booking_data = {
-#                 "booking_code": booking.unique_booking_code,
-#                 "resort_name": booking.listing.resort.name,
-#                 "resort_city": booking.listing.resort.city,
-#                 "resort_country": booking.listing.resort.country,
-#                 "unit_type": booking.listing.unit_type.name,
-#                 "nights": booking.listing.nights,
-#                 "check_in": check_in.strftime("%Y-%m-%d"),
-#                 "check_out": booking.listing.check_out.strftime("%Y-%m-%d"),
-#                 "price_per_night": f"${booking.price_night:.2f}",
-#                 "total_price": f"${booking.total_price:.2f}",
-#                 "listing_status": booking.listing.status,
-#                 "check_in_obj": check_in
-#             }
-
-#             filtered.append(booking_data)
-
-#         # Case: Only year is provided
-#         if year and not month and not day:
-#             total_count = sum(monthly_count.values())
-#             if total_count > 5:
-#                 month_map = {
-#                     1: "January", 2: "February", 3: "March", 4: "April",
-#                     5: "May", 6: "June", 7: "July", 8: "August",
-#                     9: "September", 10: "October", 11: "November", 12: "December"
-#                 }
-#                 return {
-#                     "message": f"Too many bookings ({total_count}) found for {year}. Please specify a month.",
-#                     "monthly_counts": {month_map[m]: c for m, c in sorted(monthly_count.items())}
-#                 }
-
-#         # Separate upcoming and past
-#         upcoming, past = [], []
-#         for b in filtered:
-#             if b["check_in_obj"] >= today:
-#                 upcoming.append(b)
-#             else:
-#                 past.append(b)
-
-#         # Sort
-#         upcoming = sorted(upcoming, key=lambda b: b["check_in_obj"])
-#         past = sorted(past, key=lambda b: b["check_in_obj"], reverse=True)
-
-#         # Apply limits if no filters
-#         if not any([year, month, day]):
-#             upcoming = upcoming[:upcoming_limit]
-#             past = past[:past_limit]
-
-#         # Remove helper
-#         for b in upcoming + past:
-#             b.pop("check_in_obj", None)
-
-#         def get_month_year_summary(bookings_list, max_months_per_year=3):
-#             summary = defaultdict(set)
-#             for b in bookings_list:
-#                 d = date.fromisoformat(b["check_in"])
-#                 summary[d.year].add(d.strftime("%B"))
-#             return {
-#                 y: sorted(list(m))[:max_months_per_year]
-#                 for y, m in summary.items()
-#             }
-
-#         return {
-#             "upcoming_bookings": upcoming,
-#             "past_bookings": past,
-#             "summary": {
-#                 "upcoming_months_years": get_month_year_summary(upcoming),
-#                 "past_months_years": get_month_year_summary(past)
-#             }
-#         }
-
-#     except Exception as e:
-#         print(f"Error in get_user_bookings: {str(e)}")
-#         return {
-#             "upcoming_bookings": [],
-#             "past_bookings": [],
-#             "summary": {},
-#             "error": str(e)
-#         }
-
-#     finally:
-#         session.close()
 
 def get_user_bookings(
     user_email: str,
@@ -1272,246 +1369,7 @@ def get_available_resorts(
         session.close()
 
 
-# def get_resort_price(
-#     resort_name: str = None,
-#     country: str = None,
-#     city: str = None,
-#     state: str = None,
-#     min_price: float = None,
-#     max_price: float = None,
-#     unit_type: str = None,
-#     nights: int = None,
-#     currency_code: str = None,
-#     limit: int = 20,
-#     debug: bool = False
-# ) -> List[Dict[str, Any]]:
-#     """
-#     Enhanced version of get_resort_price with better debugging and flexible matching.
-#     """
-#     session = SessionLocal()
-    
-#     try:
-#         if debug:
-#             print(f"🔍 Searching for resort: '{resort_name}'")
-        
-#         # Start with base query
-#         query = session.query(ResortMigration)
-        
-#         # Apply filters one by one and count results at each step
-#         if resort_name:
-#             query = query.filter(ResortMigration.resort_name.ilike(f"%{resort_name.strip()}%"))
-#             if debug:
-#                 count = query.count()
-#                 print(f"📊 After name filter '{resort_name}': {count} records")
-        
-#         # Try less restrictive status filter first
-#         query = query.filter(ResortMigration.listing_has_deleted == 0)
-#         if debug:
-#             count = query.count()
-#             print(f"📊 After deleted filter: {count} records")
-        
-#         # Use broader status filter
-#         query = query.filter(ResortMigration.listing_status.isnot(None))
-#         if debug:
-#             count = query.count()
-#             print(f"📊 After status not null filter: {count} records")
-        
-#         # Location filters
-#         if country:
-#             query = query.filter(
-#                 ResortMigration.country.isnot(None),
-#                 ResortMigration.country.ilike(f"%{country.strip()}%")
-#             )
-#             if debug:
-#                 count = query.count()
-#                 print(f"📊 After country filter '{country}': {count} records")
-        
-#         if city:
-#             query = query.filter(
-#                 ResortMigration.city.isnot(None),
-#                 ResortMigration.city.ilike(f"%{city.strip()}%")
-#             )
-#             if debug:
-#                 count = query.count()
-#                 print(f"📊 After city filter '{city}': {count} records")
-        
-#         if state:
-#             query = query.filter(
-#                 ResortMigration.state.isnot(None),
-#                 ResortMigration.state.ilike(f"%{state.strip()}%")
-#             )
-#             if debug:
-#                 count = query.count()
-#                 print(f"📊 After state filter '{state}': {count} records")
-        
-#         # Execute query to get raw results
-#         all_resorts = query.limit(limit * 3).all()  # Get more for filtering
-        
-#         if debug:
-#             print(f"📊 Raw query returned: {len(all_resorts)} records")
-        
-#         if not all_resorts:
-#             # Try fallback searches
-#             if resort_name:
-#                 # Try searching individual words
-#                 words = resort_name.split()
-#                 if len(words) > 1:
-#                     fallback_query = session.query(ResortMigration)\
-#                         .filter(ResortMigration.listing_has_deleted == 0)
-                    
-#                     for word in words:
-#                         if len(word) > 2:  # Skip small words
-#                             fallback_query = fallback_query.filter(
-#                                 ResortMigration.resort_name.ilike(f"%{word}%")
-#                             )
-                    
-#                     all_resorts = fallback_query.limit(limit).all()
-#                     if debug:
-#                         print(f"📊 Fallback word search returned: {len(all_resorts)} records")
-        
-#         result = []
-        
-#         for resort in all_resorts:
-#             try:
-#                 # Enhanced price parsing
-#                 def parse_price_enhanced(price_str):
-#                     if not price_str:
-#                         return 0.0
-                    
-#                     # Convert to string and clean
-#                     clean_price = str(price_str).strip()
-                    
-#                     # Remove currency symbols and commas
-#                     for symbol in ['$', '€', '£', '¥', ',', ' ']:
-#                         clean_price = clean_price.replace(symbol, '')
-                    
-#                     # Handle ranges (take the first number)
-#                     if '-' in clean_price:
-#                         clean_price = clean_price.split('-')[0].strip()
-                    
-#                     try:
-#                         return float(clean_price) if clean_price and clean_price.replace('.', '').isdigit() else 0.0
-#                     except (ValueError, AttributeError):
-#                         return 0.0
-                
-#                 # Try multiple price fields
-#                 listing_price = parse_price_enhanced(resort.listing_price_night)
-#                 unit_price = parse_price_enhanced(resort.unit_rates_price)
-#                 nightly_price = parse_price_enhanced(resort.unit_rate_nightly_price)
-#                 offer_price = parse_price_enhanced(resort.offer_price) if resort.offer_price else None
-                
-#                 # Use the best available price
-#                 price_per_night = listing_price or unit_price or nightly_price or 0.0
-                
-#                 if debug and price_per_night == 0:
-#                     print(f"⚠️ No valid price found for {resort.resort_name}")
-#                     print(f"   listing_price_night: {resort.listing_price_night}")
-#                     print(f"   unit_rates_price: {resort.unit_rates_price}")
-#                     print(f"   unit_rate_nightly_price: {resort.unit_rate_nightly_price}")
-                
-#                 # Apply price filters (but be more lenient)
-#                 if min_price and price_per_night > 0 and price_per_night < min_price:
-#                     continue
-#                 if max_price and price_per_night > max_price:
-#                     continue
-                
-#                 # Apply other filters
-#                 if unit_type and resort.unit_type_name:
-#                     if unit_type.lower() not in resort.unit_type_name.lower():
-#                         continue
-                
-#                 if nights and resort.listing_nights != nights:
-#                     continue
-                
-#                 if currency_code and resort.listing_currency_code:
-#                     if resort.listing_currency_code.upper() != currency_code.upper():
-#                         continue
-                
-#                 # Calculate totals
-#                 nights_count = resort.listing_nights or 1
-#                 total_price = price_per_night * nights_count if price_per_night > 0 else None
-                
-#                 # Build result
-#                 resort_info = {
-#                     "resort_id": resort.resort_id,
-#                     "resort_name": resort.resort_name or "Unknown Resort",
-#                     "location": {
-#                         "address": resort.address,
-#                         "city": resort.city,
-#                         "state": resort.state,
-#                         "country": resort.country,
-#                         "zip_code": resort.zip,
-#                         "coordinates": {
-#                             "latitude": resort.lattitude,
-#                             "longitude": resort.longitude
-#                         }
-#                     },
-#                     "pricing": {
-#                         "price_per_night": price_per_night,
-#                         "currency_code": resort.listing_currency_code or "USD",
-#                         "nights": nights_count,
-#                         "total_price": total_price,
-#                         "offer_price": offer_price,
-#                         "offer_description": resort.offer,
-#                         "price_display": f"{resort.listing_currency_code or '$'}{price_per_night:.2f}" if price_per_night > 0 else "Contact for pricing",
-#                         "raw_prices": {
-#                             "listing_price_night": resort.listing_price_night,
-#                             "unit_rates_price": resort.unit_rates_price,
-#                             "unit_rate_nightly_price": resort.unit_rate_nightly_price
-#                         }
-#                     },
-#                     "unit_details": {
-#                         "unit_type": resort.unit_type_name,
-#                         "bedrooms": resort.unit_bedrooms,
-#                         "bathrooms": resort.unit_bathrooms,
-#                         "sleeps": resort.unit_sleeps or 0,
-#                         "kitchenette": resort.unit_kitchenate
-#                     },
-#                     "availability": {
-#                         "check_in": resort.listing_check_in.strftime("%Y-%m-%d") if resort.listing_check_in else None,
-#                         "check_out": resort.listing_check_out.strftime("%Y-%m-%d") if resort.listing_check_out else None,
-#                         "status": resort.listing_status,
-#                         "has_weekend": bool(resort.has_weekend)
-#                     },
-#                     "amenities": {
-#                         "fitness_center": bool(resort.is_fitness_center),
-#                         "free_wifi": bool(resort.is_free_wifi),
-#                         "restaurant": bool(resort.is_restaurant),
-#                         "swimming_pool": bool(resort.is_swimming_pool),
-#                         "pets_friendly": bool(resort.pets_friendly)
-#                     },
-#                     "ratings": {
-#                         "hotel_stars": resort.hotel_star or 0,
-#                         "google_rating": resort.google_rating or 0,
-#                         "is_featured": bool(resort.is_featured),
-#                         "is_popular": bool(resort.popular)
-#                     }
-#                 }
-                
-#                 result.append(resort_info)
-                
-#                 if len(result) >= limit:
-#                     break
-                    
-#             except Exception as e:
-#                 if debug:
-#                     print(f"❌ Error processing resort {resort.resort_id}: {str(e)}")
-#                 continue
-        
-#         # Sort by price (but show zero prices too)
-#         result.sort(key=lambda x: (x['pricing']['price_per_night'] == 0, x['pricing']['price_per_night']))
-        
-#         if debug:
-#             print(f"✅ Final result count: {len(result)}")
-        
-#         return result
-        
-#     except Exception as e:
-#         print(f"Database error in get_resort_price_enhanced: {str(e)}")
-#         return []
-        
-#     finally:
-#         session.close()
+
 
 
 
@@ -1714,290 +1572,6 @@ def get_resort_price(
 
     finally:
         session.close()
-
-
-# Add to tools
-
-# in live
-# def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[str] = None) -> Dict[str, Any]:
-#     """Get detailed information about a specific resort by ID or Name."""
-#     session: Session = SessionLocal()
-
-#     try:
-#         if not resort_id and not resort_name:
-#             return {"error": "Please provide either resort_id or resort_name."}
-
-#         # --- Fetch resort based on ID or Name ---
-#         query = session.query(Resort).join(User, Resort.creator_id == User.id).filter(Resort.has_deleted == 0)
-
-#         if resort_id:
-#             query = query.filter(Resort.id == resort_id)
-#         else:
-#             query = query.filter(Resort.name.ilike(f"%{resort_name.strip()}%"))
-
-#         resort = query.first()
-
-#         if not resort:
-#             return {"error": "Resort not found with the given identifier."}
-
-#         # --- Fetch unit types ---
-#         unit_types = session.query(UnitType).filter(
-#             UnitType.resort_id == resort.id,
-#             UnitType.has_deleted == 0
-#         ).all()
-
-
-#         # --- Listings count by status ---
-#         statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']
-#         listings_stats = {
-#             status: session.query(Listing).filter(
-#                 Listing.resort_id == resort.id,
-#                 Listing.has_deleted == 0,
-#                 Listing.status == status
-#             ).count()
-#             for status in statuses
-#         }
-
-#         # --- Total bookings ---
-#         total_bookings = session.query(Booking).join(
-#             Listing, Booking.listing_id == Listing.id
-#         ).filter(
-#             Listing.resort_id == resort.id
-#         ).count()
-
-#         # --- Construct final result ---
-#         resort_details = {
-#             "id": resort.id,
-#             "name": resort.name,
-#             "slug": resort.slug,
-#             "address": resort.address,
-#             "city": resort.city,
-#             "state": resort.state,
-#             "country": resort.country,
-#             "zip": resort.zip,
-#             "county": resort.county,
-#             "lattitude": resort.lattitude,
-#             "longitude": resort.longitude,
-#             "highlight_quote": resort.highlight_quote,
-#             "description": resort.description,
-#             "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
-#             "creator_email": resort.creator.email,
-#             "status": resort.status,
-#             "unit_types": [
-#                 {"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types
-#             ],
-#             "listings_by_status": listings_stats,
-#             "total_bookings": total_bookings
-#         }
-
-#         return resort_details
-
-#     except Exception as e:
-#         print(f"[ERROR] Failed to fetch resort details: {str(e)}")
-#         return {"error": f"Exception occurred: {str(e)}"}
-
-#     finally:
-#         session.close()
-
-# BASE_URL = "https://dev.go-koala.com/uploads/resorts"
-
-# def get_resort_details(
-#     resort_id: Optional[int] = None,
-#     resort_name: Optional[str] = None,
-#     amenities_list: Optional[List[str]] = None,
-#     amenities_only: bool = False,
-#     list_resorts_with_amenities: bool = False,
-#     limit: int = 5
-# ) -> Dict[str, Any]:
-
-#     """
-#     Get resort details or filter resorts by amenities.
-#     """
-#     session: Session = SessionLocal()
-#     try:
-#         # -------------------------
-#         # CASE 1: All resorts with amenities
-#         # -------------------------
-#         if list_resorts_with_amenities:
-#             resorts = session.query(Resort).filter(Resort.has_deleted == 0).all()
-#             return {
-#                 "resorts_with_amenities": [
-#                     {
-#                         "resort_id": r.id,
-#                         "resort_name": r.name,
-#                         "amenities": [
-#                             {"id": a.id, "name": a.name}
-#                             for a in session.query(Amenity.id, Amenity.name)
-#                             .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
-#                             .filter(
-#                                 ResortAmenity.resort_id == r.id,
-#                                 or_(*[Amenity.name.ilike(f"%{amenity}%") for amenity in amenities_list])
-#                                 if amenities_list else True
-#                             )
-#                             .all()
-#                         ]
-#                     }
-#                     for r in resorts
-#                 ]
-#             }
-
-#         # -------------------------
-#         # CASE 2: Single resort details by ID or Name
-#         # -------------------------
-#         elif resort_id or resort_name:
-#             query = (
-#                 session.query(Resort)
-#                 .join(User, Resort.creator_id == User.id)
-#                 .filter(Resort.has_deleted == 0)
-#             )
-#             if resort_id:
-#                 query = query.filter(Resort.id == resort_id)
-#             else:
-#                 query = query.filter(Resort.name.ilike(f"%{resort_name.strip()}%"))
-
-#             resort = query.first()
-#             if not resort:
-#                 return {"error": "Resort not found with the given identifier."}
-
-#             amenities_data = [
-#                 {"id": a.id, "name": a.name}
-#                 for a in session.query(Amenity.id, Amenity.name)
-#                 .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
-#                 .filter(ResortAmenity.resort_id == resort.id)
-#                 .all()
-#             ]
-
-#             if amenities_only:
-#                 return {
-#                     "resort_id": resort.id,
-#                     "resort_name": resort.name,
-#                     "amenities": amenities_data
-#                 }
-
-#             # Top image
-#             top_image = (
-#                 session.query(ResortImage)
-#                 .filter(ResortImage.resort_id == resort.id)
-#                 .order_by(ResortImage.image_order.asc())
-#                 .first()
-#             )
-#             image_data = (
-#                 {
-#                     "id": top_image.id,
-#                     "filename": top_image.image,
-#                     "image_order": top_image.image_order,
-#                     "url": f"{BASE_URL}/{resort.id}/{top_image.image}"
-#                 }
-#                 if top_image and top_image.image
-#                 else None
-#             )
-
-#             # Unit types
-#             unit_types = session.query(UnitType).filter(
-#                 UnitType.resort_id == resort.id, UnitType.has_deleted == 0
-#             ).all()
-
-#             # Listings by status
-#             statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']
-#             listings_stats = {
-#                 status: session.query(Listing).filter(
-#                     Listing.resort_id == resort.id,
-#                     Listing.has_deleted == 0,
-#                     Listing.status == status
-#                 ).count()
-#                 for status in statuses
-#             }
-
-#             # Total bookings
-#             total_bookings = session.query(Booking).join(
-#                 Listing, Booking.listing_id == Listing.id
-#             ).filter(Listing.resort_id == resort.id).count()
-
-#             return {
-#                 "id": resort.id,
-#                 "name": resort.name,
-#                 "slug": resort.slug,
-#                 "address": resort.address,
-#                 "city": resort.city,
-#                 "state": resort.state,
-#                 "country": resort.country,
-#                 "zip": resort.zip,
-#                 "county": resort.county,
-#                 "lattitude": resort.lattitude,
-#                 "longitude": resort.longitude,
-#                 "highlight_quote": resort.highlight_quote,
-#                 "description": resort.description,
-#                 "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
-#                 "creator_email": resort.creator.email,
-#                 "status": resort.status,
-#                 "unit_types": [
-#                     {"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types
-#                 ],
-#                 "listings_by_status": listings_stats,
-#                 "total_bookings": total_bookings,
-#                 "top_image": image_data,
-#                 "amenities": amenities_data
-#             }
-
-#         # -------------------------
-#         # CASE 3: Amenities-only search
-#         # -------------------------
-#         elif amenities_list:
-#             # Step 1: Find amenity IDs (case-insensitive)
-#             amenity_ids = [
-#                 a[0]
-#                 for a in session.query(Amenity.id)
-#                 .filter(func.lower(Amenity.name).in_([name.lower() for name in amenities_list]))
-#                 .all()
-#             ]
-#             if not amenity_ids:
-#                 return {"error": "No amenities found for the given names."}
-
-#             # Step 2: Resorts with ALL those amenities
-#             resort_ids = [
-#                 r[0]
-#                 for r in session.query(ResortAmenity.resort_id)
-#                 .filter(ResortAmenity.amenity_id.in_(amenity_ids))
-#                 .group_by(ResortAmenity.resort_id)
-#                 .having(func.count(ResortAmenity.amenity_id) == len(amenity_ids))
-#                 .all()
-#             ]
-#             if not resort_ids:
-#                 return {"error": "No resorts found with the given amenities."}
-
-#             # Step 3: Fetch resort details
-#             resorts = session.query(Resort).filter(
-#                 Resort.id.in_(resort_ids), Resort.has_deleted == 0
-#             ).limit(limit).all()
-
-#             return {
-#                 "resorts": [
-#                     {
-#                         "resort_id": r.id,
-#                         "resort_name": r.name,
-#                         "amenities": [
-#                             {"id": a.id, "name": a.name}
-#                             for a in session.query(Amenity.id, Amenity.name)
-#                             .join(ResortAmenity, ResortAmenity.amenity_id == Amenity.id)
-#                             .filter(ResortAmenity.resort_id == r.id)
-#                             .all()
-#                         ]
-#                     }
-#                     for r in resorts
-#                 ]
-#             }
-
-#         return {"error": "Please provide either resort_id, resort_name, or amenities_list."}
-
-#     except Exception as e:
-#         print(f"[ERROR] Failed to fetch resort details: {e}")
-#         return {"error": f"Exception occurred: {e}"}
-
-#     finally:
-#         session.close()
-
-
-
 
 
 
@@ -2222,171 +1796,6 @@ def get_resort_details(
 
     finally:
         session.close()
-
-
-
-
-
-
-#rubi
-
-# def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[str] = None) -> Dict[str, Any]:
-#     """Get detailed information about a specific resort by ID or Name."""
-#     session = SessionLocal()
-
-#     try:
-#         if resort_id is None and resort_name is None:
-#             return {"error": "Please provide either resort_id or resort_name."}
-
-#         # Fetch resort based on ID or Name
-#         query = session.query(Resort).join(User, Resort.creator_id == User.id).filter(Resort.has_deleted == 0)
-
-#         if resort_id is not None:
-#             query = query.filter(Resort.id == resort_id)
-#         elif resort_name is not None:
-#             query = query.filter(Resort.name.ilike(f"%{resort_name}%"))  # case-insensitive match
-
-#         resort = query.first()
-
-#         if not resort:
-#             return {"error": f"Resort not found with given identifier."}
-
-#         # Get unit types
-#         unit_types = session.query(UnitType)\
-#             .filter(UnitType.resort_id == resort.id)\
-#             .filter(UnitType.has_deleted == 0)\
-#             .all()
-
-#         # Get listings count by status
-#         listings_stats = {}
-#         for status in ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']:
-#             count = session.query(Listing)\
-#                 .filter(Listing.resort_id == resort.id)\
-#                 .filter(Listing.has_deleted == 0)\
-#                 .filter(Listing.status == status)\
-#                 .count()
-#             listings_stats[status] = count
-
-#         # Total bookings
-#         total_bookings = session.query(Booking)\
-#             .join(Listing, Booking.listing_id == Listing.id)\
-#             .filter(Listing.resort_id == resort.id)\
-#             .count()
-
-#         # Final resort details
-#         return {
-#             "id": resort.id,
-#             "name": resort.name,
-#             "slug": resort.slug,
-#             "address": resort.address,
-#             "city": resort.city,
-#             "state": resort.state,
-#             "country": resort.country,
-#             "zip": resort.zip,
-#             "county": resort.county,
-#             "lattitude": resort.lattitude,
-#             "longitude": resort.longitude,
-#             "highlight_quote": resort.highlight_quote,
-#             "description": resort.description,
-#             "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
-#             "creator_email": resort.creator.email,
-#             "status": resort.status,
-#             "unit_types": [{"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types],
-#             "listings_by_status": listings_stats,
-#             "total_bookings": total_bookings
-#         }
-
-#     except Exception as e:
-#         print(f"Error in get_resort_details: {str(e)}")
-#         return {"error": f"Error retrieving resort details: {str(e)}"}
-
-#     finally:
-#         session.close()
-
-
-# def get_resort_details(resort_id: Optional[int] = None, resort_name: Optional[str] = None) -> Dict[str, Any]:
-#     """Get detailed information about a specific resort by ID or Name."""
-#     session = SessionLocal()
-
-#     try:
-#         if resort_id is None and resort_name is None:
-#             return {"error": "Please provide either resort_id or resort_name."}
-
-#         # Fetch resort based on ID or Name
-#         query = session.query(Resort).join(User, Resort.creator_id == User.id).filter(Resort.has_deleted == 0)
-
-#         if resort_id is not None:
-#             query = query.filter(Resort.id == resort_id)
-#         elif resort_name is not None:
-#             query = query.filter(Resort.name.ilike(f"%{resort_name}%"))  # case-insensitive partial match
-
-#         resort = query.first()
-
-#         if not resort:
-#             return {"error": f"Resort not found with the given identifier."}
-#         #get unit_types_rubi
-#         unit_types = session.query(UnitType).filter(
-#             UnitType.resort_id == resort_id,
-#             UnitType.has_deleted == 0
-#         ).all()
-
-#         return {
-#             "resort_name": resort.name,
-#             "unit_types": [
-#                 {
-#                     "id": ut.id,
-#                     "name": ut.name,
-#                     "status": ut.status
-#                 } for ut in unit_types
-#             ]
-#         }
-    
-
-#         # ✅ Get listings count by status
-#         listings_stats = {}
-#         for status in ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']:
-#             count = session.query(Listing)\
-#                 .filter(Listing.resort_id == resort.id)\
-#                 .filter(Listing.has_deleted == 0)\
-#                 .filter(Listing.status == status)\
-#                 .count()
-#             listings_stats[status] = count
-
-#         # ✅ Get total bookings
-#         total_bookings = session.query(Booking)\
-#             .join(Listing, Booking.listing_id == Listing.id)\
-#             .filter(Listing.resort_id == resort.id)\
-#             .count()
-
-#         # ✅ Return full resort details
-#         return {
-#             "id": resort.id,
-#             "name": resort.name,
-#             "slug": resort.slug,
-#             "address": resort.address,
-#             "city": resort.city,
-#             "state": resort.state,
-#             "country": resort.country,
-#             "zip": resort.zip,
-#             "county": resort.county,
-#             "lattitude": resort.lattitude,
-#             "longitude": resort.longitude,
-#             "highlight_quote": resort.highlight_quote,
-#             "description": resort.description,
-#             "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",
-#             "creator_email": resort.creator.email,
-#             "status": resort.status,
-#             "unit_types": [{"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types],
-#             "listings_by_status": listings_stats,
-#             "total_bookings": total_bookings
-#         }
-
-#     except Exception as e:
-#         print(f"Error in get_resort_details: {str(e)}")
-#         return {"error": f"Error retrieving resort details: {str(e)}"}
-
-#     finally:
-#         session.close()
 
 
 
@@ -2711,83 +2120,6 @@ def get_weekend_listings(limit: int = 10) -> List[Dict[str, Any]]:
     finally:
         session.close()
 
-# in live 
-# def search_resorts_by_amenities(amenities: List[str], limit: int = 10) -> List[Dict[str, Any]]:
-#     """
-#     Search for resorts that have specific amenities.
-    
-#     Args:
-#         amenities: List of amenity names to search for
-#         limit: Maximum number of resorts to return
-        
-#     Returns:
-#         List of resorts with matching amenities
-#     """
-#     session = SessionLocal()
-    
-#     try:
-#         # Search in ResortMigration table for amenities
-#         query = session.query(ResortMigration)\
-#             .filter(ResortMigration.resort_has_deleted == 0)\
-#             .filter(ResortMigration.resort_status == 'active')
-        
-#         # Apply amenity filters
-#         for amenity in amenities:
-#             if amenity.lower() in ['pool', 'swimming pool']:
-#                 query = query.filter(ResortMigration.is_swimming_pool == 1)
-#             elif amenity.lower() in ['wifi', 'free wifi']:
-#                 query = query.filter(ResortMigration.is_free_wifi == 1)
-#             elif amenity.lower() in ['fitness', 'gym', 'fitness center']:
-#                 query = query.filter(ResortMigration.is_fitness_center == 1)
-#             elif amenity.lower() in ['restaurant', 'dining']:
-#                 query = query.filter(ResortMigration.is_restaurant == 1)
-#             elif amenity.lower() in ['pets', 'pet friendly']:
-#                 query = query.filter(ResortMigration.pets_friendly == 1)
-        
-#         resorts = query.limit(limit).all()
-        
-#         result = []
-#         seen_resorts = set()  # To avoid duplicates
-        
-#         for resort in resorts:
-#             if resort.resort_id not in seen_resorts:
-#                 seen_resorts.add(resort.resort_id)
-                
-#                 result.append({
-#                     "resort_id": resort.resort_id,
-#                     "resort_name": resort.resort_name,
-#                     "location": {
-#                         "city": resort.city,
-#                         "state": resort.state,
-#                         "country": resort.country,
-#                         "address": resort.address
-#                     },
-#                     "amenities": {
-#                         "swimming_pool": bool(resort.is_swimming_pool),
-#                         "free_wifi": bool(resort.is_free_wifi),
-#                         "fitness_center": bool(resort.is_fitness_center),
-#                         "restaurant": bool(resort.is_restaurant),
-#                         "pets_friendly": bool(resort.pets_friendly)
-#                     },
-#                     "ratings": {
-#                         "google_rating": resort.google_rating or 0,
-#                         "hotel_stars": resort.hotel_star or 0,
-#                         "is_featured": bool(resort.is_featured)
-#                     },
-#                     "brand": resort.brand_name,
-#                     "highlight_quote": resort.highlight_quote
-#                 })
-        
-#         return result
-        
-#     except Exception as e:
-#         print(f"Error in search_resorts_by_amenities: {str(e)}")
-#         return []
-        
-#     finally:
-#         session.close()
-
-
 
 
 def search_resorts_by_amenities(
@@ -2841,8 +2173,6 @@ def search_resorts_by_amenities(
 
     finally:
         session.close()
-
-
 
 
 

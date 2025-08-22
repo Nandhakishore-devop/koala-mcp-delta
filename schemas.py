@@ -1,4 +1,6 @@
 from typing import List, Dict, Any
+import datetime
+import uuid
 
 
 def get_amenity_details_schema() -> Dict[str, Any]:
@@ -560,8 +562,7 @@ def test_database_connection_schema() -> Dict[str, Any]:
 #     }
 
 
-import datetime
-import uuid
+
 
 def current_date():
     """Get the current date in YYYY-MM-DD format."""
@@ -624,7 +625,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                     },
                     "listing_check_out": {
                         "type": "string",
-                        "description": f"Check-out date in YYYY-MM-DD format (auto-adjusted to future) based on {today},{current_year}."
+                        "description": f"Check- date in YYYY-MM-DD format (auto-adjusted to future) based on {today},{current_year}."
                     },
                    "month": {
                         "type": "string",
@@ -673,6 +674,25 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                         "description": "Specific unit type to filter (e.g., Studio, 1 Bedroom, Suite)."
                     },
 
+                    "min_guests": {
+                       "type": "integer",
+                       "description": "Minimum guest capacity required (filters by unit_types.sleeps)."
+                    },
+
+                  # cancellation_policy
+                    "cancellation_policy": {
+                        "type": "string",
+                        "description": "Filter listings by cancellation policy.",
+                        "enum": ["flexible", "relaxed", "moderate", "firm", "strict"],
+                        "x-enumDescriptions": {
+                            "flexible": "Full refund if canceled at least 3 days before check-in.",
+                            "relaxed": "Full refund if canceled at least 16 days before check-in.",
+                            "moderate": "Full refund if canceled at least 32 days before check-in.",
+                            "firm": "Full refund if canceled at least 62 days before check-in.",
+                            "strict": "Booking is non-refundable."
+                        }
+                    },
+ 
                     # Options
                     "limit": {
                         "type": "integer",
