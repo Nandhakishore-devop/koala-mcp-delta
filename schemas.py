@@ -592,6 +592,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                 "If only month is provided (no year), the system automatically selects "
                 "the next upcoming occurrence of that month. "
                 "If year is also provided, that exact year is used (even if past)."
+                
             ),
             "parameters": {
                 "type": "object",
