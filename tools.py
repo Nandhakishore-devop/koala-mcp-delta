@@ -460,6 +460,7 @@ def slugify_resort_name(name: str) -> str:
     )
 
 
+
 def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
@@ -611,6 +612,22 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
             resort_url = f"{BASE_LIST_URL}{slug}?startD=&endD=&adults=0&months=&dateOption=7" if slug else None
 
 
+            # ✅ Resort booking URL (with listing_id + dates + adults=2)
+            booking_url = None
+            if slug and row.id and row.listing_check_in and row.listing_check_out:
+                booking_url = (
+                    f"{BASE_LIST_URL}{slug}"
+                    f"?startD={row.listing_check_in.strftime('%Y-%m-%d')}"
+                    f"&endD={row.listing_check_out.strftime('%Y-%m-%d')}"
+                    f"&adults=0&months=&dateOption=7"
+                )
+
+                print(f"Generated booking URL: {booking_url}")  # Debug print
+                
+
+             
+             
+
             # ✅ Format price here
             if row.listing_price_night:
                 display_price = f"from ${row.listing_price_night} per night"
@@ -628,7 +645,8 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 "cancellation_policy_description": policy_desc,
                 "listing_cancelation_date": cancel_date,
                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
-                "resort_url": resort_url
+                "resort_url": resort_url,
+                "booking_url": booking_url
             })
 
         # print("Rubi" ,results)  # Rubi

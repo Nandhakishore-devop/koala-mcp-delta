@@ -699,7 +699,16 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                             "strict": "Booking is non-refundable."
                         }
                     },
-                   
+
+                    "listing_url": {
+                        "type": "string",
+                        "description": "The URL to the resort's listing page."
+                    },
+                    "booking_url": {
+                        "type": "string",
+                        "description": "The URL to book the resort directly with the given check-in and check-out dates."
+                    },
+                                
 
 
  
@@ -717,7 +726,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                         "description": "Enable verbose output for debugging (default: false)."
                     }
                 },
-                "required": [],
+                "required": ["listing_url","booking_url"],
                 "additionalProperties": False
             }
         }
