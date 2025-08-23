@@ -678,8 +678,14 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                        "type": "integer",
                        "description": "Minimum guest capacity required (filters by unit_types.sleeps)."
                     },
+                     "listing_cancelation_date": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "The date when the user can cancel the booking, in YYYY-MM-DD format."
+                        
+                        
+                    },
 
-                  # cancellation_policy
                     "cancellation_policy": {
                         "type": "string",
                         "description": "Filter listings by cancellation policy.",
@@ -692,6 +698,9 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                             "strict": "Booking is non-refundable."
                         }
                     },
+                   
+
+
  
                     # Options
                     "limit": {

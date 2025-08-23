@@ -242,7 +242,7 @@ class PtRtListing(Base):
     # unit_type_name = Column(String(255))
     # unit_kitchenate = Column(String(255))
     # unit_status = Column(String(255))
-    unit_cancelation_policy_option = Column(String(255))
+    unit_sleeps = Column(String(50))  # Changed to String to match possible formats
     resort_id = Column(Integer, default=0)  # This is NOT a foreign key - it's just data
     resort_lattitude = Column(String(255))
     resort_longitude = Column(String(255))
@@ -1126,13 +1126,32 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
         output = []
         for listing in final_results:
             listing_dict = model_to_dict(listing)
+            
             policy_key = listing_dict.get("listing_cancelation_policy_option")
+            
+            # Use the provided cancellation date from data and normalize to YYYY-MM-DD
+            cancel_date_raw = listing_dict.get("listing_cancelation_date")
+            if cancel_date_raw and cancel_date_raw not in ["0000-00-00", "0000-00-00 00:00:00", None, ""]:
+                listing_dict["listing_cancelation_date"] = str(cancel_date_raw).split(" ")[0]
+            else:
+                listing_dict["listing_cancelation_date"] = "Date not specified"
+            
+            # Add human-readable policy description
             listing_dict["cancellation_policy_description"] = CANCELLATION_POLICY_DESCRIPTIONS.get(
                 policy_key, "Policy not specified"
             )
+            
+            # Combine both for display
+            listing_dict["cancellation_info"] = f"{listing_dict['cancellation_policy_description']} (By {listing_dict['listing_cancelation_date']})"
+            
+            # ✅ Use listing_dict instead of listing
+            print(f"Cancellation: {listing_dict['cancellation_info']}") #rubi
+
             output.append(listing_dict)
+            print(listing_dict) #rubi
 
         return output
+
 
     except Exception as e:
         print(f"❌ Error in search_available_future_listings_enhanced: {str(e)}")
@@ -1140,6 +1159,12 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
         return []
     finally:
         session.close()
+
+
+
+
+
+
 
 
 #----------search_avaliable_future..... end 
