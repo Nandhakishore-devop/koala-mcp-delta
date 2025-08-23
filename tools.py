@@ -610,6 +610,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
             slug = slugify_resort_name(row.resort_name) if row.resort_name else None
             resort_url = f"{BASE_LIST_URL}{slug}?startD=&endD=&adults=0&months=&dateOption=7" if slug else None
 
+
             # ✅ Format price here
             if row.listing_price_night:
                 display_price = f"from ${row.listing_price_night} per night"
@@ -623,14 +624,18 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 "sleeps": int(row.sleeps) if row.sleeps is not None else None,
                 "check_in": row.listing_check_in.strftime("%Y-%m-%d") if row.listing_check_in else None,
                 "check_out": row.listing_check_out.strftime("%Y-%m-%d") if row.listing_check_out else None,
-                "price_per_night": display_price,   # ✅ updated
+                "price_per_night": display_price,
                 "cancellation_policy_description": policy_desc,
                 "listing_cancelation_date": cancel_date,
                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
                 "resort_url": resort_url
             })
-                
-            return results
+
+        # print("Rubi" ,results)  # Rubi
+        print("Rubi")
+
+
+        return results
 
     except Exception as e:
         print(f"❌ Error in search_available_future_listings_enhanced: {str(e)}")
