@@ -681,8 +681,8 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                      "listing_cancelation_date": {
                         "type": "string",
                         "format": "date",
-                        "description": "The date when the user can cancel the booking, in YYYY-MM-DD format."
-                        
+                        "description": "The date when the user can cancel the booking, in YYYY-MM-DD format.eg: Cancellation: Full refund if canceled at least 16 days before check-in. (By 2025-12-07)"
+
                         
                     },
 
