@@ -526,23 +526,24 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
 
             elif month and not check_in_str and not check_out_str:
-                # Get start and end of the month
+                # Month-based filtering
                 ci_str, co_str = get_month_year_range(month, year)
                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
                 
-                # Check if user also provided a specific day
-                if specific_day:  # e.g., day variable is not None
+                if specific_day:
+                    # Month + specific day -> use same day for check-in and check-out
                     specific_date = datetime(year, month, day)
                     filter_conditions += [
-                        PtRtListing.listing_check_in == check_in_start,
-                        PtRtListing.listing_check_out == check_in_end,
+                        PtRtListing.listing_check_in == specific_date,
+                        PtRtListing.listing_check_out == specific_date,
                     ]
                     exact_date_filter = True
-                else:  # Only month/year provided only for month filter
+                else:
+                    # Only month -> check-in >= first_day, check-out <= last_day
                     filter_conditions += [
                         PtRtListing.listing_check_in >= check_in_start,
-                        PtRtListing.listing_check_in <= check_in_end,
+                        PtRtListing.listing_check_out <= check_in_end,
                     ]
                     exact_date_filter = False
 
