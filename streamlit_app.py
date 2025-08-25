@@ -346,11 +346,9 @@ def main():
 
     
     # Chat input at the bottom
-    user_input = st.text_input(
+    user_input = st.chat_input(
         "Ask me anything about resort bookings:",
-        value="",
-        key=f"chat_input_{st.session_state.input_counter}",
-        placeholder="Type your message here..."
+        key=f"chat_input_{st.session_state.input_counter}"
     )
 
     

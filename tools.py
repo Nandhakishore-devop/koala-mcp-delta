@@ -895,8 +895,6 @@ def get_available_resorts(
 
 
 
-
-
 def get_resort_price(
     resort_name: str = None,
     country: str = None,
@@ -1095,7 +1093,6 @@ def get_resort_price(
 
     finally:
         session.close()
-
 
 
 
