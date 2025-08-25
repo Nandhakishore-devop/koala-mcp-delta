@@ -430,7 +430,7 @@ def get_month_year_range(month_input: str, year_input: int = None):
         last_day.strftime("%Y-%m-%d"),
         
     )
-    # print(f"Month/Year Range: {ci_str} to {co_str}")
+    print(f"Month/Year Range: {ci_str} to {co_str}")
     return ci_str, co_str
 
      
@@ -519,7 +519,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
                 filter_conditions += [
                     PtRtListing.listing_check_in >= check_in_start,
-                    PtRtListing.listing_check_in <= check_in_end,
+                    PtRtListing.listing_check_out <= check_in_end,
                 ]
                 exact_date_filter = True
 
