@@ -583,6 +583,13 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
     Supports flexible resort search with filters for location, pricing, unit type,
     currency, sorting, debugging, and date logic.
     Always ensures check-in/check-out dates are in the future (auto-adjusted).
+
+    specifically:
+    -> if specified all three year,month,day it will take as it is checkin and check out in pt_rt table .
+    1. If no year/month/day is provided, defaults to future dates.
+    2. If only month is provided (no year), it resolves to the next upcoming occurrence.
+
+    
     If only month is provided (no year), it resolves to the next upcoming occurrence.
     If year is explicitly provided, it is used as-is (even if past).
     """
