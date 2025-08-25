@@ -589,10 +589,11 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
         # ---------------- Fetch + deduplicate ----------------
         limit = int(filters.get("limit", 10))
-        fetch_limit = limit * 100
+        fetch_limit = limit * 50
         results = query.limit(fetch_limit).all()
         unique_results = deduplicate_by_resort_id(results) if price_sort != "avg_price" else results
         final_results = unique_results[:limit]
+        # print("sql_Quary_rubi:",query)  # Debug print of final SQL query
 
         # ---------------- Build Structured Result ----------------
         results = []
@@ -623,6 +624,8 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 )
 
                 print(f"Generated booking URL: {booking_url}")  # Debug print
+
+                
                 
 
              
@@ -894,7 +897,6 @@ def get_available_resorts(
 
 
 
-
 def get_resort_price(
     resort_name: str = None,
     country: str = None,
@@ -1097,6 +1099,8 @@ def get_resort_price(
 
 
 
+
+
 # BASE_URL = "https://dev.go-koala.com/uploads/resorts"
 BASE_URL = "https://koalaadmin-prod.s3.us-east-2.amazonaws.com/uploads/resorts" # live url
 def get_resort_details(
@@ -1224,8 +1228,8 @@ def get_resort_details(
                 "country": resort.country,
                 "zip": resort.zip,
                 "county": resort.county,
-                "lattitude": resort.lattitude,
-                "longitude": resort.longitude,
+                # "lattitude": resort.lattitude,
+                # "longitude": resort.longitude,
                 "highlight_quote": resort.highlight_quote,
                 "description": resort.description,
                 "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}",

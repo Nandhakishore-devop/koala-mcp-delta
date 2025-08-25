@@ -24,16 +24,12 @@ class AssistantThread:
                     "Unavailable Data" "If the requested data cannot be found in the database/API, respond with a fallback: “Sorry, I couldn’t find exact results for that request. Would you like me to suggest similar options?”"
 
                     "Personal Information Requests:"
-                    "1. Email Required"
+                    "1. Email & password  Required"
                     "→ Always ask the user to provide their email ID before showing any booking details."
                     "2. Password Handling"
                     "→ Immediately after the user enters their email, prompt:"
                         "Enter your password to continue."
                     "→ The password is only a formality and is not validated."
-                    "→ Provide a default password example in the prompt:"
-                        "Your default password is: koala12345"
-                    "→ Once the user enters the password, execute the intended backend function and display the results."
-                    "Never store or log the password."
 
 
                     "Unclear User Intent:" "If the request is confusing, ask for clarification before proceeding: “Could you clarify your location, check-in, or budget details so I can help better?”"
