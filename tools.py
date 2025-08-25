@@ -535,11 +535,11 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 if specific_day:  # e.g., day variable is not None
                     specific_date = datetime(year, month, day)
                     filter_conditions += [
-                        PtRtListing.listing_check_in == specific_date,
-                        PtRtListing.listing_check_out == specific_date,
+                        PtRtListing.listing_check_in == check_in_start,
+                        PtRtListing.listing_check_out == check_in_end,
                     ]
                     exact_date_filter = True
-                else:  # Only month/year provided
+                else:  # Only month/year provided only for month filter
                     filter_conditions += [
                         PtRtListing.listing_check_in >= check_in_start,
                         PtRtListing.listing_check_in <= check_in_end,
