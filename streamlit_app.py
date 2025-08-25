@@ -84,6 +84,8 @@ st.markdown("""
         margin-bottom: 2rem;
         margin-top:-80px 
     }
+
+    
     
     .chat-message {
         padding: 1rem;
@@ -346,9 +348,11 @@ def main():
 
     
     # Chat input at the bottom
-    user_input = st.chat_input(
+    user_input = st.text_input(
         "Ask me anything about resort bookings:",
-        key=f"chat_input_{st.session_state.input_counter}"
+        value="",
+        key=f"chat_input_{st.session_state.input_counter}",
+        placeholder="Type your message here..."
     )
 
     
@@ -509,13 +513,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
 
 
 # def display_function_call(function_name, arguments, result=None):

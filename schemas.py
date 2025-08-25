@@ -33,8 +33,11 @@ def get_available_resorts_schema() -> Dict[str, Any]:
     "type": "function",
     "function": {
         "name": "get_available_resorts",
-        "description": "List all available resorts with their basic information"
-                        "the count of activate listings, and the total number of bookings. it manditory",
+        "description": ( "Get a list of ALL EXISTING RESORTS in a specific location. "
+                        "Use this when the user asks 'show me resorts in [location]' or "
+                        "'what resorts are in [location]'. "
+                        "This returns resort information, NOT availability or bookings. "
+                        "For availability/booking searches, use search_available_future_listings_enhanced instead."),
         "parameters": {
             "type": "object",
             "properties": {
@@ -288,9 +291,12 @@ def get_resort_details_schema() -> Dict[str, Any]:
             "name": "get_resort_details",
             "description": (
                 "Retrieve resort details by ID or name, or search resorts by amenities. "
+                
+                "only resort based question means to call in this tool get_resort_details "
                 "Amenities search matches all given amenities (case-insensitive)."
                 "resort name with price based question means to call in this tool search_available_future_listings_enhanced "
                 "if asking any specify resort details means the image must show"
+                
             ),
             "parameters": {
                 "type": "object",
@@ -585,13 +591,13 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
         "function": {
             "name": "search_available_future_listings_enhanced",
             "description": (
-                "Enhanced search for available future resort listings with advanced filters. "
-                "Supports location (country, state, city), price range, unit type, nights, "
-                "currency code, sorting by price, debugging options, and flexible date resolution. "
-                "Always ensures check-in/check-out dates are in the future. "
-                "If only month is provided (no year), the system automatically selects "
-                "the next upcoming occurrence of that month. "
-                "If year is also provided, that exact year is used (even if past)."
+                
+
+                "Search for AVAILABLE BOOKINGS/LISTINGS at resorts in a specific location. "
+                "Use this when the user asks 'find me available stays in [location]', "
+                "'show me what I can book in [location]', or asks about availability, dates, or pricing. "
+                "This is for finding bookable options, NOT for listing what resorts exist. "
+                "For resort listings, use get_available_resorts instead."
                 
             ),
             "parameters": {
