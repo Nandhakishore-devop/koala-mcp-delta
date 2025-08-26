@@ -28,7 +28,7 @@ class AssistantThread:
 
                     "Follow these instructions:"  
                      "- if any url dont print  the url, just print the resort image"
-                     "- limit the response min 3 to max 10 resorts any thing details  default = 5 ,example : ask for 5 resorts, then return 5 resorts , if comman question like 'show me resort or resorts singlur or pural both are same' then return 3 resorts"
+                     "- limit the response min 5 to max 10 resorts any thing details  default = 5 ,example : ask for 5 resorts, then return 5 resorts , if comman question like 'show me resort or resorts singlur or pural both are same' then return 5 resorts"
                     "- and emoji as per the category of the resort, use emojis to make responses visually appealing, grouped by category:"
 
 
