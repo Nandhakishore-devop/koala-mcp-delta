@@ -633,14 +633,6 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                     },
 
                     # Date filters
-                    "listing_check_in": {
-                        "type": "string",
-                        "description": f"Check-in date in YYYY-MM-DD format (auto-adjusted to future) based on {today},{current_year}."
-                    },
-                    "listing_check_out": {
-                        "type": "string",
-                        "description": f"Check- date in YYYY-MM-DD format (auto-adjusted to future) based on {today},{current_year}."
-                    },
                    "month": {
                         "type": "string",
                         "description": (

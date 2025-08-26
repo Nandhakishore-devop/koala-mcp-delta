@@ -361,7 +361,7 @@ def get_database_url():
     host = os.getenv("MYSQL_HOST", "localhost")
     user = os.getenv("MYSQL_USER", "root")
     password = os.getenv("MYSQL_PASSWORD", "")
-    database = os.getenv("MYSQL_DATABASE", "koala_live_laravel")
+    database = os.getenv("MYSQL_DATABASE", "koala_dev")
     
     # Build MySQL URL
     if password:
@@ -775,7 +775,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
 
 
-                
+
 # ---------------- Date filters ----------------
         exact_date_filter = False
         check_in_str = filters.get("listing_check_in")
@@ -811,7 +811,7 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 else:
                     filter_conditions += [
                         PtRtListing.listing_check_in >= check_in_start,
-                        PtRtListing.listing_check_out <= check_in_end,
+                        PtRtListing.listing_check_in <= check_in_end,
                     ]
                     exact_date_filter = False
 
