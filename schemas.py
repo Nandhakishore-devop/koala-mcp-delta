@@ -740,156 +740,156 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
 
 
 
-def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
-    today = current_date()
-    current_year = datetime.datetime.now().year
-    """
-    Unified schema for the search_available_future_listings_enhanced_v2 function.
-    specified resort name or slug with listings details
-    Supports flexible resort search with filters for location, pricing, unit type,
-    only for this type of input {resort name} give me the listings details with price and availability
-    """
-    return {
-        "type": "function",
-        "function": {
-            "name": "search_available_future_listings_enhanced_v2",
-            "description": (
+# def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
+#     today = current_date()
+#     current_year = datetime.datetime.now().year
+#     """
+#     Unified schema for the search_available_future_listings_enhanced_v2 function.
+#     specified resort name or slug with listings details
+#     Supports flexible resort search with filters for location, pricing, unit type,
+#     only for this type of input {resort name} give me the listings details with price and availability
+#     """
+#     return {
+#         "type": "function",
+#         "function": {
+#             "name": "search_available_future_listings_enhanced_v2",
+#             "description": (
                 
-                "input resort name or slug with listings details for specified resort" 
-                "Search for AVAILABLE BOOKINGS/LISTINGS at resorts in a specific location. "
-                "Use this when the user asks 'find me available stays in [location]', "
-                "only for this type of input {resort name} give me the listings details with price and availability"
+#                 "input resort name or slug with listings details for specified resort" 
+#                 "Search for AVAILABLE BOOKINGS/LISTINGS at resorts in a specific location. "
+#                 "Use this when the user asks 'find me available stays in [location]', "
+#                 "only for this type of input {resort name} give me the listings details with price and availability"
                 
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    # Resort/location filters
-                    "resort_id": {
-                        "type": "integer",
-                        "description": "Unique resort ID (optional)."
-                    },
-                    "resort_name": {
-                        "type": "string",
-                        "description": "Name of the resort to search for (optional if location is provided)."
-                    },
-                    "resort_country": {
-                        "type": "string",
-                        "description": "Country where the resort is located."
-                    },
-                    "resort_state": {
-                        "type": "string",
-                        "description": "State or province where the resort is located."
-                    },
-                    "resort_city": {
-                        "type": "string",
-                        "description": "City where the resort is located."
-                    },
+#             ),
+#             "parameters": {
+#                 "type": "object",
+#                 "properties": {
+#                     # Resort/location filters
+#                     "resort_id": {
+#                         "type": "integer",
+#                         "description": "Unique resort ID (optional)."
+#                     },
+#                     "resort_name": {
+#                         "type": "string",
+#                         "description": "Name of the resort to search for (optional if location is provided)."
+#                     },
+#                     "resort_country": {
+#                         "type": "string",
+#                         "description": "Country where the resort is located."
+#                     },
+#                     "resort_state": {
+#                         "type": "string",
+#                         "description": "State or province where the resort is located."
+#                     },
+#                     "resort_city": {
+#                         "type": "string",
+#                         "description": "City where the resort is located."
+#                     },
 
-                    # Date filters
-                   "month": {
-                        "type": "string",
-                        "description": (
-                            "Filter for check-in month (name or number, e.g., 'Jan' or 1-12). "
-                            "Always used with automatic future year mapping if year not explicitly set."
-                        )
-                    },
-                    "year": {
-                        "type": "integer",
-                        "description": (
-                            "Optional filter for check-in year. "
-                            "If not provided, the system automatically resolves to the correct future year."
-                        )
-                    },
+#                     # Date filters
+#                    "month": {
+#                         "type": "string",
+#                         "description": (
+#                             "Filter for check-in month (name or number, e.g., 'Jan' or 1-12). "
+#                             "Always used with automatic future year mapping if year not explicitly set."
+#                         )
+#                     },
+#                     "year": {
+#                         "type": "integer",
+#                         "description": (
+#                             "Optional filter for check-in year. "
+#                             "If not provided, the system automatically resolves to the correct future year."
+#                         )
+#                     },
 
-                    # Pricing / currency
-                    "min_price": {
-                        "type": "number",
-                        "description": "Minimum price per night to filter listings."
-                    },
-                    "max_price": {
-                        "type": "number",
-                        "description": "Maximum price per night to filter listings."
-                    },
-                    "listing_price_night": {
-                        "type": "integer",
-                        "description": "Number of nights for the booking (used for total price calculation)."
-                    },
-                    "currency_code": {
-                        "type": "string",
-                        "description": "Currency code for price (e.g., USD, EUR, INR)."
-                    },
-                    "price_sort": {
-                        "type": "string",
-                        "description": (
-                            "Sort results by price. "
-                            "Use 'asc' for lowest to highest, 'desc' for highest to lowest, "
-                            "'avg_price' for resort average, 'cheapest', 'average', or 'highest'."
-                        )
-                    },
+#                     # Pricing / currency
+#                     "min_price": {
+#                         "type": "number",
+#                         "description": "Minimum price per night to filter listings."
+#                     },
+#                     "max_price": {
+#                         "type": "number",
+#                         "description": "Maximum price per night to filter listings."
+#                     },
+#                     "listing_price_night": {
+#                         "type": "integer",
+#                         "description": "Number of nights for the booking (used for total price calculation)."
+#                     },
+#                     "currency_code": {
+#                         "type": "string",
+#                         "description": "Currency code for price (e.g., USD, EUR, INR)."
+#                     },
+#                     "price_sort": {
+#                         "type": "string",
+#                         "description": (
+#                             "Sort results by price. "
+#                             "Use 'asc' for lowest to highest, 'desc' for highest to lowest, "
+#                             "'avg_price' for resort average, 'cheapest', 'average', or 'highest'."
+#                         )
+#                     },
 
-                    # Unit / type filters
-                    "unit_type": {
-                        "type": "string",
-                        "description": "Specific unit type to filter (e.g., Studio, 1 Bedroom, Suite)."
-                    },
+#                     # Unit / type filters
+#                     "unit_type": {
+#                         "type": "string",
+#                         "description": "Specific unit type to filter (e.g., Studio, 1 Bedroom, Suite)."
+#                     },
 
-                    "min_guests": {
-                       "type": "integer",
-                       "description": "Minimum guest capacity required (filters by unit_types.sleeps)."
-                    },
-                     "listing_cancelation_date": {
-                        "type": "string",
-                        "format": "date",
-                        "description": "The date when the user can cancel the booking, in YYYY-MM-DD format.eg: Cancellation: Full refund if canceled at least 16 days before check-in. (By 2025-12-07)"
+#                     "min_guests": {
+#                        "type": "integer",
+#                        "description": "Minimum guest capacity required (filters by unit_types.sleeps)."
+#                     },
+#                      "listing_cancelation_date": {
+#                         "type": "string",
+#                         "format": "date",
+#                         "description": "The date when the user can cancel the booking, in YYYY-MM-DD format.eg: Cancellation: Full refund if canceled at least 16 days before check-in. (By 2025-12-07)"
 
                         
-                    },
+#                     },
 
-                    "cancellation_policy": {
-                        "type": "string",
-                        "description": "Filter listings by cancellation policy.",
-                        "enum": ["flexible", "relaxed", "moderate", "firm", "strict"],
-                        "x-enumDescriptions": {
-                            "flexible": "Full refund if canceled at least 3 days before check-in.",
-                            "relaxed": "Full refund if canceled at least 16 days before check-in.",
-                            "moderate": "Full refund if canceled at least 32 days before check-in.",
-                            "firm": "Full refund if canceled at least 62 days before check-in.",
-                            "strict": "Booking is non-refundable."
-                        }
-                    },
+#                     "cancellation_policy": {
+#                         "type": "string",
+#                         "description": "Filter listings by cancellation policy.",
+#                         "enum": ["flexible", "relaxed", "moderate", "firm", "strict"],
+#                         "x-enumDescriptions": {
+#                             "flexible": "Full refund if canceled at least 3 days before check-in.",
+#                             "relaxed": "Full refund if canceled at least 16 days before check-in.",
+#                             "moderate": "Full refund if canceled at least 32 days before check-in.",
+#                             "firm": "Full refund if canceled at least 62 days before check-in.",
+#                             "strict": "Booking is non-refundable."
+#                         }
+#                     },
 
-                    "listing_url": {
-                        "type": "string",
-                        "description": "The URL to the resort's listing page."
-                    },
-                    "booking_url": {
-                        "type": "string",
-                        "description": "The URL to book the resort directly with the given check-in and check-out dates."
-                    },
+#                     "listing_url": {
+#                         "type": "string",
+#                         "description": "The URL to the resort's listing page."
+#                     },
+#                     "booking_url": {
+#                         "type": "string",
+#                         "description": "The URL to book the resort directly with the given check-in and check-out dates."
+#                     },
                                 
 
 
  
-                    # Options
-                    "limit": {
-                        "type": "integer",
-                        "description": "Maximum number of listings to return (default: 30)."
-                    },
-                    "flexible_dates": {
-                        "type": "boolean",
-                        "description": "Search for alternative dates if exact not available (default: true)."
-                    },
-                    "debug": {
-                        "type": "boolean",
-                        "description": "Enable verbose output for debugging (default: false)."
-                    }
-                },
-                "required": ["listing_url","booking_url"],
-                "additionalProperties": False
-            }
-        }
-    }
+#                     # Options
+#                     "limit": {
+#                         "type": "integer",
+#                         "description": "Maximum number of listings to return (default: 30)."
+#                     },
+#                     "flexible_dates": {
+#                         "type": "boolean",
+#                         "description": "Search for alternative dates if exact not available (default: true)."
+#                     },
+#                     "debug": {
+#                         "type": "boolean",
+#                         "description": "Enable verbose output for debugging (default: false)."
+#                     }
+#                 },
+#                 "required": ["listing_url","booking_url"],
+#                 "additionalProperties": False
+#             }
+#         }
+#     }
 
 
 
@@ -939,7 +939,7 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
         # search_resorts_by_amenities_schema(),
         test_database_connection_schema(),
         search_available_future_listings_enhanced_schema(),  # Enhanced version
-        search_available_future_listings_enhanced_v2_schema(),  # New v2 version
+        # search_available_future_listings_enhanced_v2_schema(),  # New v2 version
     ]
 
 # Export all schemas as a list
