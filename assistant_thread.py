@@ -9,7 +9,6 @@ class AssistantThread:
         current_year = get_current_year()
         today = datetime.datetime.now()
         # print(f"Current year is {current_year}")
-        # print (f"Today's date is {today}")
         self.thread_id = str(uuid.uuid4())
         system_content = f"""
         Strictly follow the user's tone.You are a customer support agent for a timeshare or vacation rentals booking systemYour role is to guide users in finding and booking resorts in a way that is clear, engaging, and easy to understand.
