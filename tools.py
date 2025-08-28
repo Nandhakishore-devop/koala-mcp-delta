@@ -2140,73 +2140,73 @@ def get_user_bookings(
 
 
 
-def get_available_resorts(
-    country: str = None,
-    city: str = None,
-    state: str = None,
-    status: str = "active",
-    limit: int = 10
-) -> List[Dict[str, Any]]:
-    """
-    List available resorts with optional filtering by country, city, and state.
+# def get_available_resorts(
+#     country: str = None,
+#     city: str = None,
+#     state: str = None,
+#     status: str = "active",
+#     limit: int = 10
+# ) -> List[Dict[str, Any]]:
+#     """
+#     List available resorts with optional filtering by country, city, and state.
 
-    Args:
-        country: Optional country filter
-        city: Optional city filter
-        state: Optional state filter
-        status: Resort status filter (default: active)
-        limit: Maximum number of resorts to return (default: 10)
+#     Args:
+#         country: Optional country filter
+#         city: Optional city filter
+#         state: Optional state filter
+#         status: Resort status filter (default: active)
+#         limit: Maximum number of resorts to return (default: 10)
 
-    Returns:
-        List of dictionaries with resort information
-    """
-    session = SessionLocal()
+#     Returns:
+#         List of dictionaries with resort information
+#     """
+#     session = SessionLocal()
 
-    try:
-        query = session.query(Resort)\
-            .join(User, Resort.creator_id == User.id)\
-            .filter(Resort.has_deleted == 0)\
-            .filter(Resort.status == status)
+#     try:
+#         query = session.query(Resort)\
+#             .join(User, Resort.creator_id == User.id)\
+#             .filter(Resort.has_deleted == 0)\
+#             .filter(Resort.status == status)
 
-        if country:
-            query = query.filter(Resort.country.isnot(None), Resort.country.ilike(f"%{country.strip()}%"))
-        if city:
-            query = query.filter(Resort.city.isnot(None), Resort.city.ilike(f"%{city.strip()}%"))
-        if state:
-            query = query.filter(Resort.state.isnot(None), Resort.state.ilike(f"%{state.strip()}%"))
+#         if country:
+#             query = query.filter(Resort.country.isnot(None), Resort.country.ilike(f"%{country.strip()}%"))
+#         if city:
+#             query = query.filter(Resort.city.isnot(None), Resort.city.ilike(f"%{city.strip()}%"))
+#         if state:
+#             query = query.filter(Resort.state.isnot(None), Resort.state.ilike(f"%{state.strip()}%"))
 
-        resorts = query.limit(limit).all()
+#         resorts = query.limit(limit).all()
 
-        result = []
-        for resort in resorts:
-            active_listings = session.query(Listing)\
-                .filter(Listing.resort_id == resort.id)\
-                .filter(Listing.has_deleted == 0)\
-                .filter(Listing.status.in_(['active', 'pending']))\
-                .count()
+#         result = []
+#         for resort in resorts:
+#             active_listings = session.query(Listing)\
+#                 .filter(Listing.resort_id == resort.id)\
+#                 .filter(Listing.has_deleted == 0)\
+#                 .filter(Listing.status.in_(['active', 'pending']))\
+#                 .count()
 
-            result.append({
-                "id": resort.id,
-                "name": resort.name,
-                "city": resort.city,
-                "state": resort.state,
-                "country": resort.country,
-                "highlight_quote": resort.highlight_quote[:200] + "..." if resort.highlight_quote and len(resort.highlight_quote) > 200 else resort.highlight_quote,
-                "active_listings": active_listings,
-                "status": resort.status
-            })
+#             result.append({
+#                 "id": resort.id,
+#                 "name": resort.name,
+#                 "city": resort.city,
+#                 "state": resort.state,
+#                 "country": resort.country,
+#                 "highlight_quote": resort.highlight_quote[:200] + "..." if resort.highlight_quote and len(resort.highlight_quote) > 200 else resort.highlight_quote,
+#                 "active_listings": active_listings,
+#                 "status": resort.status
+#             })
 
-        result = sorted(result, key=lambda result: result['active_listings'], reverse=True)
+#         result = sorted(result, key=lambda result: result['active_listings'], reverse=True)
 
-        return result
+#         return result
 
 
-    except Exception as e:
-        print(f"Error in get_available_resorts: {str(e)}")
-        return []
+#     except Exception as e:
+#         print(f"Error in get_available_resorts: {str(e)}")
+#         return []
 
-    finally:
-        session.close()
+#     finally:
+#         session.close()
 
 
 
@@ -3096,7 +3096,7 @@ def get_price_range_summary(country: str = None, state: str = None) -> Dict[str,
 # Tool function registry for easy lookup
 AVAILABLE_TOOLS = {
     "get_user_bookings": get_user_bookings,
-    "get_available_resorts": get_available_resorts,
+    # "get_available_resorts": get_available_resorts,
     "get_resort_details": get_resort_details,
     "search_available_future_listings_enhanced": search_available_future_listings_enhanced,
     "search_available_future_listings_enhanced_v2": search_available_future_listings_enhanced_v2,

@@ -27,46 +27,46 @@ def get_amenity_details_schema() -> Dict[str, Any]:
 }
 
 
-def get_available_resorts_schema() -> Dict[str, Any]:
-    """Auto-generated schema for get_available_resorts function."""
-    return {
-    "type": "function",
-    "function": {
-        "name": "get_available_resorts",
-        "description": ( "Get a list of ALL EXISTING RESORTS in a specific location. "
-                        "Use this when the user asks 'show me resorts in [location]' or "
-                        "'what resorts are in [location]'. "
-                        "This returns resort information, NOT availability or bookings. "
-                        "For availability/booking searches, use search_available_future_listings_enhanced instead."),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "country": {
-                    "type": "string",
-                    "description": "The country parameter"
-                },
-                "city": {
-                    "type": "string",
-                    "description": "The city parameter"
-                },
-                "state": {
-                    "type": "string",
-                    "description": "The state parameter"
-                },
-                "status": {
-                    "type": "string",
-                    "description": "The status parameter"
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "The limit parameter"
-                }
-            },
-            "required": [],
-            "additionalProperties": False
-        }
-    }
-}
+# def get_available_resorts_schema() -> Dict[str, Any]:
+#     """Auto-generated schema for get_available_resorts function."""
+#     return {
+#     "type": "function",
+#     "function": {
+#         "name": "get_available_resorts",
+#         "description": ( "Get a list of ALL EXISTING RESORTS in a specific location. "
+#                         "Use this when the user asks 'show me resorts in [location]' or "
+#                         "'what resorts are in [location]'. "
+#                         "This returns resort information, NOT availability or bookings. "
+#                         "For availability/booking searches, use search_available_future_listings_enhanced instead."),
+#         "parameters": {
+#             "type": "object",
+#             "properties": {
+#                 "country": {
+#                     "type": "string",
+#                     "description": "The country parameter"
+#                 },
+#                 "city": {
+#                     "type": "string",
+#                     "description": "The city parameter"
+#                 },
+#                 "state": {
+#                     "type": "string",
+#                     "description": "The state parameter"
+#                 },
+#                 "status": {
+#                     "type": "string",
+#                     "description": "The status parameter"
+#                 },
+#                 "limit": {
+#                     "type": "integer",
+#                     "description": "The limit parameter"
+#                 }
+#             },
+#             "required": [],
+#             "additionalProperties": False
+#         }
+#     }
+# }
 
 
 def get_booking_details_schema() -> Dict[str, Any]:
@@ -221,70 +221,10 @@ def get_price_range_summary_schema() -> Dict[str, Any]:
     }
 }
 
-# details_with_out imag
-
-# def get_resort_details_schema() -> Dict[str, Any]:
-#     """Schema for get_resort_details function, supporting ID or Name and includes unit types."""
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "get_resort_details",
-#             "description": "Get detailed information about a specific resort using either ID or Name. Returns resort details including unit types, listing stats, and total bookings.",
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "resort_id": {
-#                         "type": "integer",
-#                         "description": "The ID of the resort to retrieve details for"
-#                     },
-#                     "resort_name": {
-#                         "type": "string",
-#                         "description": "The name of the resort to retrieve details for"
-#                     }
-                    
-
-#                 },
-#                 "required": [],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
-# with img
-# def get_resort_details_schema() -> Dict[str, Any]:
-#     """Schema for get_resort_details function, supporting ID or Name and including amenities, unit types, listings, and top image."""
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "get_resort_details",
-#             "description": (
-#                 "List of amenity names to search for. Must match all provided amenities."
-#                 "Get detailed information about a specific resort using either ID or Name. "
-#                 "Returns resort details including amenities, unit types, listing stats, total bookings, "
-#                 "and the top resort image (only the image filename, no URL)."
-#                 "Search for resorts that have all the specified amenities. "
-#                 "Matches are case-insensitive. "
-#                 "Returns resort details along with their amenities."
-#             ),
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "resort_id": {
-#                         "type": "integer",
-#                         "description": "The ID of the resort to retrieve details for."
-#                     },
-#                     "resort_name": {
-#                         "type": "string",
-#                         "description": "The name of the resort to retrieve details for."
-#                     }
-#                 },
-#                 "required": [],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
 
 def get_resort_details_schema() -> Dict[str, Any]:
-    """Compact schema for get_resort_details to handle ID, Name, or Amenities search."""
+    """Compact schema for get_resort_details to handle ID, Name, or Amenities search.
+       "Fetch details about a specified resort. This is ONLY for getting context/details about a resort (not for searching availability or pricing).","""
     return {
         "type": "function",
         "function": {
@@ -296,6 +236,10 @@ def get_resort_details_schema() -> Dict[str, Any]:
                 "resort_id listing by resort  name are provided means to call in this tool search_available_future_listings_enhanced  "                
                 "resort name with price based question means to call in this tool search_available_future_listings_enhanced "
                 "if asking any specify resort details means the image must show"
+                "The tool get_resort_details_schema is only used to retrieve static details about a specific resort, such as its name, location, description, amenities, or general information."
+                "It is not intended for searching listings, checking availability, or filtering by price."
+                "Use this tool only when the user explicitly asks for resort information (e.g., ""Tell me about Club Wyndham Ocean Walk"")."
+                "Do not call this tool if the user’s request is about dates, availability, booking options, or pricing."
                 
             ),
             "parameters": {
@@ -519,53 +463,6 @@ def test_database_connection_schema() -> Dict[str, Any]:
     }
 }
 
-#-----1
-
-# def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
-#     """Auto-generated schema for search_available_future_listings_enhanced function."""
-#     return {
-#         "type": "function",
-#         "function": {
-#             "name": "search_available_future_listings_enhanced",
-#             "description": (
-#                 "Enhanced search for available future listings. "
-#                 "Always ensures check-in/check-out dates are in the future. "
-#                 "If only month is provided (no year), the system automatically selects "
-#                 "the *next upcoming occurrence of that month*. "
-#                 "If year is also provided, that exact year is used (even if past)."
-#             ),  
-
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "resort_id": {"type": "integer", "description": "The resort_id parameter"},
-#                     "listing_check_in": {"type": "string", "description": "Check-in date in YYYY-MM-DD format (auto-adjusted to future)"},
-#                     "listing_check_out": {"type": "string", "description": "Check-out date in YYYY-MM-DD format (auto-adjusted to future)"},
-#                     "listing_price_night": {"type": "integer", "description": "Number of nights for the stay"},
-#                     "resort_country": {"type": "string", "description": "Country to search in"},
-#                     "resort_city": {"type": "string", "description": "City to search in"},
-#                     "month": {
-#                         "type": "integer",
-#                         "description": (
-#                             "Optional filter for check-in month (1-12). "
-#                             "If year not provided, applies future-mapping rules."
-#                         )
-#                     },
-#                     "year": {
-#                         "type": "integer",
-#                         "description": "Optional filter for check-in year. Overrides default rules if provided."
-#                     },
-#                     "resort_state": {"type": "string", "description": "State to search in"},
-#                     "limit": {"type": "integer", "description": "Maximum number of results to return (default: 30)"},
-#                     "flexible_dates": {"type": "boolean", "description": "Search for alternative dates if exact not available (default: true)"},
-#                     "debug": {"type": "boolean", "description": "Enable debug output (default: false)"}
-#                 },
-                
-#                 "required": [],
-#                 "additionalProperties": False
-#             }
-#         }
-#     }
 
 
 
@@ -579,6 +476,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
     today = current_date()
     current_year = datetime.datetime.now().year
     """
+    Schema for searching available listings by city, state, country, or general location.
     Unified schema for the search_available_future_listings_enhanced function.
     Supports flexible resort search with filters for location, pricing, unit type,
     currency, sorting, debugging, and date logic.
@@ -598,14 +496,11 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
         "function": {
             "name": "search_available_future_listings_enhanced",
             "description": (
-                
-
-                "Search for AVAILABLE BOOKINGS/LISTINGS at resorts in a specific location. "
-                "Use this when the user asks 'find me available stays in [location]', "
-                "'show me what I can book in [location]', or asks about availability, dates, or pricing. "
-                "This is for finding bookable options, NOT for listing what resorts exist. "
-                "For resort listings, use get_available_resorts instead."
-                
+                "Search for AVAILABLE LISTINGS across multiple resorts in a location (state, city, country, or by holiday). "
+                "Use this tool when the user asks about availability in a general area instead of a specific resort. "
+                "Example: 'Find me available resorts in Florida in February' or 'Show me listings in Hawaii this summer.' "
+                "Do NOT use this tool for static resort details (use get_resort_details) "
+                "or for availability at a single named resort (use search_available_future_listings_enhanced_v2)."
             ),
             "parameters": {
                 "type": "object",
@@ -649,14 +544,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                     },
 
                     # Pricing / currency
-                    "min_price": {
-                        "type": "number",
-                        "description": "Minimum price per night to filter listings."
-                    },
-                    "max_price": {
-                        "type": "number",
-                        "description": "Maximum price per night to filter listings."
-                    },
+                 
                     "listing_price_night": {
                         "type": "integer",
                         "description": "Number of nights for the booking (used for total price calculation)."
@@ -731,7 +619,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                         "description": "Enable verbose output for debugging (default: false)."
                     }
                 },
-                "required": ["listing_url","booking_url"],
+                "required": [],
                 "additionalProperties": False
             }
         }
@@ -754,12 +642,14 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
         "function": {
             "name": "search_available_future_listings_enhanced_v2",
             "description": (
-                
-                "input resort name or slug with listings details for specified resort" 
-                "Search for AVAILABLE BOOKINGS/LISTINGS at resorts in a specific location. "
-                "Use this when the user asks 'find me available stays in [location]', "
-                "only for this type of input {resort name} give me the listings details with price and availability"
-                
+                "Search for AVAILABLE LISTINGS at a specific resort, including pricing, unit type, guest capacity, "
+                "and cancellation policy. "
+                "Use this tool when the user asks about availability, stays, or prices at ONE resort. "
+                "Example: 'Show me listings at Club Wyndham Ocean Walk in March under $200/night' or "
+                "'Find me a 2-bedroom deluxe at Bonnet Creek for 6 guests in July.' "
+                "Do NOT use this tool for static resort details (use get_resort_details instead). "
+                "Do NOT use this tool for general area searches across multiple resorts "
+                "(use search_available_future_listings_enhanced instead)."
             ),
             "parameters": {
                 "type": "object",
@@ -803,14 +693,7 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
                     },
 
                     # Pricing / currency
-                    "min_price": {
-                        "type": "number",
-                        "description": "Minimum price per night to filter listings."
-                    },
-                    "max_price": {
-                        "type": "number",
-                        "description": "Maximum price per night to filter listings."
-                    },
+                  
                     "listing_price_night": {
                         "type": "integer",
                         "description": "Number of nights for the booking (used for total price calculation)."
@@ -885,7 +768,7 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
                         "description": "Enable verbose output for debugging (default: false)."
                     }
                 },
-                "required": ["listing_url","booking_url"],
+                "required": [],
                 "additionalProperties": False
             }
         }
@@ -924,7 +807,7 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
     """Get all auto-generated OpenAI-compatible function schemas including enhanced versions."""
     return [
         get_amenity_details_schema(),
-        get_available_resorts_schema(),
+        # get_available_resorts_schema(),
         get_booking_details_schema(),
         get_database_url_schema(),
         # get_featured_listings_schema(),
