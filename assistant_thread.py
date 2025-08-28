@@ -16,7 +16,7 @@ class AssistantThread:
         Today’s date is {today:%b %d, %Y}, and the current year is {current_year}. When a query uses ‘this’ with any month, it should default to {current_year}.
         When the user asks for data by month (e.g., “fetch July data”), always resolve it to the next occurrence of that month in the future relative to today’s date.
         -If today’s date is past that month in the current year, interpret it as that month in the next year.
-        -If today’s date is before or during that month, interpret it as that month in the current year.
+        -If today’s date is before or during that month, interpret it  as that month in the current year.
         -Never return a past date
         Follow these instructions:
         - if any url dont print  the url, just print the resort image
