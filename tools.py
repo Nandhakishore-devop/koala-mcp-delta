@@ -186,7 +186,8 @@ class Resort(Base):
     listings = relationship("Listing", back_populates="resort")
     images = relationship("ResortImage",back_populates="resort")
     resort_amenities = relationship("ResortAmenity", back_populates="resort")
-    # Remove the problematic relationship - we'll handle this differently
+    
+
 
 
 class PtRtListing(Base):
@@ -355,6 +356,69 @@ class ResortAmenity(Base):
     resort = relationship("Resort", back_populates="resort_amenities")
     amenity = relationship("Amenity", back_populates="resort_amenities")
 
+
+class EsPlaceOfInterests(Base):
+    __tablename__ = "es_place_of_interests"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    es_poi_location_id = Column(
+        Integer, ForeignKey("es_poi_locations.id"), nullable=False
+    )
+    location_category_id = Column(Integer)  # add FK if you also join categories
+    term = Column(String(255))
+    full_term = Column(String(255))
+    image = Column(String(255))
+    price = Column(String(255))
+    type = Column(String(255))
+    lattitude = Column(String(255))   # spelling matches DB
+    longitude = Column(String(255))
+    radius = Column(String(255))
+    country = Column(String(255))
+    state = Column(String(255))
+    city = Column(String(255))
+    description = Column(Text)
+    url = Column(String(300))
+
+    # 🔗 Relationship back to EsPoiLocations
+    location = relationship("EsPoiLocations", back_populates="place_of_interests")
+
+
+class EsPoiLocations(Base):
+    __tablename__ = "es_poi_locations"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    full_name = Column(String(255))
+    name = Column(String(255))
+    description = Column(Text)
+    radius = Column(Integer, default=0)
+    country = Column(String(255))
+    state = Column(String(255))
+    county = Column(String(255))
+    city = Column(String(255))
+    lattitude = Column(String(255))
+    longitude = Column(String(255))
+    has_deleted = Column(Integer, nullable=False, default=0)
+
+    # 🔗 Relationship to EsPlaceOfInterests
+    place_of_interests = relationship(
+        "EsPlaceOfInterests", back_populates="location", cascade="all, delete-orphan"
+    )
+
+    
+# class LocationCategories(Base):
+#     __tablename__ = "location_categories"
+
+#     id = Column(BigInteger, primary_key=True, autoincrement=True)
+#     name = Column(String(255), nullable=True, index=True)
+#     status = Column(String(255), nullable=True, default="active", index=True)
+#     has_deleted = Column(Integer, nullable=False, default=0)
+
+#     # Relationship
+#     place_of_interests = relationship("EsPlaceOfInterests", back_populates="location_category")
+
+
+
+
 # Database setup
 def get_database_url():
     """Get database URL from environment variables."""
@@ -373,6 +437,12 @@ def get_database_url():
 DATABASE_URL = get_database_url()
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+
+
+
+
 
 # rubi _ tools
 #base tools for resort booking system---------------
@@ -909,6 +979,233 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 #                 ]
 #                 exact_date_filter = True
 
+
+
+# def get_nearby_places(resort_name: str, category: str) -> Dict[str, Any]:
+#     session = SessionLocal()
+#     try:
+#         resort = session.query(Resort).filter(Resort.name.ilike(f"%{resort_name}%")).first()
+#         if not resort:
+#             return {"error": f"Resort '{resort_name}' not found"}
+
+#         pois = (
+#             session.query(EsPlaceOfInterests)
+#             .join(LocationCategories, EsPlaceOfInterests.location_category_id == LocationCategories.id)
+#             .filter(EsPlaceOfInterests.city == resort.city)
+#             .filter(LocationCategories.name.ilike(f"%{category}%"))
+#             .all()
+#         )
+
+#         if not pois:
+#             return {"message": f"No {category} found near {resort_name}"}
+
+#         return [
+#             {
+#                 "resort_name": resort.name,
+#                 "poi_id": poi.id,
+#                 "description": poi.description,
+#                 "city": poi.city,
+#                 "category": category,
+#             }
+#             for poi in pois
+#         ]
+#     except Exception as e:
+#         return {"error": f"Error retrieving nearby places: {str(e)}"}
+#     finally:
+#         session.close()
+
+# def get_nearby_places(resort_name: str, category: str) -> Dict[str, Any]:
+#     session = SessionLocal()
+#     try:
+#         # 1️⃣ Find resort by name
+#         resort = (
+#             session.query(Resort)
+#             .filter(Resort.name.ilike(f"%{resort_name}%"))
+#             .first()
+#         )
+#         if not resort:
+#             return {"error": f"Resort '{resort_name}' not found"}
+
+#         # 2️⃣ Get city from resort
+#         resort_city = resort.city
+#         if not resort_city:
+#             return {"error": f"City not found for resort '{resort_name}'"}
+
+#         # 3️⃣ Get POIs in same city, filtered by category (from EsPlaceOfInterests only)
+#         pois = (
+#             session.query(EsPlaceOfInterests)
+#             .filter(EsPlaceOfInterests.city == resort_city)
+#             .filter(EsPlaceOfInterests.type.ilike(f"%{category}%"))
+#             .all()
+#         )
+
+#         # 4️⃣ Build response
+#         if not pois:
+#             return {"message": f"No {category} found near {resort_name} in {resort_city}"}
+
+#         return {
+#             "resort": resort.name,
+#             "city": resort_city,
+#             "category": category,
+#             "places": [
+#                 {
+#                     "poi_id": poi.id,
+#                     "description": poi.description,
+#                     "city": poi.city,
+#                     "url": poi.url,
+#                 }
+#                 for poi in pois
+#             ],
+#         }
+
+#     except Exception as e:
+#         return {"error": f"Error retrieving nearby places: {str(e)}"}
+#     finally:
+#         session.close()
+
+
+
+
+
+
+# def get_city_from_resort(resort_name: str) -> Dict[str, Any]:
+#     with SessionLocal() as session:
+#         try:
+#             # ---------------- Step 1: Get resort and its city ----------------
+#             resort = session.query(Resort).filter(Resort.name.ilike(f"%{resort_name}%")).first()
+#             if not resort:
+#                 return {"error": f"Resort '{resort_name}' not found"}
+
+#             city = resort.city
+
+#             # ---------------- Step 2: Get the POI location for this city ----------------
+#             place_of_location = (
+#                 session.query(EsPoiLocations)
+#                 .filter(EsPoiLocations.city.ilike(f"%{city}%"))
+#                 .first()
+#             )
+#             if not place_of_location:
+#                 return {
+#                     "resort_name": resort.name,
+#                     "city": city,
+#                     "pois": "No POI location found"
+#                 }
+
+#             poi_location_id = place_of_location.id
+#             print("rubi",poi_location_id)
+
+#             # ---------------- Step 3: Fetch all POIs for this location ----------------
+#             pois: List[EsPlaceOfInterests] = (
+#                 session.query(EsPlaceOfInterests)
+#                 .filter(EsPlaceOfInterests.es_poi_location_id == poi_location_id)
+#                 .all()
+#             )
+
+#             # ---------------- Step 4: Serialize results ----------------
+#             results = [
+#                 {
+#                     "term": p.term,
+#                     "full_term": p.full_term,
+#                     "state": p.state,
+#                     "city": p.city,
+#                     "description": p.description
+#                 }
+#                 for p in pois
+#             ]
+
+#             # ---------------- Step 5: Build response ----------------
+#             return {
+#                 "resort_name": resort.name,
+#                 "city": city,
+#                 "place_of_location": {
+#                     "id": place_of_location.id,
+#                     "city": place_of_location.city,
+#                     "state": place_of_location.state,
+#                     "country": place_of_location.country
+#                 },
+#                 "pois": results or "No POIs found"
+#             }
+
+#         except Exception as e:
+#             return {"error": str(e)}
+
+
+CATEGORY_MAPPING = {
+    "Top Sights": 1,
+    "Restaurants": 2,
+    "Airport": 3,
+    "Transit": 4
+}
+
+def get_city_from_resort(resort_name: str, categories: List[str] = None) -> Dict[str, Any]:
+    with SessionLocal() as session:
+        try:
+            # ---------------- Step 1: Get resort and its city ----------------
+            resort = session.query(Resort).filter(Resort.name.ilike(f"%{resort_name}%")).first()
+            if not resort:
+                return {"error": f"Resort '{resort_name}' not found"}
+
+            city = resort.city
+
+            # ---------------- Step 2: Get the POI location for this city ----------------
+            place_of_location = (
+                session.query(EsPoiLocations)
+                .filter(EsPoiLocations.city.ilike(f"%{city}%"))
+                .first()
+            )
+            if not place_of_location:
+                return {
+                    "resort_name": resort.name,
+                    "city": city,
+                    "pois": "No POI location found"
+                }
+
+            poi_location_id = place_of_location.id
+
+            # ---------------- Step 3: Prepare category filter ----------------
+            if categories:
+                category_ids = [CATEGORY_MAPPING[cat] for cat in categories if cat in CATEGORY_MAPPING]
+            else:
+                category_ids = list(CATEGORY_MAPPING.values())  # all categories by default
+
+            # ---------------- Step 4: Fetch POIs for this location & categories ----------------
+            pois: List[EsPlaceOfInterests] = (
+                session.query(EsPlaceOfInterests)
+                .filter(
+                    EsPlaceOfInterests.es_poi_location_id == poi_location_id,
+                    EsPlaceOfInterests.location_category_id.in_(category_ids)
+                )
+                .limit(5)  # limit 5 nearest POIs
+                .all()
+            )
+
+            # ---------------- Step 5: Serialize results ----------------
+            results = [
+                {
+                    "term": p.term,
+                    "full_term": p.full_term,
+                    "state": p.state,
+                    "city": p.city,
+                    "description": p.description
+                }
+                for p in pois
+            ]
+
+            # ---------------- Step 6: Build response ----------------
+            return {
+                "resort_name": resort.name,
+                "city": city,
+                "place_of_location": {
+                    "id": place_of_location.id,
+                    "city": place_of_location.city,
+                    "state": place_of_location.state,
+                    "country": place_of_location.country
+                },
+                "pois": results or "No POIs found"
+            }
+
+        except Exception as e:
+            return {"error": str(e)}
 
 
 # Cancellation policies
@@ -2140,73 +2437,73 @@ def get_user_bookings(
 
 
 
-# def get_available_resorts(
-#     country: str = None,
-#     city: str = None,
-#     state: str = None,
-#     status: str = "active",
-#     limit: int = 10
-# ) -> List[Dict[str, Any]]:
-#     """
-#     List available resorts with optional filtering by country, city, and state.
+def get_available_resorts(
+    country: str = None,
+    city: str = None,
+    state: str = None,
+    status: str = "active",
+    limit: int = 10
+) -> List[Dict[str, Any]]:
+    """
+    List available resorts with optional filtering by country, city, and state.
 
-#     Args:
-#         country: Optional country filter
-#         city: Optional city filter
-#         state: Optional state filter
-#         status: Resort status filter (default: active)
-#         limit: Maximum number of resorts to return (default: 10)
+    Args:
+        country: Optional country filter
+        city: Optional city filter
+        state: Optional state filter
+        status: Resort status filter (default: active)
+        limit: Maximum number of resorts to return (default: 10)
 
-#     Returns:
-#         List of dictionaries with resort information
-#     """
-#     session = SessionLocal()
+    Returns:
+        List of dictionaries with resort information
+    """
+    session = SessionLocal()
 
-#     try:
-#         query = session.query(Resort)\
-#             .join(User, Resort.creator_id == User.id)\
-#             .filter(Resort.has_deleted == 0)\
-#             .filter(Resort.status == status)
+    try:
+        query = session.query(Resort)\
+            .join(User, Resort.creator_id == User.id)\
+            .filter(Resort.has_deleted == 0)\
+            .filter(Resort.status == status)
 
-#         if country:
-#             query = query.filter(Resort.country.isnot(None), Resort.country.ilike(f"%{country.strip()}%"))
-#         if city:
-#             query = query.filter(Resort.city.isnot(None), Resort.city.ilike(f"%{city.strip()}%"))
-#         if state:
-#             query = query.filter(Resort.state.isnot(None), Resort.state.ilike(f"%{state.strip()}%"))
+        if country:
+            query = query.filter(Resort.country.isnot(None), Resort.country.ilike(f"%{country.strip()}%"))
+        if city:
+            query = query.filter(Resort.city.isnot(None), Resort.city.ilike(f"%{city.strip()}%"))
+        if state:
+            query = query.filter(Resort.state.isnot(None), Resort.state.ilike(f"%{state.strip()}%"))
 
-#         resorts = query.limit(limit).all()
+        resorts = query.limit(limit).all()
 
-#         result = []
-#         for resort in resorts:
-#             active_listings = session.query(Listing)\
-#                 .filter(Listing.resort_id == resort.id)\
-#                 .filter(Listing.has_deleted == 0)\
-#                 .filter(Listing.status.in_(['active', 'pending']))\
-#                 .count()
+        result = []
+        for resort in resorts:
+            active_listings = session.query(Listing)\
+                .filter(Listing.resort_id == resort.id)\
+                .filter(Listing.has_deleted == 0)\
+                .filter(Listing.status.in_(['active', 'pending']))\
+                .count()
 
-#             result.append({
-#                 "id": resort.id,
-#                 "name": resort.name,
-#                 "city": resort.city,
-#                 "state": resort.state,
-#                 "country": resort.country,
-#                 "highlight_quote": resort.highlight_quote[:200] + "..." if resort.highlight_quote and len(resort.highlight_quote) > 200 else resort.highlight_quote,
-#                 "active_listings": active_listings,
-#                 "status": resort.status
-#             })
+            result.append({
+                "id": resort.id,
+                "name": resort.name,
+                "city": resort.city,
+                "state": resort.state,
+                "country": resort.country,
+                "highlight_quote": resort.highlight_quote[:200] + "..." if resort.highlight_quote and len(resort.highlight_quote) > 200 else resort.highlight_quote,
+                "active_listings": active_listings,
+                "status": resort.status
+            })
 
-#         result = sorted(result, key=lambda result: result['active_listings'], reverse=True)
+        result = sorted(result, key=lambda result: result['active_listings'], reverse=True)
 
-#         return result
+        return result
 
 
-#     except Exception as e:
-#         print(f"Error in get_available_resorts: {str(e)}")
-#         return []
+    except Exception as e:
+        print(f"Error in get_available_resorts: {str(e)}")
+        return []
 
-#     finally:
-#         session.close()
+    finally:
+        session.close()
 
 
 
@@ -2914,19 +3211,19 @@ def get_amenity_details(amenity_id: int) -> Dict[str, Any]:
         session.close()
 
 
-def search_listings_by_type(listing_type: str, limit: int = 10) -> List[Dict[str, Any]]:
-    """Get listings by type."""
-    session = SessionLocal()
-    try:
-        listings = session.query(PtRtListing)\
-            .filter(PtRtListing.listing_type == listing_type)\
-            .limit(limit).all()
-        return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
-    except Exception as e:
-        print(f"Error in search_listings_by_type: {str(e)}")
-        return []
-    finally:
-        session.close()
+# def search_listings_by_type(listing_type: str, limit: int = 10) -> List[Dict[str, Any]]:
+#     """Get listings by type."""
+#     session = SessionLocal()
+#     try:
+#         listings = session.query(PtRtListing)\
+#             .filter(PtRtListing.listing_type == listing_type)\
+#             .limit(limit).all()
+#         return [{col.name: getattr(listing, col.name) for col in PtRtListing.__table__.columns} for listing in listings]
+#     except Exception as e:
+#         print(f"Error in search_listings_by_type: {str(e)}")
+#         return []
+#     finally:
+#         session.close()
 
 
 def get_featured_listings(limit: int = 10) -> List[Dict[str, Any]]:
@@ -3096,16 +3393,17 @@ def get_price_range_summary(country: str = None, state: str = None) -> Dict[str,
 # Tool function registry for easy lookup
 AVAILABLE_TOOLS = {
     "get_user_bookings": get_user_bookings,
-    # "get_available_resorts": get_available_resorts,
+    "get_available_resorts": get_available_resorts,
     "get_resort_details": get_resort_details,
     "search_available_future_listings_enhanced": search_available_future_listings_enhanced,
     "search_available_future_listings_enhanced_v2": search_available_future_listings_enhanced_v2,
-    
+    "get_city_from_resort":get_city_from_resort,
+    # "get_nearby_places":get_nearby_places,
     "get_booking_details": get_booking_details,
     "get_user_profile": get_user_profile,
     "get_listing_details": get_listing_details,
     "get_amenity_details": get_amenity_details,
-    "search_listings_by_type": search_listings_by_type,
+    # "search_listings_by_type": search_listings_by_type,
     "get_featured_listings": get_featured_listings,
     "get_weekend_listings": get_weekend_listings,
     "get_resort_price": get_resort_price,
