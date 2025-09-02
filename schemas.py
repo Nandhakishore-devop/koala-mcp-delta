@@ -10,7 +10,7 @@ def get_resort_details_schema() -> Dict[str, Any]:
         "function": {
             "name": "get_resort_details",
             "description": (
-                "Retrieve static resort details such as name, location, description, images, or amenities.  or commanly give me the details about"
+                "Retrieve static resort details such as name, location, description, images, or amenities.  or comman give me the details about resort name "
                 "Use ONLY when the user explicitly asks about a resort itself (e.g., "
                 "'Tell me about Bonnet Creeks Resort' or 'What amenities does Club Wyndham have?'). "
                 "Do NOT use for nearby restaurants, airports, transport, or sightseeing."
@@ -252,10 +252,7 @@ def get_price_range_summary_schema() -> Dict[str, Any]:
                         "type": "string",
                         "description": "Check-out date in YYYY-MM-DD format if there is not specified  date in  ptompt then give full avaliable  resort  or ask the user define the  specify  the date "
                     },
-                    "listing_price_night": {
-                        "type": "integer",
-                        "description": "Number of nights for the stay incase price is present in the prompt then call listing_price_night ar  ugement "
-                    },
+                 
                     "resort_country": {
                         "type": "string",
                         "description": "Country to search in"
@@ -561,10 +558,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
 
                     # Pricing / currency
                  
-                    "listing_price_night": {
-                        "type": "integer",
-                        "description": "Number of nights for the booking (used for total price calculation)."
-                    },
+                
                     "currency_code": {
                         "type": "string",
                         "description": "Currency code for price (e.g., USD, EUR, INR)."
@@ -709,11 +703,7 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
                     },
 
                     # Pricing / currency
-                  
-                    "listing_price_night": {
-                        "type": "integer",
-                        "description": "Number of nights for the booking (used for total price calculation)."
-                    },
+            
                     "currency_code": {
                         "type": "string",
                         "description": "Currency code for price (e.g., USD, EUR, INR)."

@@ -1405,9 +1405,11 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 "cancellation_policy_description": policy_desc,
                 "listing_cancelation_date": cancel_date,
                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
+                # "booking_type":l_booking_type,
                 "resort_url": resort_url,
                 "booking_url": booking_url
             })
+            # print("rubi",booking_type)
 
         return results_list
 
@@ -2260,6 +2262,7 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
                 "cancellation_policy_description": policy_desc,
                 "listing_cancelation_date": cancel_date,
                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
+
                 "resort_url": resort_url,
                 "booking_url": booking_url
             })
