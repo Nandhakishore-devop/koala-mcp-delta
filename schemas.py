@@ -643,71 +643,53 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
     current_year = datetime.datetime.now().year
     """
     Unified schema for the search_available_future_listings_enhanced_v2 function.
-    specified resort name or slug with listings details
-    Supports flexible resort search with filters for location, pricing, unit type,
-    only for this type of input {resort name} give me the listings details with price and availability
+    This function ONLY works for one specific resort (by name or ID).
+    Supports filters for pricing, unit type, guest capacity, and cancellation policy.
+    Example: "Show me listings at Club Wyndham Ocean Walk in March under $200/night"
     """
     return {
         "type": "function",
         "function": {
             "name": "search_available_future_listings_enhanced_v2",
             "description": (
-                "Search for AVAILABLE LISTINGS at a specific resort, including pricing, unit type, guest capacity, "
-                "and cancellation policy. "
+                "Search for AVAILABLE LISTINGS at a specific resort ONLY. "
+                "Requires either 'resort_name' or 'resort_id'. "
                 "Use this tool when the user asks about availability, stays, or prices at ONE resort. "
                 "Example: 'Show me listings at Club Wyndham Ocean Walk in March under $200/night' or "
                 "'Find me a 2-bedroom deluxe at Bonnet Creek for 6 guests in July.' "
-                "Do NOT use this tool for static resort details (use get_resort_details instead). "
                 "Do NOT use this tool for general area searches across multiple resorts "
                 "(use search_available_future_listings_enhanced instead)."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
-                    # Resort/location filters
+                    # Resort filter (required)
                     "resort_id": {
                         "type": "integer",
-                        "description": "Unique resort ID (optional)."
+                        "description": "Unique resort ID (alternative to resort_name)."
                     },
                     "resort_name": {
                         "type": "string",
-                        "description": "Name of the resort to search for (optional if location is provided)."
-                    },
-                    "resort_country": {
-                        "type": "string",
-                        "description": "Country where the resort is located."
-                    },
-                    "resort_state": {
-                        "type": "string",
-                        "description": "State or province where the resort is located."
-                    },
-                    "resort_city": {
-                        "type": "string",
-                        "description": "City where the resort is located."
+                        "description": "Name of the resort to search for."
                     },
 
                     # Date filters
-                   "month": {
+                    "month": {
                         "type": "string",
                         "description": (
                             "Filter for check-in month (name or number, e.g., 'Jan' or 1-12). "
-                            "Always used with automatic future year mapping if year not explicitly set."
+                            "If year not provided, automatically maps to the next future year."
                         )
                     },
                     "year": {
                         "type": "integer",
                         "description": (
                             "Optional filter for check-in year. "
-                            "If not provided, the system automatically resolves to the correct future year."
+                            "If not provided, defaults to the next valid future year."
                         )
                     },
 
-                    # Pricing / currency
-            
-                    "currency_code": {
-                        "type": "string",
-                        "description": "Currency code for price (e.g., USD, EUR, INR)."
-                    },
+                    # Pricing / sorting
                     "price_sort": {
                         "type": "string",
                         "description": (
@@ -720,51 +702,36 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
                     # Unit / type filters
                     "unit_type": {
                         "type": "string",
-                        "description": "Specific unit type to filter (e.g., Studio, 1 Bedroom, Suite)."
+                        "description": "Specific unit type (e.g., Studio, 1 Bedroom, Suite)."
+                    },
+                    "min_guests": {
+                        "type": "integer",
+                        "description": "Minimum guest capacity (filters by unit_types.sleeps)."
                     },
 
-                    "min_guests": {
-                       "type": "integer",
-                       "description": "Minimum guest capacity required (filters by unit_types.sleeps)."
-                    },
-                     "listing_cancelation_date": {
+                    # Cancellation filters
+                    "listing_cancelation_date": {
                         "type": "string",
                         "format": "date",
-                        "description": "The date when the user can cancel the booking, in YYYY-MM-DD format.eg: Cancellation: Full refund if canceled at least 16 days before check-in. (By 2025-12-07)"
-
-                        
+                        "description": "Date when cancellation is allowed (YYYY-MM-DD)."
                     },
-
                     "cancellation_policy": {
                         "type": "string",
                         "description": "Filter listings by cancellation policy.",
-                        "enum": ["flexible", "relaxed", "moderate", "firm", "strict"],
-                        "x-enumDescriptions": {
-                            "flexible": "Full refund if canceled at least 3 days before check-in.",
-                            "relaxed": "Full refund if canceled at least 16 days before check-in.",
-                            "moderate": "Full refund if canceled at least 32 days before check-in.",
-                            "firm": "Full refund if canceled at least 62 days before check-in.",
-                            "strict": "Booking is non-refundable."
-                        }
+                        "enum": ["flexible", "relaxed", "moderate", "firm", "strict"]
                     },
 
+                    # URLs
                     "listing_url": {
                         "type": "string",
                         "description": "The URL to the resort's listing page."
                     },
                     "booking_url": {
                         "type": "string",
-                        "description": "The URL to book the resort directly with the given check-in and check-out dates."
+                        "description": "The URL to book the resort with given dates."
                     },
-                                
 
-
- 
                     # Options
-                    "limit": {
-                        "type": "integer",
-                        "description": "Maximum number of listings to return (default: 30)."
-                    },
                     "flexible_dates": {
                         "type": "boolean",
                         "description": "Search for alternative dates if exact not available (default: true)."
@@ -774,12 +741,11 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
                         "description": "Enable verbose output for debugging (default: false)."
                     }
                 },
-                "required": [],
+                "required": ["resort_name"],  # <-- enforce single resort search
                 "additionalProperties": False
             }
         }
     }
-
 
 
 
