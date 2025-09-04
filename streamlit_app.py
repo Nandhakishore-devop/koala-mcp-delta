@@ -234,13 +234,17 @@ st.markdown(
             background-size: 49px;
             border-radius: 50%;
         }
-         .stFormSubmitButton button:hover, .stFormSubmitButton button:focus(:active){
+        .stFormSubmitButton button:hover, .stFormSubmitButton button:focus(:active), .st-emotion-cache-z8vbw2:hover
+        {
             border-color: transparent;
-         }
+        }
+        .chat-message.assistant-message img{ 
+            border-radius: 10px; margin: 20px 0 10px;
+        }
 
-
-
-
+        .chat-message.assistant-message a{ 
+             color: #0B6E4F;
+        }
 
         .stTextInput > div > div > input:focus {
             border-color: red;
