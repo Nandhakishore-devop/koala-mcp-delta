@@ -257,20 +257,26 @@ st.markdown(
             outline: none;
         }
 
-        .textarea::placeholder {
-            color: #E6E5DE;
-            opacity: 1;
+        .stTextArea textarea::placeholder {
+            color: gray;
+            opacity: 8;
         }
 
         textarea::placeholder {
            color: #888888;
            opacity: 1;
         }
-        textarea:-ms-input-placeholder { /* IE 10+ */
+        textarea:-ms-input-placeholder { 
            color: #888888;
         }
-        textarea::-ms-input-placeholder { /* Edge 12-18 */
+        textarea::-ms-input-placeholder { 
            color: #888888;
+        }
+
+
+        .chat-textarea::placeholder {
+           font-size: 28px;
+        
         }
 
 
@@ -305,9 +311,7 @@ st.markdown(
             display: none;
         }
 
-        .function-call{ 
-           display: none;
-        }
+       
         .assistant-message{ 
            background-color: transparent; 
          }
@@ -559,15 +563,6 @@ def main():
 
         else:
             st.warning("⚠️ Please type a question before submitting.")
-
-
-
-
-
-
-
-
-
 
 
 
