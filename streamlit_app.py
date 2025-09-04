@@ -108,7 +108,7 @@ st.markdown(
             margin-top: 10px;
             margin-left: 150px;
             color: black;
-            border: 1px solid #ccc;
+            border: 1px solid #e8e8e8;
             border-radius: 24px;
             border-bottom-right-radius: 3px;
             font-family: proxima-nova, sans-serif;
@@ -124,7 +124,7 @@ st.markdown(
         }
 
         .assistant-message {
-            background-color: white;
+            background-color: transparent;
             border:0;
             color: black;
             border-radius: 0px;
@@ -164,6 +164,7 @@ st.markdown(
         .stTextArea > div > div > textarea {
             color: #000;
             font-size:17px;
+            resize:none;
         }
     
 
@@ -186,7 +187,7 @@ st.markdown(
             background: #fff;
             box-shadow: 0 0 20px rgba(0, 0, 0, .05);
             border-radius: 20px;
-            border: 1px solid #CCC;
+            border: 1px solid #e8e8e8;
         }
 
         .stTextArea > div::after {
@@ -210,7 +211,7 @@ st.markdown(
             border-radius: 50%;
             left: 0;
             margin: 0 auto;
-            right: -560px;
+            right: -620px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -233,9 +234,11 @@ st.markdown(
             background-size: 49px;
             border-radius: 50%;
         }
-         .stFormSubmitButton button:hover{
-         border-color: transparent;
+         .stFormSubmitButton button:hover, .stFormSubmitButton button:focus(:active){
+            border-color: transparent;
          }
+
+
 
 
 
@@ -271,6 +274,20 @@ st.markdown(
         div[data-testid="stSidebar"] {
             display: none;
         }
+
+        .stAppHeader {
+            display: none;
+        }
+
+        .function-call{ 
+           display: none;
+        }
+        .assistant-message{ 
+           background-color: transparent; 
+         }
+
+
+
     </style>
     """,
     unsafe_allow_html=True
