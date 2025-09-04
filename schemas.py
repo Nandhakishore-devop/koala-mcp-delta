@@ -648,6 +648,20 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
                             "If not provided, defaults to the next valid future year."
                         )
                     },
+                    "listing_check_in": {
+                        "type": "string",
+                        "description": (
+                            "Check-in date in 'YYYY-MM-DD' format."
+                            "only prompt the user to provide a specific date."
+                        )
+                    },
+                    "listing_check_out": {
+                        "type": "string",
+                        "description": (
+                            "Check-out date in 'YYYY-MM-DD' format."
+                            "only prompt the user to provide a specific date."
+                        )
+                    },
 
                     # Pricing / sorting
                     "price_sort": {
