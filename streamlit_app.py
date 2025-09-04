@@ -242,9 +242,7 @@ st.markdown(
             boder:0;
         }
 
-        .stElementContainer{ 
-            display: none;
-        }
+      
 
         .chat-message.assistant-message img{ 
             border-radius: 10px; margin: 20px 0 10px;
