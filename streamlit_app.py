@@ -237,7 +237,15 @@ st.markdown(
         .stFormSubmitButton button:hover, .stFormSubmitButton button:focus(:active), .st-emotion-cache-z8vbw2:hover{
             border-color: transparent;
         }
-        
+
+        .stFormSubmitButton button:hover{
+            boder:0;
+        }
+
+        .stElementContainer{ 
+            display: none;
+        }
+
         .chat-message.assistant-message img{ 
             border-radius: 10px; margin: 20px 0 10px;
         }
