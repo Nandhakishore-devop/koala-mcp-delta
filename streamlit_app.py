@@ -191,16 +191,16 @@ st.markdown(
         }
 
         .stTextArea > div::after {
-                content: "";
-                width: 100%;
-                background: #F8F7F6;
-                left: 0;
-                right: 0;
-                boo: 0;
-                bottom: -42px;
-                position: absolute;
-                height: 42px;
-                z-index: 17;
+            content: "";
+            width: 100%;
+            background: #F8F7F6;
+            left: 0;
+            right: 0;
+            boo: 0;
+            bottom: -42px;
+            position: absolute;
+            height: 42px;
+            z-index: 17;
         }
   
         .stFormSubmitButton {
@@ -220,8 +220,8 @@ st.markdown(
         }
         
         .stFormSubmitButton:focus, .stFormSubmitButton:hover {
-        border: 0;
-        box-shadow: inherit;
+            border: 0;
+            box-shadow: inherit;
         }
 
         .stFormSubmitButton button{
@@ -234,10 +234,10 @@ st.markdown(
             background-size: 49px;
             border-radius: 50%;
         }
-        .stFormSubmitButton button:hover, .stFormSubmitButton button:focus(:active), .st-emotion-cache-z8vbw2:hover
-        {
+        .stFormSubmitButton button:hover, .stFormSubmitButton button:focus(:active), .st-emotion-cache-z8vbw2:hover{
             border-color: transparent;
         }
+        
         .chat-message.assistant-message img{ 
             border-radius: 10px; margin: 20px 0 10px;
         }
@@ -251,9 +251,25 @@ st.markdown(
             outline: none;
         }
 
-        .stTextInput > div > div > input::placeholder {
+        .textarea::placeholder {
             color: #E6E5DE;
             opacity: 1;
+        }
+
+        textarea::placeholder {
+           color: #888888;
+           opacity: 1;
+        }
+        textarea:-ms-input-placeholder { /* IE 10+ */
+           color: #888888;
+        }
+        textarea::-ms-input-placeholder { /* Edge 12-18 */
+           color: #888888;
+        }
+
+
+        .chat-message * {
+           font-size: 18px;
         }
 
         .stTextInput label {
