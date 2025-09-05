@@ -248,7 +248,7 @@ st.markdown(
         }
 
         .stFormSubmitButton button:hover{
-            boder:0;
+            border:0;
         }
 
       
