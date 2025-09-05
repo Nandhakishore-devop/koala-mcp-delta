@@ -14,6 +14,7 @@ from assistant_thread import AssistantThread
 import time
 import base64
 import streamlit.components.v1 as components
+import time
 
 
 # Load environment variables
@@ -23,25 +24,123 @@ load_dotenv()
 GPT4_TURBO_PROMPT_PRICE = 0.0015  # $0.0015 per 1K prompt tokens 3.5
 GPT4_TURBO_COMPLETION_PRICE = 0.002  # $0.002 per 1K completion tokens 3.5
 
+# scroll_js = """
+# <script>
+#     var chatElems = window.parent.document.querySelectorAll('.stMarkdown');
+#     console.log("4567890")
+#     if (chatElems.length > 0) {
+#         chatElems[chatElems.length-1].scrollIntoView({behavior: "smooth"});
+#     }
+# </script>
+# """
+# st.markdown(scroll_js, unsafe_allow_html=True)
+
+
+# components.html(
+#     """
+#     <script>
+#         document.addEventListener("DOMContentLoaded", function() {
+#             console.log("DOM fully loaded in iframe");
+
+       
+#             if (window.parent && window.parent !== window) {
+#                 console.log("Injecting into parent DOM");
+
+#                 window.parent.document.addEventListener("keydown", function(event) {
+#                     console.log("23456789");
+
+#                         var chatElems = window.parent.document.querySelectorAll('.stMarkdown');
+#                         console.log('chat length',chatElems)
+#                         console.log("rubi-scroll")
+#                         if (chatElems.length > 0) {
+#                             chatElems[chatElems.length-1].scrollIntoView({behavior: "smooth"});
+#                         }
+                    
+#                     if (event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.altKey) {
+#                         const submitButton = window.parent.document.querySelector('button[kind="secondaryFormSubmit"]');
+#                         if (submitButton) {
+#                             if(chatElems.length > 0){
+#                                 submitButton.click();
+#                                 chatElems[chatElems.length-1].scrollIntoView({behavior: "smooth"});
+#                             }
+#                         }
+#                         event.preventDefault();
+#                     }
+#                 });
+#             }
+#         });
+#     </script>
+#     """,
+#     height=0,
+    
+# )
+
 components.html(
     """
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             console.log("DOM fully loaded in iframe");
 
-            // Inject into parent window
             if (window.parent && window.parent !== window) {
                 console.log("Injecting into parent DOM");
 
+                function showToast(message) {
+                    let oldToast = window.parent.document.getElementById("chat-toast");
+                    if (oldToast) oldToast.remove();
+
+                    const toast = window.parent.document.createElement("div");
+                    toast.id = "chat-toast";
+                    toast.innerText = message;
+
+                    // Style toast
+                    toast.style.position = "fixed";
+                    toast.style.bottom = "-60px";   // start hidden
+                    toast.style.left = "50%";
+                    toast.style.transform = "translateX(-50%)";
+                    toast.style.background = "#dc3545";   // Bootstrap danger red
+                    toast.style.color = "white";
+                    toast.style.padding = "12px 24px";
+                    toast.style.borderRadius = "8px";
+                    toast.style.fontSize = "14px";
+                    toast.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+                    toast.style.zIndex = "9999";
+                    toast.style.transition = "bottom 0.5s ease";
+
+                    window.parent.document.body.appendChild(toast);
+
+                    setTimeout(() => {
+                        toast.style.bottom = "30px";
+                    }, 100);
+
+                    setTimeout(() => {
+                        toast.style.bottom = "-60px";
+                        setTimeout(() => toast.remove(), 500);
+                    }, 3000);
+                }
+
                 window.parent.document.addEventListener("keydown", function(event) {
-                    console.log("23456789");
                     if (event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.altKey) {
-                        const submitButton = window.parent.document.querySelector('button[kind="secondaryFormSubmit"]');
-                        if (submitButton) {
-                            submitButton.click();
-                            console.log("Submit button clicked!");
+                        event.preventDefault(); // stop newline
+
+                        const textarea = window.parent.document.querySelector('textarea');
+                        if (!textarea) return; // safety
+
+                        if (textarea.value.trim().length === 0) {
+                            
+                            return; 
+                        } else {
+                            // Find submit button
+                            const submitButton = window.parent.document.querySelector('button[kind="secondaryFormSubmit"]');
+                            if (submitButton) {
+                                submitButton.click();
+
+                                // Scroll chat
+                                const chatElems = window.parent.document.querySelectorAll('.stMarkdown');
+                                if (chatElems.length > 0) {
+                                    chatElems[chatElems.length-1].scrollIntoView({behavior: "smooth"});
+                                }
+                            }
                         }
-                        event.preventDefault();
                     }
                 });
             }
@@ -53,7 +152,9 @@ components.html(
 
 
 
+
 def calculate_cost(prompt_tokens: int, completion_tokens: int) -> float:
+
     """Calculate the cost of OpenAI API usage."""
     prompt_cost = (prompt_tokens / 1000) * GPT4_TURBO_PROMPT_PRICE
     completion_cost = (completion_tokens / 1000) * GPT4_TURBO_COMPLETION_PRICE
@@ -92,14 +193,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for black background and white text
-import streamlit as st
+
+
+
+
 
 st.markdown(
     """
     <link rel="stylesheet" href="https://use.typekit.net/huc7jof.css">
     <style>
-        .main {
+    
+            .main {
             background-color: #000000;
             color: #ffffff;
             font-family: proxima-nova, sans-serif;
@@ -665,11 +769,8 @@ def main():
                 "content": user_input
             }) 
 
-        else:
-            st.warning("⚠️ Please type a question before submitting.")
-
-
-
+        # else:
+        #     st.warning("⚠️ Please type a question before submitting.")
 
         
         # Check if this is a simple greeting first
@@ -691,7 +792,7 @@ def main():
         st.session_state.thread.add_user_message(user_input)
         
         # Process with OpenAI
-        import time
+        
 
         # Process with OpenAI       
         with st.spinner("🐨 Gathering info for you…"):
