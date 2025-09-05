@@ -153,6 +153,7 @@ components.html(
 
 
 
+
 def calculate_cost(prompt_tokens: int, completion_tokens: int) -> float:
 
     """Calculate the cost of OpenAI API usage."""
