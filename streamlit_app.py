@@ -15,7 +15,7 @@ import time
 import base64
 import streamlit.components.v1 as components
 import time
-
+import re
 
 # Load environment variables
 load_dotenv()
@@ -97,7 +97,7 @@ components.html(
                     toast.style.bottom = "-60px";   // start hidden
                     toast.style.left = "50%";
                     toast.style.transform = "translateX(-50%)";
-                    toast.style.background = "#dc3545";   // Bootstrap danger red
+                    toast.style.background = "green";   // Bootstrap danger red
                     toast.style.color = "white";
                     toast.style.padding = "12px 24px";
                     toast.style.borderRadius = "8px";
@@ -126,7 +126,7 @@ components.html(
                         if (!textarea) return; // safety
 
                         if (textarea.value.trim().length === 0) {
-                            
+                            showToast("⚠️ Please type a message before submitting!");
                             return; 
                         } else {
                             // Find submit button
@@ -522,6 +522,51 @@ st.markdown(
         .st-emotion-cache-1bcyifm{
             border:0;
         }
+         
+
+
+        .booknow-btn{
+            height: 40px;
+            margin: auto;
+            border: 0;
+            border-radius: 6px;
+            color: #fff;
+            font-family: proxima_nova_rgsbold, Arial, Helvetica, sans-serif;
+            font-size: 15px;
+            line-height: 22px;
+            background: linear-gradient(261.34deg, #1CB954 11.4%, #0B6E4F 53.43%);
+            width: max-content;
+            display: inline-block;
+            height: auto;
+            padding: 7px 20px;
+            text-decoration: none;
+            margin: 10px 0 30px !important;
+            margin-left: 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .booknow-btn:hover{
+            transition: all 0.3s ease;
+            background: linear-gradient(261.34deg, #1CB954 11.4%, #1CB954 53.43%);
+        }
+
+        .booknow-btn:before{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50px;
+            bottom: 0;
+            background-color: #FFF;
+            width: 50px;
+        }
+
+        .stTextArea div[data-baseweb="textarea"] + div {
+            display: none !important;
+        }
+
+
+
     </style>
     """,
     unsafe_allow_html=True
@@ -606,6 +651,16 @@ def handle_simple_greetings(user_input: str) -> str:
 
 def display_message(message, is_user=True):
     """Display a chat message with appropriate styling."""
+
+        # Check for "Book Now" keyword and wrap it in a <p> with custom class
+    if not is_user:
+        
+        # Match "Book Now" with optional "!"
+        message = re.sub(
+            r'(?i)\bbook\s*now!?',
+            r'<p class="booknow-btn">Book Now</p>',
+            message
+        )
     if is_user:
         st.markdown(f"""
         <div class="chat-message user-message">
