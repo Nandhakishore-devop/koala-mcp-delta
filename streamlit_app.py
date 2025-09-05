@@ -112,16 +112,24 @@ st.markdown(
             border-radius: 24px;
             border-bottom-right-radius: 3px;
             font-family: proxima-nova, sans-serif;
-            display:flex;
+            display:inline-flex;
             align-items: flex-start;
             flex-direction: row-reverse;
             justify-content: end;
             gap: 20px;
             padding-left: 20px;
             max-width:90%;
-            margin-left:auto;
+            float:right;
+            font-size:17px;
+            line-height:24px;
             
         }
+        .user-message strong{
+            flex: 0 0 40px;
+            max-width: 40px;
+        }
+
+        
 
         .assistant-message {
             background-color: transparent;
@@ -165,6 +173,7 @@ st.markdown(
             color: #000;
             font-size:17px;
             resize:none;
+            max-width: 650px;
         }
     
 
@@ -316,8 +325,15 @@ st.markdown(
            background-color: transparent; 
          }
 
+        .st-bx{
+            caret-color:black;       
+        } 
 
-
+        .st-emotion-cache-z8vbw2:hover {
+            border-color: gray;
+            color: gray;
+        }
+        
     </style>
     """,
     unsafe_allow_html=True
