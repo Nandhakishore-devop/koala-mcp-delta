@@ -117,7 +117,7 @@ st.markdown(
             flex-direction: row-reverse;
             justify-content: end;
             gap: 20px;
-            padding-left: 20px;
+            padding: 10px 15px 10px 20px;
             max-width:90%;
             float:right;
             font-size:17px;
@@ -247,8 +247,9 @@ st.markdown(
             border-color: transparent;
         }
 
-        .stFormSubmitButton button:hover{
-            border:0;
+        .stFormSubmitButton button:hover, .stFormSubmitButton button:focus:not(:active){
+            border-color:#000;
+
         }
 
       
@@ -329,11 +330,38 @@ st.markdown(
             caret-color:black;       
         } 
 
-        .st-emotion-cache-z8vbw2:hover {
-            border-color: gray;
-            color: gray;
+        .function-call{
+             display: none;
+         }
+
+        .sticky-small-note{
+            margin: 0;
+            position: fixed;
+            left: 0;
+            right: 0;
+            text-align: center;
+            bottom: 8px;
+            z-index: 1;
+            color: #000;
+            font-size: 14px;
         }
-        
+        .stSpinner{
+            position: fixed;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            background: #FFF5EA;
+            width: 130px;
+            bottom: 150px;
+            border-radius: 20px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border:1px solid #FFE0BF;
+            color: #3A3A39;
+ 
+        }        
     </style>
     """,
     unsafe_allow_html=True
@@ -546,14 +574,21 @@ def main():
         unsafe_allow_html=True
     )
 
-    # Chat input at the bottom with Submit button
+        # Chat input at the bottom with Submit button
     with st.form(key="chat_form", clear_on_submit=True):
-        user_input = st.text_area(
-            "I can guide you with resort options and availability to make your vacation planning easier:",
-            placeholder="Type your message here..."
+            # Render the text as <p>
+            st.markdown(
+                '<p class="sticky-small-note">I can guide you with resort options and availability to make your vacation planning easier:</p>',
+                unsafe_allow_html=True
+            )
+
+            # Text area without label
+            user_input = st.text_area(
+                label="",  # Empty label so no extra label appears
+                placeholder="Type your message here..."
+            )
             
-        )
-        submit_button = st.form_submit_button("Submit")
+            submit_button = st.form_submit_button("Submit")
         
 
 
@@ -602,7 +637,11 @@ def main():
         st.session_state.thread.add_user_message(user_input)
         
         # Process with OpenAI
+        import time
+
+        # Process with OpenAI       
         with st.spinner("🐨 Thinking..."):
+            time.sleep(1000)
             try:
                 # Decide whether to include schemas
                 include_schema = st.session_state.schema_limit_counter < 2
@@ -619,6 +658,7 @@ def main():
                     recent_messages = history[-6:]  # Last 3 user-assistant pairs
                     messages_to_send = schema_messages + recent_messages
                     tools_to_send = []
+
 
                 # First API call
                 response = st.session_state.client.chat.completions.create(
