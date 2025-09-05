@@ -126,7 +126,7 @@ components.html(
                         if (!textarea) return; // safety
 
                         if (textarea.value.trim().length === 0) {
-                            showToast("⚠️ Please type a message before submitting!");
+                            
                             return; 
                         } else {
                             // Find submit button
@@ -656,11 +656,24 @@ def display_message(message, is_user=True):
     if not is_user:
         
         # Match "Book Now" with optional "!"
+        # message = re.sub(
+        #     r'(?i)\bbook\s*(now|here|noe)\b!?',
+        #     r'<p class="booknow-btn">Book Now</p>',
+        #     message
+        # )
+
         message = re.sub(
             r'(?i)\bbook\s*now!?',
             r'<p class="booknow-btn">Book Now</p>',
             message
         )
+        # Replace "Book Here" / "Book Here!"
+        message = re.sub(
+            r'(?i)\bbook\s*here!?',
+            r'<p class="booknow-btn">Book Here</p>',
+            message
+        )
+        
     if is_user:
         st.markdown(f"""
         <div class="chat-message user-message">
@@ -697,6 +710,7 @@ def display_function_call(function_name, arguments, result=None):
         {result_display}
     </div>
     """, unsafe_allow_html=True)
+
 
 def main():
     # Display cost information in sidebar
