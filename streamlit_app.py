@@ -557,7 +557,7 @@ st.markdown(
             top: 0;
             left: -50px;
             bottom: 0;
-            background-color: #FFF;
+            background-color: #F8F7F6;
             width: 50px;
         }
 
