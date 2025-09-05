@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 from assistant_thread import AssistantThread
 import time
 import base64
+import streamlit.components.v1 as components
+
 
 # Load environment variables
 load_dotenv()
@@ -20,6 +22,36 @@ load_dotenv()
 # OpenAI pricing (as of 2024) - prices per 1K tokens
 GPT4_TURBO_PROMPT_PRICE = 0.0015  # $0.0015 per 1K prompt tokens 3.5
 GPT4_TURBO_COMPLETION_PRICE = 0.002  # $0.002 per 1K completion tokens 3.5
+
+components.html(
+    """
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("DOM fully loaded in iframe");
+
+            // Inject into parent window
+            if (window.parent && window.parent !== window) {
+                console.log("Injecting into parent DOM");
+
+                window.parent.document.addEventListener("keydown", function(event) {
+                    console.log("23456789");
+                    if (event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.altKey) {
+                        const submitButton = window.parent.document.querySelector('button[kind="secondaryFormSubmit"]');
+                        if (submitButton) {
+                            submitButton.click();
+                            console.log("Submit button clicked!");
+                        }
+                        event.preventDefault();
+                    }
+                });
+            }
+        });
+    </script>
+    """,
+    height=0,
+)
+
+
 
 def calculate_cost(prompt_tokens: int, completion_tokens: int) -> float:
     """Calculate the cost of OpenAI API usage."""
@@ -32,25 +64,21 @@ def display_cost_info():
     st.markdown(f"""
     <div style="
         position: fixed;
-        top: 100px;
+        bottom:45px;
         right: 20px;
-        background-color: #2d2d2d;
+        background-color: #232221;
         padding: 1rem;
-        border-radius: 10px;
-        border-left: 4px solid #4ECDC4;
+        border-radius: 20px;
         z-index: 1000;
-        min-width: 200px;
+        min-width: 150px;
         color: #ffffff;
-        font-size: 0.9em;
+        font-size: 14px;
+        border:3px solid #ccc;
     ">
-        <h4 style="margin: 0 0 0.5rem 0; color: #4ECDC4;">💰 Usage Stats</h4>
-        <div style="margin: 0.3rem 0;">
-            <strong>Tokens:</strong> {st.session_state.total_tokens:,}
-        </div>
-        <div style="margin: 0.3rem 0;">
+        <div>
             <strong>Cost:</strong> ${st.session_state.total_cost:.4f}
         </div>
-        <div style="margin: 0.3rem 0;">
+        <div>
             <strong>Messages:</strong> {len([m for m in st.session_state.messages if m['type'] == 'user'])}
         </div>
     </div>
@@ -95,7 +123,6 @@ st.markdown(
         .chat-message {
             padding: 1rem;
             border-radius: 20px; /* ✅ fixed */
-            margin: 1rem 0; 
             border-left: 4px solid #4ECDC4;
             background-color: green;
             color: #ffffff;
@@ -369,7 +396,7 @@ st.markdown(
             right: 0;
             margin: 0 auto;
             background: #E8D8C7;
-            width: 120px;
+            width: 210px;
             bottom: 150px;
             border-radius: 20px;
             height: 40px;
@@ -391,16 +418,6 @@ st.markdown(
         .st-emotion-cache-1bcyifm{
             border:0;
         }
-   
-
-
-
-
- 
-
-
-
-
     </style>
     """,
     unsafe_allow_html=True
@@ -592,9 +609,6 @@ def main():
 
 
 
-
-
-
     st.markdown(
         """
         <style>
@@ -656,6 +670,7 @@ def main():
 
 
 
+
         
         # Check if this is a simple greeting first
         greeting_response = handle_simple_greetings(user_input)
@@ -679,8 +694,8 @@ def main():
         import time
 
         # Process with OpenAI       
-        with st.spinner("🐨 Thinking..."):
-            time.sleep(3)
+        with st.spinner("🐨 Gathering info for you…"):
+            # time.sleep(100)
             try:
                 # Decide whether to include schemas
                 include_schema = st.session_state.schema_limit_counter < 2
