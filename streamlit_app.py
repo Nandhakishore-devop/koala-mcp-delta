@@ -58,7 +58,7 @@ def display_cost_info():
 
 # Page configuration
 st.set_page_config(
-    page_title="🏖️ koala_chat_bot_DM",
+    page_title="🏖️ Koala Chat Bot",
     page_icon="🏖️",
     layout="centered",
     initial_sidebar_state="collapsed"
@@ -342,8 +342,8 @@ st.markdown(
             text-align: center;
             bottom: 8px;
             z-index: 1;
-            color: #000;
-            font-size: 14px;
+            color: #504538;
+            font-size: 14px !important;
         }
         .stSpinner{
             position: fixed;
@@ -361,7 +361,46 @@ st.markdown(
             border:1px solid #FFE0BF;
             color: #3A3A39;
  
-        }        
+        }    
+
+        .stSpinner {
+            position: fixed;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            background: #E8D8C7;
+            width: 120px;
+            bottom: 150px;
+            border-radius: 20px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #C2A788;
+            color: #504538;
+        }
+        .stSpinner > div { 
+            justify-content: center;
+        }
+
+        .stSpinner i{ 
+            display: none 
+        }
+
+
+        .st-emotion-cache-1bcyifm{
+            border:0;
+        }
+   
+
+
+
+
+ 
+
+
+
+
     </style>
     """,
     unsafe_allow_html=True
@@ -641,7 +680,7 @@ def main():
 
         # Process with OpenAI       
         with st.spinner("🐨 Thinking..."):
-            time.sleep(1000)
+            time.sleep(3)
             try:
                 # Decide whether to include schemas
                 include_schema = st.session_state.schema_limit_counter < 2
