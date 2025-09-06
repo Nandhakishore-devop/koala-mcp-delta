@@ -20,9 +20,12 @@ import re
 # Load environment variables
 load_dotenv()
 
-# OpenAI pricing (as of 2024) - prices per 1K tokens
-GPT4_TURBO_PROMPT_PRICE = 0.0015  # $0.0015 per 1K prompt tokens 3.5
-GPT4_TURBO_COMPLETION_PRICE = 0.002  # $0.002 per 1K completion tokens 3.5
+
+
+
+# # OpenAI pricing (as of 2024) - prices per 1K tokens
+# GPT4_TURBO_PROMPT_PRICE = 0.0015  # $0.0015 per 1K prompt tokens 3.5
+# GPT4_TURBO_COMPLETION_PRICE = 0.002  # $0.002 per 1K completion tokens 3.5
 
 # scroll_js = """
 # <script>
@@ -152,14 +155,19 @@ components.html(
 
 
 
+GPT4_TURBO_PROMPT_PRICE = 0.00000015     # $0.15 per 1K prompt tokens
+GPT4_TURBO_COMPLETION_PRICE = 0.00000060 # $0.60 per 1K completion tokens
 
 
 def calculate_cost(prompt_tokens: int, completion_tokens: int) -> float:
 
     """Calculate the cost of OpenAI API usage."""
-    prompt_cost = (prompt_tokens / 1000) * GPT4_TURBO_PROMPT_PRICE
-    completion_cost = (completion_tokens / 1000) * GPT4_TURBO_COMPLETION_PRICE
+    prompt_cost = prompt_tokens * GPT4_TURBO_PROMPT_PRICE
+    completion_cost = completion_tokens * GPT4_TURBO_COMPLETION_PRICE
     return prompt_cost + completion_cost
+
+
+    print("total:", prompt_tokens)
 
 def display_cost_info():
     """Display cost information in a fixed position on the right side."""
@@ -887,7 +895,7 @@ def main():
 
                 # First API call
                 response = st.session_state.client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4o-mini",
                     messages=st.session_state.thread.get_history(),
                     tools=ALL_FUNCTION_SCHEMAS,
                     tool_choice="auto"
@@ -950,12 +958,12 @@ def main():
                         final_tools_to_send = []
                     # Get final response
                     final_response = st.session_state.client.chat.completions.create(
-                        model="gpt-3.5-turbo",
+                        model="gpt-4o-mini",
                         messages=st.session_state.thread.get_history(),
                         tools=ALL_FUNCTION_SCHEMAS,
                         tool_choice="auto"
-                    )
                     
+                    )
                     final_message = final_response.choices[0].message
                     
                     # Track tokens for final response
