@@ -184,7 +184,10 @@ def display_cost_info():
         color: #ffffff;
         font-size: 14px;
         border:3px solid #ccc;
-    ">
+    ">       
+        <div>
+            <strong>Tokens:</strong> {st.session_state.total_tokens:,}
+        </div>
         <div>
             <strong>Cost:</strong> ${st.session_state.total_cost:.4f}
         </div>
