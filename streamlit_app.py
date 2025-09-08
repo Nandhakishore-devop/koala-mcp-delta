@@ -187,7 +187,7 @@ st.markdown(
         }
 
         .user-message {
-            background-color: #e9f6ed;
+            background-color: white;
             border-left: 4px solid #FF6B6B;
             margin-top: 15px;
             margin-left: 150px;
