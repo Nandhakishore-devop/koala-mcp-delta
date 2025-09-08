@@ -22,62 +22,6 @@ load_dotenv()
 
 
 
-
-# # OpenAI pricing (as of 2024) - prices per 1K tokens
-# GPT4_TURBO_PROMPT_PRICE = 0.0015  # $0.0015 per 1K prompt tokens 3.5
-# GPT4_TURBO_COMPLETION_PRICE = 0.002  # $0.002 per 1K completion tokens 3.5
-
-# scroll_js = """
-# <script>
-#     var chatElems = window.parent.document.querySelectorAll('.stMarkdown');
-#     console.log("4567890")
-#     if (chatElems.length > 0) {
-#         chatElems[chatElems.length-1].scrollIntoView({behavior: "smooth"});
-#     }
-# </script>
-# """
-# st.markdown(scroll_js, unsafe_allow_html=True)
-
-
-# components.html(
-#     """
-#     <script>
-#         document.addEventListener("DOMContentLoaded", function() {
-#             console.log("DOM fully loaded in iframe");
-
-       
-#             if (window.parent && window.parent !== window) {
-#                 console.log("Injecting into parent DOM");
-
-#                 window.parent.document.addEventListener("keydown", function(event) {
-#                     console.log("23456789");
-
-#                         var chatElems = window.parent.document.querySelectorAll('.stMarkdown');
-#                         console.log('chat length',chatElems)
-#                         console.log("rubi-scroll")
-#                         if (chatElems.length > 0) {
-#                             chatElems[chatElems.length-1].scrollIntoView({behavior: "smooth"});
-#                         }
-                    
-#                     if (event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.altKey) {
-#                         const submitButton = window.parent.document.querySelector('button[kind="secondaryFormSubmit"]');
-#                         if (submitButton) {
-#                             if(chatElems.length > 0){
-#                                 submitButton.click();
-#                                 chatElems[chatElems.length-1].scrollIntoView({behavior: "smooth"});
-#                             }
-#                         }
-#                         event.preventDefault();
-#                     }
-#                 });
-#             }
-#         });
-#     </script>
-#     """,
-#     height=0,
-    
-# )
-
 components.html(
     """
     <script>
@@ -207,9 +151,6 @@ st.set_page_config(
 
 
 
-
-
-
 st.markdown(
     """
     <link rel="stylesheet" href="https://use.typekit.net/huc7jof.css">
@@ -246,9 +187,9 @@ st.markdown(
         }
 
         .user-message {
-            background-color: white;
+            background-color: #e9f6ed;
             border-left: 4px solid #FF6B6B;
-            margin-top: 10px;
+            margin-top: 15px;
             margin-left: 150px;
             color: black;
             border: 1px solid #e8e8e8;
@@ -577,7 +518,9 @@ st.markdown(
             display: none !important;
         }
 
-
+        .stIFrame.st-emotion-cache-fsrfgf.evfee5y0 {
+            display: none !important;
+        }
 
     </style>
     """,
@@ -742,8 +685,7 @@ def main():
     if not st.session_state.client:
         st.error("⚠️ OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
         return
-    
-    # Display chat messages
+    # Display all chat messages
     for message in st.session_state.messages:
         if message["type"] == "user":
             display_message(message["content"], is_user=True)
@@ -751,10 +693,28 @@ def main():
             display_message(message["content"], is_user=False)
         elif message["type"] == "function_call":
             display_function_call(
-                message["function_name"], 
-                message["arguments"], 
+                message["function_name"],
+                message["arguments"],
                 message.get("result")
             )
+
+    # # Always scroll down after rendering messages
+    components.html(
+        """
+        <script>
+            function scrollToLastMessage() {
+                const chatElems = window.parent.document.querySelectorAll('.stMarkdown');
+                if (chatElems.length > 0) {
+                    chatElems[chatElems.length - 1].scrollIntoView({ behavior: "smooth" });
+                }
+            }
+            scrollToLastMessage();
+        </script>
+        """,
+        height=0,
+    )
+
+
 
     
 
@@ -792,8 +752,6 @@ def main():
     # """
     # st.markdown(hide_submit_css, unsafe_allow_html=True)
 
-
-
     st.markdown(
         """
         <style>
@@ -819,11 +777,10 @@ def main():
                 '<p class="sticky-small-note">I can guide you with resort options and availability to make your vacation planning easier:</p>',
                 unsafe_allow_html=True
             )
-
-            # Text area without label
             user_input = st.text_area(
-                label="",  # Empty label so no extra label appears
-                placeholder="Type your message here..."
+                "User Input", 
+                key="user_input", 
+                label_visibility="collapsed"
             )
             
             submit_button = st.form_submit_button("Submit")
@@ -873,6 +830,27 @@ def main():
         st.session_state.thread.add_user_message(user_input)
         
         # Process with OpenAI
+
+        # 🔹 Immediately display the user message
+        display_message(user_input, is_user=True)
+        st.markdown("<div style='margin:6px;'></div>", unsafe_allow_html=True)  # small spacing
+        st.empty()  # force UI update
+
+        components.html(
+        """
+        <script>
+            function scrollToLastMessage() {
+                const chatElems = window.parent.document.querySelectorAll('.stMarkdown');
+                if (chatElems.length > 0) {
+                    chatElems[chatElems.length - 1].scrollIntoView({ behavior: "smooth" });
+                }
+            }
+            scrollToLastMessage();
+        </script>
+        """,
+        height=0,
+    )
+
         
 
         # Process with OpenAI       
@@ -969,6 +947,7 @@ def main():
                     )
                     final_message = final_response.choices[0].message
                     
+                    # print("final_message_rubi",final_message)
                     # Track tokens for final response
                     if hasattr(final_response, 'usage') and final_response.usage:
                         st.session_state.total_tokens += final_response.usage.total_tokens
@@ -1006,219 +985,3 @@ if __name__ == "__main__":
     main()
 
 
-
-
-
-# def main():
-#     # Display cost information in sidebar
-#     display_cost_info()
-#     st.markdown(
-#         """
-#         <div class="main-header" style="text-align:center;">
-#             <img src="https://koalaadmin-prod.s3.us-east-2.amazonaws.com/static/assets/img/Koala-Home-hero-logo.svg" 
-#                 alt="Header Image" width="200">
-#         </div>
-#         """,
-#         unsafe_allow_html=True
-#     )
-#     # Check API key
-#     if not st.session_state.client:
-#         st.error("⚠️ OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
-#         return
-    
-#     # Display chat messages
-#     for message in st.session_state.messages:
-#         if message["type"] == "user":
-#             display_message(message["content"], is_user=True)
-#         elif message["type"] == "assistant":
-#             display_message(message["content"], is_user=False)
-#         elif message["type"] == "function_call":
-#             display_function_call(
-#                 message["function_name"], 
-#                 message["arguments"], 
-#                 message.get("result")
-#             )
-
-    
-
-#     if 'schema_limit_counter' not in st.session_state:
-#         st.session_state.schema_limit_counter = 0
-
-#     if 'thread' not in st.session_state:
-#         st.session_state.thread = Thread()
-
-#     if 'chat_history' not in st.session_state:
-#         st.session_state.chat_history = []
-
-#     if 'input_counter' not in st.session_state:
-#         st.session_state.input_counter = 0
-
-#     # ... continue your app logic
-
-    
-#     # Chat input at the bottom
-#     user_input = st.chat_input(
-#         "I can guide you with resort options and availability to make your vacation planning easier:",
-#         # value="",
-#         key=f"chat_input_{st.session_state.input_counter}",
-#         # placeholder="Type your message here..."
-#     )
-
-    
-    
-#     # Process input when user presses Enter
-#     if user_input and user_input.strip() and user_input != st.session_state.get('last_processed_input', ''):
-#         # Store the input we're processing to avoid duplicate processing
-#         st.session_state.last_processed_input = user_input
-        
-#         # Add user message to chat history
-#         st.session_state.messages.append({
-#             "type": "user",
-#             "content": user_input
-#         })
-        
-#         # Check if this is a simple greeting first
-#         greeting_response = handle_simple_greetings(user_input)
-        
-#         if greeting_response:
-#             # Handle greeting locally without LLM call
-#             st.session_state.messages.append({
-#                 "type": "assistant",
-#                 "content": greeting_response
-#             })
-            
-#             # Clear the input for next message by incrementing counter
-#             st.session_state.input_counter += 1
-#             st.rerun()
-#             return
-        
-#         # Add to thread for LLM processing
-#         st.session_state.thread.add_user_message(user_input)
-        
-#         # Process with OpenAI
-#         with st.spinner("🐨 Thinking..."):
-#             try:
-#                 # Decide whether to include schemas
-#                 include_schema = st.session_state.schema_limit_counter < 2
-
-#                 # Get message history
-#                 history = st.session_state.thread.get_history()
-
-#                 if include_schema:
-#                     messages_to_send = history
-#                     tools_to_send = ALL_FUNCTION_SCHEMAS
-#                     st.session_state.schema_limit_counter += 1
-#                 else:
-#                     schema_messages = history[:3]
-#                     recent_messages = history[-6:]  # Last 3 user-assistant pairs
-#                     messages_to_send = schema_messages + recent_messages
-#                     tools_to_send = []
-
-#                 # First API call
-#                 response = st.session_state.client.chat.completions.create(
-#                     model="gpt-3.5-turbo",
-#                     messages=st.session_state.thread.get_history(),
-#                     tools=ALL_FUNCTION_SCHEMAS,
-#                     tool_choice="auto"
-#                 )
-                
-#                 assistant_message = response.choices[0].message
-                
-#                 # Track tokens and cost
-#                 if hasattr(response, 'usage') and response.usage:
-#                     st.session_state.total_tokens += response.usage.total_tokens
-#                     call_cost = calculate_cost(response.usage.prompt_tokens, response.usage.completion_tokens)
-#                     st.session_state.total_cost += call_cost
-                
-#                 # Add assistant message to thread
-#                 st.session_state.thread.add_assistant_message({
-#                     "role": "assistant",
-#                     "content": assistant_message.content,
-#                     "tool_calls": assistant_message.tool_calls
-#                 })
-                
-#                 # Handle tool calls
-#                 if assistant_message.tool_calls:
-#                     for tool_call in assistant_message.tool_calls:
-#                         function_name = tool_call.function.name
-#                         arguments = tool_call.function.arguments
-                        
-#                         # Execute function
-#                         parsed_args = json.loads(arguments)
-#                         tool_result = call_tool(function_name, **parsed_args)
-                        
-#                         # Convert result to JSON string
-#                         if isinstance(tool_result, dict):
-#                             tool_result_str = json.dumps(tool_result, indent=2, default=str)
-#                         else:
-#                             tool_result_str = json.dumps({"result": tool_result}, indent=2, default=str)
-                        
-#                         # Add function call to chat history with actual result
-#                         st.session_state.messages.append({
-#                             "type": "function_call",
-#                             "function_name": function_name,
-#                             "arguments": arguments,
-#                             "result": tool_result_str
-#                         })
-                        
-#                         # Add tool response to thread
-#                         st.session_state.thread.add_assistant_message({
-#                             "role": "tool",
-#                             "tool_call_id": tool_call.id,
-#                             "content": tool_result_str
-#                         })
-
-#                     # Use same schema rule for final response (don’t include after limit)
-#                     if st.session_state.schema_limit_counter < 2:
-#                         final_messages_to_send = st.session_state.thread.get_history()
-#                         final_tools_to_send = ALL_FUNCTION_SCHEMAS
-#                     else:
-#                         schema_messages = st.session_state.thread.get_history()[:3]
-#                         recent_messages = st.session_state.thread.get_history()[-6:]
-#                         final_messages_to_send = schema_messages + recent_messages
-#                         final_tools_to_send = []
-#                     # Get final response
-#                     final_response = st.session_state.client.chat.completions.create(
-#                         model="gpt-3.5-turbo",
-#                         messages=st.session_state.thread.get_history(),
-#                         tools=ALL_FUNCTION_SCHEMAS,
-#                         tool_choice="auto"
-#                     )
-                    
-#                     final_message = final_response.choices[0].message
-                    
-#                     # Track tokens for final response
-#                     if hasattr(final_response, 'usage') and final_response.usage:
-#                         st.session_state.total_tokens += final_response.usage.total_tokens
-#                         final_cost = calculate_cost(final_response.usage.prompt_tokens, final_response.usage.completion_tokens)
-#                         st.session_state.total_cost += final_cost
-                    
-#                     # Add final assistant message
-#                     st.session_state.thread.add_assistant_message({
-#                         "role": "assistant",
-#                         "content": final_message.content
-#                     })
-                    
-#                     # Add to chat history
-#                     if final_message.content:
-#                         st.session_state.messages.append({
-#                             "type": "assistant",
-#                             "content": final_message.content
-#                         })
-#                 else:
-#                     # No function calls, just add the response
-#                     if assistant_message.content:
-#                         st.session_state.messages.append({
-#                             "type": "assistant",
-#                             "content": assistant_message.content
-#                         })
-                
-#                 # Clear the input for next message by incrementing counter
-#                 st.session_state.input_counter += 1
-#                 st.rerun()
-                
-#             except Exception as e:
-#                 st.error(f"❌ Error: {str(e)}")
-
-# if __name__ == "__main__":
-#     main()
