@@ -4,6 +4,7 @@ Clean black background with white text interface.
 """
 import os
 import json
+from threading import Thread
 import streamlit as st
 from typing import Dict, Any, List
 from openai import OpenAI
@@ -26,10 +27,10 @@ components.html(
     """
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            console.log("DOM fully loaded in iframe");
+             
 
             if (window.parent && window.parent !== window) {
-                console.log("Injecting into parent DOM");
+              
 
                 function showToast(message) {
                     let oldToast = window.parent.document.getElementById("chat-toast");
@@ -715,7 +716,6 @@ def main():
     )
 
 
-
     
 
     if 'schema_limit_counter' not in st.session_state:
@@ -929,7 +929,7 @@ def main():
                         })
 
                     # Use same schema rule for final response (don’t include after limit)
-                    if st.session_state.schema_limit_counter < 2:
+                    if st.session_state.schema_limit_counter < 5:
                         final_messages_to_send = st.session_state.thread.get_history()
                         final_tools_to_send = ALL_FUNCTION_SCHEMAS
                     else:

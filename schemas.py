@@ -4,16 +4,17 @@ import uuid
 
 
 def get_resort_details_schema() -> Dict[str, Any]:
-    """Schema for get_resort_details to handle ONLY static resort info queries."""
+    """Schema for get_resort_details to handle static resort info queries including reviews."""
     return {
         "type": "function",
         "function": {
             "name": "get_resort_details",
             "description": (
-                "Retrieve static resort details such as name, location, description, images, or amenities.  or comman give me the details about resort name "
+                "Retrieve static resort details such as name, location, description, images, amenities, or reviews. "
                 "Use ONLY when the user explicitly asks about a resort itself (e.g., "
-                "'Tell me about Bonnet Creeks Resort' or 'What amenities does Club Wyndham have?'). "
-                "Do NOT use for nearby restaurants, airports, transport, or sightseeing."
+                "'Tell me about Bonnet Creeks Resort', 'What amenities does Club Wyndham have?', "
+                "or 'Show me reviews of Wyndham Bonnet Creek'). "
+                "Do NOT use for nearby restaurants, airports, transport, or sightseeing. "
                 "Do NOT use for pricing, availability, or reservations."
             ),
             "parameters": {
@@ -21,7 +22,8 @@ def get_resort_details_schema() -> Dict[str, Any]:
                 "properties": {
                     "resort_id": {"type": "integer", "description": "ID of the resort."},
                     "resort_name": {"type": "string", "description": "Name of the resort."},
-                    "amenities_only": {"type": "boolean", "description": "If true, return only amenities."}
+                    "amenities_only": {"type": "boolean", "description": "If true, return only amenities."},
+                    
                 },
                 "required": [],
                 "additionalProperties": False
