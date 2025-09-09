@@ -415,8 +415,7 @@ st.markdown(
             caret-color:black;       
         } 
 
-
-
+        
         .sticky-small-note{
             margin: 0;
             position: fixed;
@@ -521,10 +520,12 @@ st.markdown(
             display: none !important;
         }
 
-        
-        .function-call{
-              display: none;
+        .function-call {
+            display:none;
         }
+
+        
+      
 
     </style>
     """,
@@ -704,23 +705,60 @@ def main():
                 message.get("result")
             )
 
-    # # Always scroll down after rendering messages
+
+   
+        
+
+    # # # Always scroll down after rendering messages
+    # components.html(
+    #     """
+    #     <script>
+    #         function scrollToLastMessage() {
+    #             const chatElems = window.parent.document.querySelectorAll('.stMarkdown');
+    #             if (chatElems.length > 0) {
+    #                 chatElems[chatElems.length - 1].scrollIntoView({ behavior: "smooth" });
+    #             }
+    #         }
+    #         scrollToLastMessage();
+    #     </script>
+    #     """,
+    #     height=0,
+    # )
+
+
     components.html(
         """
         <script>
-            function scrollToLastMessage() {
-                const chatElems = window.parent.document.querySelectorAll('.stMarkdown');
-                if (chatElems.length > 0) {
-                    chatElems[chatElems.length - 1].scrollIntoView({ behavior: "smooth" });
-                }
+        function scrollToLastMessage() {
+            const chatElems = window.parent.document.querySelectorAll('.stMarkdown');
+            if (chatElems.length > 0) {
+                chatElems[chatElems.length - 1].scrollIntoView({ behavior: "smooth" });
             }
+        }
+
+        function focusTextArea() {
+            const el = window.parent.document.querySelector('.stTextArea textarea');
+            if (el) {
+                el.focus({preventScroll:true});
+                el.style.caretColor = "black";
+                return true;
+            }
+            return false;
+        }
+
+        // Run after render
+        setTimeout(() => {
             scrollToLastMessage();
+            if (!focusTextArea()) {
+                const interval = setInterval(() => {
+                    if (focusTextArea()) clearInterval(interval);
+                }, 300);
+            }
+        }, 100);
         </script>
         """,
         height=0,
     )
-
-
     
 
     if 'schema_limit_counter' not in st.session_state:
@@ -934,7 +972,7 @@ def main():
                         })
 
                     # Use same schema rule for final response (don’t include after limit)
-                    if st.session_state.schema_limit_counter < 5:
+                    if st.session_state.schema_limit_counter < 2:
                         final_messages_to_send = st.session_state.thread.get_history()
                         final_tools_to_send = ALL_FUNCTION_SCHEMAS
                     else:
