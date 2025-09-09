@@ -58,6 +58,7 @@ class Listing(Base):
     resort = relationship("Resort", back_populates="listings")
     unit_type = relationship("UnitType", back_populates="listings")
     bookings = relationship("Booking", back_populates="listing")
+   
 
 class Amenity(Base):
     __tablename__ = 'amenities'
@@ -160,6 +161,8 @@ class ResortMigration(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
+
+
 class Resort(Base):
     __tablename__ = 'resorts'
     
@@ -187,8 +190,10 @@ class Resort(Base):
     images = relationship("ResortImage",back_populates="resort")
     resort_amenities = relationship("ResortAmenity", back_populates="resort")
     reviews = relationship("ResortReview", back_populates="resort", cascade="all, delete-orphan")
-
-
+    
+    # New relationship for location types
+    location_types = relationship("LocationType", back_populates="resort", cascade="all, delete-orphan")
+    
 
 
 class PtRtListing(Base):
@@ -405,7 +410,20 @@ class EsPoiLocations(Base):
         "EsPlaceOfInterests", back_populates="location", cascade="all, delete-orphan"
     )
 
-    
+
+class LocationType(Base):
+    __tablename__ = "location_types"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    resort_id = Column(Integer, ForeignKey("resorts.id"), nullable=False)
+    resort_location_master_id = Column(Integer, ForeignKey("resort_location_master.id"), nullable=False)
+    types = Column(String(255), nullable=False)
+    status = Column(Integer, default=1, nullable=False)
+
+    # Relationships
+    resort = relationship("Resort", back_populates="location_types")
+   
+
 
 class ResortReview(Base):
     __tablename__ = "resort_reviews"   # replace with your actual table name
@@ -1101,309 +1119,86 @@ def get_user_bookings(
 
 
 
+
+
+
 def get_available_resorts(
     country: str = None,
     city: str = None,
     state: str = None,
-    status: str = "active",
-    limit: int = 10
+    resort_status: str = "active",
+    limit: int = 10,
+    location_type: str = None
 ) -> List[Dict[str, Any]]:
     """
-    List available resorts with optional filtering by country, city, and state.
-
-    Args:
-        country: Optional country filter
-        city: Optional city filter
-        state: Optional state filter
-        status: Resort status filter (default: active)
-        limit: Maximum number of resorts to return (default: 10)
-
-    Returns:
-        List of dictionaries with resort information
+    List top resorts from ResortMigration filtered by location and sorted
+    by number of active listings.
     """
-    session = SessionLocal()
-
-    try:
-        query = session.query(Resort)\
-            .join(User, Resort.creator_id == User.id)\
-            .filter(Resort.has_deleted == 0)\
-            .filter(Resort.status == status)
-
-        if country:
-            query = query.filter(Resort.country.isnot(None), Resort.country.ilike(f"%{country.strip()}%"))
-        if city:
-            query = query.filter(Resort.city.isnot(None), Resort.city.ilike(f"%{city.strip()}%"))
-        if state:
-            query = query.filter(Resort.state.isnot(None), Resort.state.ilike(f"%{state.strip()}%"))
-
-        resorts = query.limit(limit).all()
-
-        result = []
-        for resort in resorts:
-            result.append({
-                "id": resort.id,
-                "name": resort.name,
-                "city": resort.city,
-                "state": resort.state,
-                "country": resort.country,
-                "highlight_quote": resort.highlight_quote[:200] + "..." if resort.highlight_quote and len(resort.highlight_quote) > 200 else resort.highlight_quote,
-                "status": resort.status
-            })
-
-        # Sorting only by resort name or other available field since active_listings is removed
-        result = sorted(result, key=lambda result: result['name'])  # or 'id', 'city', etc.
-        # print("ruban",result)
-
-        return result
-
-
-    except Exception as e:
-        print(f"Error in get_available_resorts: {str(e)}")
-        return []
-
-    finally:
-        session.close()
-
-#   hide active_listing
-
-    #     try:
-    # query = session.query(Resort)\
-    #     .join(User, Resort.creator_id == User.id)\
-    #     .filter(Resort.has_deleted == 0)\
-    #     .filter(Resort.status == status)
-
-    # if country:
-    #     query = query.filter(Resort.country.isnot(None), Resort.country.ilike(f"%{country.strip()}%"))
-    # if city:
-    #     query = query.filter(Resort.city.isnot(None), Resort.city.ilike(f"%{city.strip()}%"))
-    # if state:
-    #     query = query.filter(Resort.state.isnot(None), Resort.state.ilike(f"%{state.strip()}%"))
-
-    # resorts = query.limit(limit).all()
-
-    # result = []
-    # for resort in resorts:
-    #     result.append({
-    #         "id": resort.id,
-    #         "name": resort.name,
-    #         "city": resort.city,
-    #         "state": resort.state,
-    #         "country": resort.country,
-    #         "highlight_quote": resort.highlight_quote[:200] + "..." if resort.highlight_quote and len(resort.highlight_quote) > 200 else resort.highlight_quote,
-    #         "status": resort.status
-    #     })
-
-    # # Sorting only by resort name or other available field since active_listings is removed
-    # result = sorted(result, key=lambda result: result['name'])  # or 'id', 'city', etc.
-
-
-
-
-
-
-
-
-
-
-
-def get_resort_price(
-    resort_name: str = None,
-    country: str = None,
-    city: str = None,
-    state: str = None,
-    min_price: float = None,
-    max_price: float = None,
-    unit_type: str = None,
-    nights: int = None,
-    currency_code: str = None,
-    limit: int = 20,
-    debug: bool = False
-) -> Dict[str, Any]:
-    """
-    Enhanced version of get_resort_price with price-based bucketing (budget, mid_range, luxury, premium).
-    """
-    session = SessionLocal()
-    
-    try:
-        if debug:
-            print(f"🔍 Searching for resort: '{resort_name}'")
-
-        query = session.query(ResortMigration)
-
-        if resort_name:
-            query = query.filter(ResortMigration.resort_name.ilike(f"%{resort_name.strip()}%"))
-            if debug:
-                print(f"📊 After name filter '{resort_name}': {query.count()} records")
-
-        query = query.filter(ResortMigration.listing_has_deleted == 0)
-        query = query.filter(ResortMigration.listing_status.isnot(None))
-
-        if country:
-            query = query.filter(
-                ResortMigration.country.isnot(None),
-                ResortMigration.country.ilike(f"%{country.strip()}%")
+    with SessionLocal() as session:
+        try:
+            # Subquery: top 20 resorts by active listings
+            listing_subq = (
+                session.query(
+                    Listing.resort_id,
+                    func.count(Listing.id).label("active_count")
+                )
+                .filter(Listing.status == "active")
+                .group_by(Listing.resort_id)
+                .order_by(func.count(Listing.id).desc())
+                .limit(30)
+                .subquery()
             )
 
-        if city:
-            query = query.filter(
-                ResortMigration.city.isnot(None),
-                ResortMigration.city.ilike(f"%{city.strip()}%")
+            # Join ResortMigration with listing counts
+            query = (
+                session.query(ResortMigration, listing_subq.c.active_count)
+                .join(listing_subq, ResortMigration.resort_id == listing_subq.c.resort_id)
+                .filter(ResortMigration.resort_has_deleted == 0)
+                .filter(ResortMigration.resort_status == resort_status)
             )
 
-        if state:
-            query = query.filter(
-                ResortMigration.state.isnot(None),
-                ResortMigration.state.ilike(f"%{state.strip()}%")
-            )
+            # Apply optional filters
+            if country:
+                query = query.filter(ResortMigration.country.ilike(f"%{country.strip()}%"))
+            if city:
+                query = query.filter(ResortMigration.city.ilike(f"%{city.strip()}%"))
+            if state:
+                query = query.filter(ResortMigration.state.ilike(f"%{state.strip()}%"))
+            if country:
+                query = query.filter(ResortMigration.country.ilike(f"%{country.strip()}%"))
+            if location_type:
+                query = query.filter(ResortMigration.location_types.ilike(f"%{location_type.strip()}%"))
 
-        all_resorts = query.limit(limit * 3).all()
-        result = []
-
-        def parse_price(price_str):
-            if not price_str:
-                return 0.0
-            clean = str(price_str)
-            for s in ['$', '€', '£', '¥', ',', ' ']:
-                clean = clean.replace(s, '')
-            if '-' in clean:
-                clean = clean.split('-')[0]
-            try:
-                return float(clean)
-            except:
-                return 0.0
-
-        for resort in all_resorts:
-            try:
-                listing_price = parse_price(resort.listing_price_night)
-                unit_price = parse_price(resort.unit_rates_price)
-                nightly_price = parse_price(resort.unit_rate_nightly_price)
-                offer_price = parse_price(resort.offer_price) if resort.offer_price else None
-
-                price_per_night = listing_price or unit_price or nightly_price or 0.0
-
-                if min_price and price_per_night < min_price:
-                    continue
-                if max_price and price_per_night > max_price:
-                    continue
-
-                if unit_type and resort.unit_type_name:
-                    if unit_type.lower() not in resort.unit_type_name.lower():
-                        continue
-
-                if nights and resort.listing_nights != nights:
-                    continue
-
-                if currency_code and resort.listing_currency_code:
-                    if resort.listing_currency_code.upper() != currency_code.upper():
-                        continue
-
-                nights_count = resort.listing_nights or 1
-                total_price = price_per_night * nights_count if price_per_night > 0 else None
-
-                resort_info = {
+            # Fetch results ordered by active_count and limited by `limit`
+            resorts = query.order_by(listing_subq.c.active_count.desc()).limit(limit).all()
+            # print("ruban",query)
+            # Format results
+            result = []
+            for resort, active_count in resorts:
+                result.append({
+                    "id": resort.id,
                     "resort_id": resort.resort_id,
-                    "resort_name": resort.resort_name or "Unknown Resort",
-                    "location": {
-                        "address": resort.address,
-                        "city": resort.city,
-                        "state": resort.state,
-                        "country": resort.country,
-                        "zip_code": resort.zip,
-                        "coordinates": {
-                            "latitude": resort.lattitude,
-                            "longitude": resort.longitude
-                        }
-                    },
-                    "pricing": {
-                        "price_per_night": price_per_night,
-                        "currency_code": resort.listing_currency_code or "USD",
-                        "nights": nights_count,
-                        "total_price": total_price,
-                        "offer_price": offer_price,
-                        "offer_description": resort.offer,
-                        "price_display": f"{resort.listing_currency_code or '$'}{price_per_night:.2f}" if price_per_night > 0 else "Contact for pricing",
-                        "raw_prices": {
-                            "listing_price_night": resort.listing_price_night,
-                            "unit_rates_price": resort.unit_rates_price,
-                            "unit_rate_nightly_price": resort.unit_rate_nightly_price
-                        }
-                    },
-                    "unit_details": {
-                        "unit_type": resort.unit_type_name,
-                        "bedrooms": resort.unit_bedrooms,
-                        "bathrooms": resort.unit_bathrooms,
-                        "sleeps": resort.unit_sleeps or 0,
-                        "kitchenette": resort.unit_kitchenate
-                    },
-                    "availability": {
-                        "check_in": resort.listing_check_in.strftime("%Y-%m-%d") if resort.listing_check_in else None,
-                        "check_out": resort.listing_check_out.strftime("%Y-%m-%d") if resort.listing_check_out else None,
-                        "status": resort.listing_status,
-                        "has_weekend": bool(resort.has_weekend)
-                    },
-                    "amenities": {
-                        "fitness_center": bool(resort.is_fitness_center),
-                        "free_wifi": bool(resort.is_free_wifi),
-                        "restaurant": bool(resort.is_restaurant),
-                        "swimming_pool": bool(resort.is_swimming_pool),
-                        "pets_friendly": bool(resort.pets_friendly)
-                    },
-                    "ratings": {
-                        "hotel_stars": resort.hotel_star or 0,
-                        "google_rating": resort.google_rating or 0,
-                        "is_featured": bool(resort.is_featured),
-                        "is_popular": bool(resort.popular)
-                    }
-                }
+                    "resort_name": resort.resort_name,
+                    "city": resort.city,
+                    "state": resort.state,
+                    "country": resort.country,
+                    "address": resort.address,
+                    "resort_slug": resort.resort_slug,
+                    "location_types": [t.strip() for t in resort.location_types.split(",")] if resort.location_types else [],
+                    "resort_status": resort.resort_status,
+                    "resort_google_rating": resort.resort_google_rating,
+                    
+                })
 
-                result.append(resort_info)
+            return result
 
-                if len(result) >= limit:
-                    break
+        except Exception as e:
+            print(f"Error in get_available_resorts: {e}")
+            return []
 
-            except Exception as e:
-                if debug:
-                    print(f"❌ Error processing resort {resort.resort_id}: {str(e)}")
-                continue
 
-        # Categorize by price brackets
-        buckets = {
-            "budget": [],
-            "mid_range": [],
-            "luxury": [],
-            "premium": []
-        }
 
-        for resort in result:
-            price = resort["pricing"]["price_per_night"]
 
-            if price <= 100:
-                buckets["budget"].append(resort)
-            elif price <= 250:
-                buckets["mid_range"].append(resort)
-            elif price <= 500:
-                buckets["luxury"].append(resort)
-            else:
-                buckets["premium"].append(resort)
-
-        for k in buckets:
-            buckets[k].sort(key=lambda x: x["pricing"]["price_per_night"])
-
-        return {
-            "resorts_by_price_bucket": buckets,
-            "total_matched": len(result)
-        }
-
-    except Exception as e:
-        print(f"Database error in get_resort_price_grouped_by_price: {str(e)}")
-        return {
-            "resorts_by_price_bucket": {},
-            "total_matched": 0,
-            "error": str(e)
-        }
-
-    finally:
-        session.close()
 
 
 
@@ -2132,7 +1927,6 @@ AVAILABLE_TOOLS = {
     # "search_listings_by_type": search_listings_by_type,
     "get_featured_listings": get_featured_listings,
     "get_weekend_listings": get_weekend_listings,
-    "get_resort_price": get_resort_price,
     "search_resorts_by_amenities": search_resorts_by_amenities,
     "get_price_range_summary": get_price_range_summary
 }
@@ -2193,10 +1987,7 @@ if __name__ == "__main__":
         resorts = call_tool("get_available_resorts", limit=3)
         print(f"Found {len(resorts)} resorts")
         
-        # Test get_resort_price
-        print("Testing get_resort_price...")
-        prices = call_tool("get_resort_price", limit=3)
-        print(f"Found {len(prices)} price records")
+    
         
         # Test search_resorts_by_amenities
         print("Testing search_resorts_by_amenities...")

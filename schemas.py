@@ -100,46 +100,65 @@ def get_amenity_details_schema() -> Dict[str, Any]:
 
 
 def get_available_resorts_schema() -> Dict[str, Any]:
-    """Auto-generated schema for get_available_resorts function."""
+    """Schema for get_available_resorts tool."""
     return {
-    "type": "function",
-    "function": {
-        "name": "get_available_resorts",
-        "description": ( "Get a list of ALL EXISTING RESORTS in a specific location. "
-                        "Use this when the user asks 'show me resorts in [location]' or "
-                        "'what resorts are in [location]'. "
-                        "This returns resort information, NOT availability or bookings. "
-                        "For availability/booking searches, use search_available_future_listings_enhanced instead."),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "country": {
-                    "type": "string",
-                    "description": "The country parameter"
+        "type": "function",
+        "function": {
+            "name": "get_available_resorts",
+            "description": (
+                "Get a list of resorts from the resort_migration table. "
+                "Supports filtering by country, city, state, county, and location type. "
+                "Useful for queries like 'top beach resorts', 'resorts in Goa', "
+                "or 'show me mountain resorts in California'. "
+                "Results are sorted by number of active listings (highest first)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "country": {
+                        "type": "string",
+                        "description": "Country filter (optional).",
+                        "default": None
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "City filter (optional).",
+                        "default": None
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "State filter (optional).",
+                        "default": None
+                    },
+                    "county": {
+                        "type": "string",
+                        "description": "County filter (optional).",
+                        "default": None
+                    },
+                    "resort_status": {
+                        "type": "string",
+                        "description": "Resort status filter (default: 'active').",
+                        "default": "active"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of resorts to return (default: 10).",
+                        "default": 10
+                    },
+                    "location_type": {
+                        "type": "string",
+                        "description": (
+                            "Filter by location type, e.g., 'beach', 'mountain', "
+                            "'urban', 'lakefront'. Useful for queries like 'top beach resort'."
+                        ),
+                        "default": None
+                    }
                 },
-                "city": {
-                    "type": "string",
-                    "description": "The city parameter"
-                },
-                "state": {
-                    "type": "string",
-                    "description": "The state parameter"
-                },
-                "status": {
-                    "type": "string",
-                    "description": "The status parameter"
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "The limit parameter"
-                }
-            },
-            "required": [],
-            "additionalProperties": False
+                "required": [],
+                "additionalProperties": False
+            }
         }
     }
-}
-
 
 def get_booking_details_schema() -> Dict[str, Any]:
     """Auto-generated schema for get_booking_details function."""

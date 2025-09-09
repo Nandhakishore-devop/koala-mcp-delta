@@ -415,9 +415,7 @@ st.markdown(
             caret-color:black;       
         } 
 
-        .function-call{
-             display: none;
-         }
+
 
         .sticky-small-note{
             margin: 0;
@@ -523,10 +521,17 @@ st.markdown(
             display: none !important;
         }
 
+        
+        .function-call{
+              display: none;
+        }
+
     </style>
     """,
     unsafe_allow_html=True
 )
+
+
 
 # Initialize session state
 if 'messages' not in st.session_state:
