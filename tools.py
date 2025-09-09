@@ -1140,12 +1140,6 @@ def get_available_resorts(
 
         result = []
         for resort in resorts:
-            active_listings = session.query(Listing)\
-                .filter(Listing.resort_id == resort.id)\
-                .filter(Listing.has_deleted == 0)\
-                .filter(Listing.status.in_(['active', 'pending']))\
-                .count()
-
             result.append({
                 "id": resort.id,
                 "name": resort.name,
@@ -1153,11 +1147,12 @@ def get_available_resorts(
                 "state": resort.state,
                 "country": resort.country,
                 "highlight_quote": resort.highlight_quote[:200] + "..." if resort.highlight_quote and len(resort.highlight_quote) > 200 else resort.highlight_quote,
-                "active_listings": active_listings,
                 "status": resort.status
             })
 
-        result = sorted(result, key=lambda result: result['active_listings'], reverse=True)
+        # Sorting only by resort name or other available field since active_listings is removed
+        result = sorted(result, key=lambda result: result['name'])  # or 'id', 'city', etc.
+        # print("ruban",result)
 
         return result
 
@@ -1168,6 +1163,45 @@ def get_available_resorts(
 
     finally:
         session.close()
+
+#   hide active_listing
+
+    #     try:
+    # query = session.query(Resort)\
+    #     .join(User, Resort.creator_id == User.id)\
+    #     .filter(Resort.has_deleted == 0)\
+    #     .filter(Resort.status == status)
+
+    # if country:
+    #     query = query.filter(Resort.country.isnot(None), Resort.country.ilike(f"%{country.strip()}%"))
+    # if city:
+    #     query = query.filter(Resort.city.isnot(None), Resort.city.ilike(f"%{city.strip()}%"))
+    # if state:
+    #     query = query.filter(Resort.state.isnot(None), Resort.state.ilike(f"%{state.strip()}%"))
+
+    # resorts = query.limit(limit).all()
+
+    # result = []
+    # for resort in resorts:
+    #     result.append({
+    #         "id": resort.id,
+    #         "name": resort.name,
+    #         "city": resort.city,
+    #         "state": resort.state,
+    #         "country": resort.country,
+    #         "highlight_quote": resort.highlight_quote[:200] + "..." if resort.highlight_quote and len(resort.highlight_quote) > 200 else resort.highlight_quote,
+    #         "status": resort.status
+    #     })
+
+    # # Sorting only by resort name or other available field since active_listings is removed
+    # result = sorted(result, key=lambda result: result['name'])  # or 'id', 'city', etc.
+
+
+
+
+
+
+
 
 
 
