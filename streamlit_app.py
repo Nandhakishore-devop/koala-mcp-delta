@@ -193,7 +193,7 @@ st.markdown(
             margin-top: 15px;
             margin-left: 150px;
             color: black;
-            border: 1px solid #e8e8e8;
+            border: 1px solid #1ff1654a;
             border-radius: 24px;
             border-bottom-right-radius: 3px;
             font-family: proxima-nova, sans-serif;
