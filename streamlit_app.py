@@ -520,6 +520,10 @@ st.markdown(
             display: none !important;
         }
 
+        .function-call {
+            display:none;
+        }
+
 
 
         
@@ -643,7 +647,7 @@ def display_message(message, is_user=True):
         st.markdown(f"""
         <div class="chat-message user-message">
             <strong>
-            <img width="40" height="40" src="https://koalaadmin-prod.s3.us-east-2.amazonaws.com/static/assets/img/availablity-koala-icon.svg" />
+            <img width="40" height="40" src="https://www.go-koala.com/assets/img/beforLoginAvatarMobile.svg" />
             </strong>
             {message}
         </div>
@@ -651,8 +655,13 @@ def display_message(message, is_user=True):
     else:
         st.markdown(f"""
         <div class="chat-message assistant-message">
-            <strong>🤖 Resort Assistant:</strong><br>
-            {message}
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <img width="40" height="40" src="https://koalaadmin-prod.s3.us-east-2.amazonaws.com/static/assets/img/availablity-koala-icon.svg" />
+                <strong>Myles AI</strong>
+            </div>
+            <div style="margin-top: 5px;">
+                {message}
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
