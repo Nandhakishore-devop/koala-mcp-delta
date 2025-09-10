@@ -198,7 +198,7 @@ st.markdown(
             border-bottom-right-radius: 3px;
             font-family: proxima-nova, sans-serif;
             display:inline-flex;
-            align-items: flex-start;
+            align-items: center;
             flex-direction: row-reverse;
             justify-content: end;
             gap: 20px;
@@ -524,10 +524,6 @@ st.markdown(
             display:none;
         }
 
-
-
-        
-      
 
     </style>
     """,

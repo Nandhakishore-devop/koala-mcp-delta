@@ -80,31 +80,6 @@ class ResortMigration(Base):
     id = Column(BigInteger, primary_key=True)
     pt_rt_id = Column(Integer, nullable=False)
     listing_id = Column(Integer)
-    listing_check_in = Column(DateTime)
-    listing_check_out = Column(DateTime)
-    listing_cancelation_date = Column(DateTime)
-    listing_price_night = Column(String(50))
-    listing_nights = Column(Integer)
-    listing_publish_type = Column(String(50))
-    listing_has_deleted = Column(Integer, default=0)
-    listing_status = Column(String(50))
-    listing_currency_id = Column(Integer, default=0)
-    listing_currency_code = Column(String(255))
-    has_weekend = Column(Integer, default=0)
-    listing_owner_id = Column(Integer, default=0)  # Remove ForeignKey to avoid issues
-    listing_count = Column(Integer, default=0)
-    unit_type_id = Column(Integer, default=0)  # Remove ForeignKey to avoid issues
-    available_count = Column(String(255))
-    exactlisting_listing_count = Column(String(255))
-    unit_type_slug = Column(String(255))
-    unit_type_name = Column(String(255))
-    unit_bedrooms = Column(String(5))
-    unit_bathrooms = Column(String(7))
-    unit_sleeps = Column(Integer, default=0)
-    unit_kitchenate = Column(String(255))
-    unit_has_deleted = Column(Integer, default=0)
-    unit_type_images = Column(Text)  # JSON
-    featured_amenities = Column(String(150))
     unit_status = Column(String(255))
     unit_cancelation_policy_option = Column(String(255))
     resort_id = Column(Integer, default=0)  # This is just an identifier, not a foreign key
@@ -115,53 +90,16 @@ class ResortMigration(Base):
     distance = Column(String(255))
     address = Column(String(255))
     location_types = Column(String(255))
+    resort_has_deleted = Column(Integer, default=0)
     county = Column(String(255))
     country = Column(String(255))
+    resort_status = Column(String(50))
     city = Column(String(255))
     state = Column(String(255))
     zip = Column(String(255))
     is_featured = Column(Integer, default=0)
     popular = Column(Integer, default=0)
-    is_fitness_center = Column(Integer, default=0)
-    is_free_wifi = Column(Integer, default=0)
-    is_restaurant = Column(Integer, default=0)
-    is_swimming_pool = Column(Integer, default=0)
-    hotel_star = Column(Integer, default=0)
     top_21_resort = Column(Integer, default=0)
-    resort_amenities = Column(Text)  # JSON
-    reslrt_updated_at = Column(DateTime)
-    resort_google_rating = Column(Integer, default=0)
-    resort_has_deleted = Column(Integer, default=0)
-    resort_status = Column(String(50))
-    google_rating = Column(Integer, default=0)
-    user_ratings_total = Column(Integer, default=0)
-    google_rating_default = Column(String(8))
-    pets_friendly = Column(Integer, default=0)
-    unit_rates_price = Column(String(50))
-    offer = Column(String(255))
-    offer_price = Column(String(255))
-    offer_popup = Column(String(255))
-    drivetime = Column(String(255))
-    image = Column(String(255))
-    images = Column(Text)  # JSON
-    resort_images = Column(Text)  # JSON
-    resort_aminities = Column(Text)  # JSON
-    amenities = Column(Text)  # JSON
-    highlight_quote = Column(String(255))
-    hotelStar = Column(String(255))
-    is_open_availability = Column(String(255))
-    brand_id = Column(Integer, default=0)
-    brand_name = Column(String(255))
-    brand_slug = Column(String(255))
-    brand_order = Column(String(255))
-    unit_rate_id = Column(Integer, default=0)
-    unit_rate_start_date = Column(DateTime)
-    unit_rate_availability = Column(String(255))
-    unit_rate_number_available = Column(String(255))
-    unit_rate_nightly_price = Column(String(255))
-    unit_rates_count = Column(String(255))
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
 
 
 
@@ -1225,7 +1163,7 @@ def get_available_resorts(
 
             # Fetch results ordered by active_count and limited by `limit`
             resorts = query.order_by(listing_subq.c.active_count.desc()).all()
-            # print("ruban",query)
+            print("ruban",query)
             # Format results
             result = []
             for resort, active_count in resorts:
