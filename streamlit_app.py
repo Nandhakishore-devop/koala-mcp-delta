@@ -144,8 +144,8 @@ def display_cost_info():
 
 # Page configuration
 st.set_page_config(
-    page_title="🏖️ Koala Chat Bot",
-    page_icon="🏖️",
+    page_title="Koala Chat Bot",
+    page_icon="🐨",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
@@ -520,9 +520,7 @@ st.markdown(
             display: none !important;
         }
 
-        .function-call {
-            display:none;
-        }
+
 
         
       
@@ -531,6 +529,11 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+
+        # .function-call {
+        #     display:none;
+        # }
 
 
 

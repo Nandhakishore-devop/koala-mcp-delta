@@ -14,6 +14,7 @@ from collections import Counter, defaultdict
 import calendar
 from calendar import monthrange
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import random
 
 
@@ -22,6 +23,7 @@ load_dotenv()
 
 # Database models
 Base = declarative_base()
+# print("ruban_db",Base)
 
 
 class User(Base):
@@ -459,11 +461,64 @@ def get_database_url():
         return f"mysql+pymysql://{user}@{host}/{database}"
 
 
+# DATABASE_URL = get_database_url()
+# engine = create_engine(DATABASE_URL, echo=False)
+# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# # Test the database connection
+# def test_database_connection():
+#     """Test if the database connection works."""
+#     try:
+#         session = SessionLocal()
+#         # Simple test query using SQLAlchemy 2.0 syntax
+       
+#         result = session.execute(text("SELECT 1")).fetchone()
+#         print("ruban_db",result)
+#         session.close()
+#         return {"status": "success", "message": "Database connection successful"}
+#     except Exception as e:
+#         return {"status": "error", "message": f"Database connection failed: {str(e)}"}
+        
+    
+def get_database_url():
+    host = os.getenv("MYSQL_HOST", "localhost")
+    user = os.getenv("MYSQL_USER", "root")
+    password = os.getenv("MYSQL_PASSWORD", "")
+    database = os.getenv("MYSQL_DATABASE", "koala_dev")
+    
+    if password:
+        return f"mysql+pymysql://{user}:{password}@{host}/{database}"
+    else:
+        return f"mysql+pymysql://{user}@{host}/{database}"
+
 DATABASE_URL = get_database_url()
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+def initialize_database():
+    """Run once at startup to verify DB connection."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return True
+    except Exception as e:
+        print(f"❌ Database initialization failed: {e}")
+        return False
+
+
+# -----------------------
+# Chatbot startup
+# -----------------------
+def start_chatbot():
+    # Initialize DB
+    db_ok = initialize_database()
+    
+    # Send welcome message
+    if db_ok:
+        print("🤖 Welcome! Database connection is ready ✅")
+    else:
+        print("🤖 Welcome! But database connection failed ❌ (check logs).")
 
 
 
@@ -1951,22 +2006,11 @@ def call_tool(tool_name: str, **kwargs) -> Any:
         return {"error": f"Error calling tool '{tool_name}': {str(e)}"}
 
 
-# Test the database connection
-def test_database_connection():
-    """Test if the database connection works."""
-    try:
-        session = SessionLocal()
-        # Simple test query using SQLAlchemy 2.0 syntax
-        from sqlalchemy import text
-        result = session.execute(text("SELECT 1")).fetchone()
-        session.close()
-        return {"status": "success", "message": "Database connection successful"}
-    except Exception as e:
-        return {"status": "error", "message": f"Database connection failed: {str(e)}"}
-
 
 
 if __name__ == "__main__":
+
+    start_chatbot()
     # Test database connection
     print("🔧 Testing Database Connection...")
     conn_result = test_database_connection()

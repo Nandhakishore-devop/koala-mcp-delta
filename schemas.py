@@ -3,6 +3,27 @@ import datetime
 import uuid
 
 
+
+
+
+def test_database_connection_schema() -> Dict[str, Any]:
+    """Auto-generated schema for test_database_connection function."""
+    return {
+    "type": "function",
+    "function": {
+        "name": "test_database_connection",
+        "description": "Test if the database connection works.",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False
+        }
+    }
+}
+
+
+
 def get_resort_details_schema() -> Dict[str, Any]:
     """Schema for get_resort_details to handle static resort info queries including reviews."""
     return {
@@ -441,23 +462,6 @@ def search_resorts_by_amenities_schema() -> Dict[str, Any]:
 
 
 
-def test_database_connection_schema() -> Dict[str, Any]:
-    """Auto-generated schema for test_database_connection function."""
-    return {
-    "type": "function",
-    "function": {
-        "name": "test_database_connection",
-        "description": "Test if the database connection works.",
-        "parameters": {
-            "type": "object",
-            "properties": {},
-            "required": [],
-            "additionalProperties": False
-        }
-    }
-}
-
-
 
 
 
@@ -781,9 +785,6 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
         get_listing_details_schema(),
         get_resort_details_schema(),
         get_price_range_summary_schema(),
-        
-        
-
         get_city_from_resort_schema(),
 
 
