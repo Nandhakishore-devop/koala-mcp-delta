@@ -554,6 +554,7 @@ if 'client' not in st.session_state:
     api_key = os.getenv("OPENAI_API_KEY")
     if api_key:
         st.session_state.client = OpenAI(api_key=api_key)
+        # print("api",api_key)
     else:
         st.session_state.client = None
 
