@@ -1191,7 +1191,7 @@ def get_available_resorts(
     """
     with SessionLocal() as session:
         try:
-            # Subquery: top 20 resorts by active listings
+            # Subquery: top 30 resorts by active listings
             listing_subq = (
                 session.query(
                     Listing.resort_id,
@@ -1200,7 +1200,6 @@ def get_available_resorts(
                 .filter(Listing.status == "active")
                 .group_by(Listing.resort_id)
                 .order_by(func.count(Listing.id).desc())
-                .limit(30)
                 .subquery()
             )
 
@@ -1225,7 +1224,7 @@ def get_available_resorts(
                 query = query.filter(ResortMigration.location_types.ilike(f"%{location_type.strip()}%"))
 
             # Fetch results ordered by active_count and limited by `limit`
-            resorts = query.order_by(listing_subq.c.active_count.desc()).limit(limit).all()
+            resorts = query.order_by(listing_subq.c.active_count.desc()).all()
             # print("ruban",query)
             # Format results
             result = []
