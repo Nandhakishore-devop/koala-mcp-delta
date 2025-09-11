@@ -1176,6 +1176,7 @@ def get_available_resorts(
                 .filter(Listing.status == "active")
                 .group_by(Listing.resort_id)
                 .order_by(func.count(Listing.id).desc())
+                .limit(30)
                 .subquery()
             )
 
