@@ -519,6 +519,10 @@ st.markdown(
         .stIFrame.st-emotion-cache-fsrfgf.evfee5y0 {
             display: none !important;
         }
+        
+        .function-call {
+            display:none;
+        }
 
 
 
