@@ -468,8 +468,8 @@ def get_database_url():
 DATABASE_URL = get_database_url()
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-print("engine",engine)
-print("se_db",SessionLocal)
+# print("engine",engine)
+# print("se_db",SessionLocal)
 
 
 def initialize_database():
@@ -481,21 +481,6 @@ def initialize_database():
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
         return False
-
-
-# -----------------------
-# Chatbot startup
-# -----------------------
-def start_chatbot():
-    # Initialize DB
-    db_ok = initialize_database()
-    
-    # Send welcome message
-    if db_ok:
-        print("🤖 Welcome! Database connection is ready ✅")
-    else:
-        print("🤖 Welcome! But database connection failed ❌ (check logs).")
-
 
 
 # rubi _ tools
@@ -1150,9 +1135,6 @@ def get_user_bookings(
 
 
 
-
-
-
 def get_available_resorts(
     country: str = None,
     city: str = None,
@@ -1176,7 +1158,7 @@ def get_available_resorts(
                 .filter(Listing.status == "active")
                 .group_by(Listing.resort_id)
                 .order_by(func.count(Listing.id).desc())
-                .limit(30)
+                .limit(80)
                 .subquery()
             )
 
@@ -1226,12 +1208,6 @@ def get_available_resorts(
         except Exception as e:
             print(f"Error in get_available_resorts: {e}")
             return []
-
-
-
-
-
-
 
 
 

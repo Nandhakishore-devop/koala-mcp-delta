@@ -562,7 +562,7 @@ def handle_simple_greetings(user_input: str) -> str:
     # Define greeting patterns and responses
     greeting_responses = {
         # Basic greetings
-        
+        # 'hi': "Hey there! 😊 How can I assist you today? Are you looking for a fantastic vacation rental or resort?",
         'hey': "Hey! 😊 Ready to plan your next vacation? I'm here to help you find amazing resorts!",
         'good morning': "Good morning! ☀️ What a beautiful day to plan a resort getaway! How can I assist you?",
         'good afternoon': "Good afternoon! 🌅 Hope you're having a great day! Let's find you an amazing resort experience.",
@@ -580,9 +580,7 @@ def handle_simple_greetings(user_input: str) -> str:
         # 'whats up': "Just ready to help you book your dream resort! ✨ What destination interests you?",
         
         # 'okay': "Perfect! 🌴 How can I help you with your resort booking today?",
-        # 'bye': "Goodbye! 👋 Thanks for using our resort booking service. Have a wonderful day!",
-        # 'goodbye': "Farewell! 🌊 Hope to help you plan your next amazing vacation soon!",
-        # 'see you': "See you later! 🏖️ Don't hesitate to come back when you're ready to book that perfect resort!",
+
         
     }
     
