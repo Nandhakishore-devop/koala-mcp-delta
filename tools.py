@@ -1147,20 +1147,39 @@ def get_available_resorts(
     List top resorts from ResortMigration filtered by location and sorted
     by number of active listings.
     """
+    # with SessionLocal() as session:
+    #     try:
+    #         # Subquery: top 30 resorts by active listings
+    #         listing_subq = (
+    #             session.query(
+    #                 Listing.resort_id,
+    #                 func.count(Listing.id).label("active_count")
+    #             )
+    #             .filter(Listing.status == "active")
+    #             .group_by(Listing.resort_id)
+    #             .order_by(func.count(Listing.id).desc())
+    #             .limit(80)
+    #             .subquery()
+    #         )
+    
     with SessionLocal() as session:
         try:
-            # Subquery: top 30 resorts by active listings
+            # Subquery: top 80 resorts by active pt_rt_listings
             listing_subq = (
                 session.query(
-                    Listing.resort_id,
-                    func.count(Listing.id).label("active_count")
+                    PtRtListing.resort_id,
+                    func.count(PtRtListing.id).label("active_count")
                 )
-                .filter(Listing.status == "active")
-                .group_by(Listing.resort_id)
-                .order_by(func.count(Listing.id).desc())
+                .filter(
+                    PtRtListing.listing_status == "active",   # equivalent to Listing.status
+                    PtRtListing.listing_has_deleted == 0      # equivalent to has_deleted = 0
+                )
+                .group_by(PtRtListing.resort_id)
+                .order_by(func.count(PtRtListing.id).desc())
                 .limit(80)
                 .subquery()
             )
+
 
             # Join ResortMigration with listing counts
             query = (
@@ -1184,7 +1203,9 @@ def get_available_resorts(
 
             # Fetch results ordered by active_count and limited by `limit`
             resorts = query.order_by(listing_subq.c.active_count.desc()).all()
+            # print("count",resorts)
             # print("ruban",query)
+
             # Format results
             result = []
             for resort, active_count in resorts:
@@ -1200,6 +1221,7 @@ def get_available_resorts(
                     "location_types": [t.strip() for t in resort.location_types.split(",")] if resort.location_types else [],
                     "resort_status": resort.resort_status,
                     "resort_google_rating": resort.resort_google_rating,
+
                     
                 })
 
