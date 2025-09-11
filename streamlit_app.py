@@ -18,10 +18,10 @@ import streamlit.components.v1 as components
 import time
 import re
 
+
+
 # Load environment variables
 load_dotenv()
-
-
 
 components.html(
     """
@@ -520,9 +520,6 @@ st.markdown(
             display: none !important;
         }
 
-        .function-call {
-            display:none;
-        }
 
 
     </style>
@@ -954,11 +951,17 @@ def main():
                     for tool_call in assistant_message.tool_calls:
                         function_name = tool_call.function.name
                         arguments = tool_call.function.arguments
-                        
-                        # Execute function
                         parsed_args = json.loads(arguments)
-                        tool_result = call_tool(function_name, **parsed_args)
-                        
+                        for attempt in range(3):  # Retry up to 3 times
+                            try:
+                                tool_result = call_tool(function_name, **parsed_args)
+                                break
+                            except Exception as e:
+                                if attempt < 2:
+                                    #logger.warning(f"Attempt {attempt + 1} failed: {str(e)}. Retrying...")
+                                    time.sleep(2 ** attempt)  # Exponential backoff
+                                else:
+                                    raise
                         # Convert result to JSON string
                         if isinstance(tool_result, dict):
                             tool_result_str = json.dumps(tool_result, indent=2, default=str)

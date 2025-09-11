@@ -21,6 +21,7 @@ import random
 # Load environment variables
 load_dotenv()
 
+
 # Database models
 Base = declarative_base()
 # print("ruban_db",Base)
@@ -453,39 +454,12 @@ def get_database_url():
     user = os.getenv("MYSQL_USER", "root")
     password = os.getenv("MYSQL_PASSWORD", "")
     database = os.getenv("MYSQL_DATABASE", "koala_dev")
+    # print("host",host)
+    # print("user",user)
+    # print("password",password)
+    # print("database",database)
     
     # Build MySQL URL
-    if password:
-        return f"mysql+pymysql://{user}:{password}@{host}/{database}"
-    else:
-        return f"mysql+pymysql://{user}@{host}/{database}"
-
-
-# DATABASE_URL = get_database_url()
-# engine = create_engine(DATABASE_URL, echo=False)
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# # Test the database connection
-# def test_database_connection():
-#     """Test if the database connection works."""
-#     try:
-#         session = SessionLocal()
-#         # Simple test query using SQLAlchemy 2.0 syntax
-       
-#         result = session.execute(text("SELECT 1")).fetchone()
-#         print("ruban_db",result)
-#         session.close()
-#         return {"status": "success", "message": "Database connection successful"}
-#     except Exception as e:
-#         return {"status": "error", "message": f"Database connection failed: {str(e)}"}
-        
-    
-def get_database_url():
-    host = os.getenv("MYSQL_HOST", "localhost")
-    user = os.getenv("MYSQL_USER", "root")
-    password = os.getenv("MYSQL_PASSWORD", "")
-    database = os.getenv("MYSQL_DATABASE", "koala_dev")
-    
     if password:
         return f"mysql+pymysql://{user}:{password}@{host}/{database}"
     else:
@@ -494,6 +468,8 @@ def get_database_url():
 DATABASE_URL = get_database_url()
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+print("engine",engine)
+print("se_db",SessionLocal)
 
 
 def initialize_database():

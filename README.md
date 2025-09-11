@@ -59,7 +59,7 @@ pip install -r requirements.txt
 
 2. **Set OpenAI API key (optional):**
 ```bash
-export OPENAI_API_KEY="your-api-key-here"
+export OPENAI_API_KEY=""
 ```
 
 ## 🎯 Usage
