@@ -1010,22 +1010,17 @@ def main():
                         function_name = tool_call.function.name
                         arguments = tool_call.function.arguments
                         parsed_args = json.loads(arguments)
-
-                        tool_result = None
-                        DEFAULT_MESSAGE = {"result": "Bonnet Creek details"}  # used only internally for DB/tool check
-                        print("check_live")
-
                         for attempt in range(3):  # Retry up to 3 times
                             try:
                                 tool_result = call_tool(function_name, **parsed_args)
                                 break
                             except Exception as e:
                                 if attempt < 2:
-                                    time.sleep(2 ** attempt)  # exponential backoff
+                                    #logger.warning(f"Attempt {attempt + 1} failed: {str(e)}. Retrying...")
+                                    time.sleep(2 ** attempt)  # Exponential backoff
                                 else:
-                                    tool_result = DEFAULT_MESSAGE
-                                    st.warning("⚠️ Could not fetch data. Using default for internal check.")
-                                    print("error _on db")
+                                    raise
+
 
                         # Convert result to JSON string
                         if isinstance(tool_result, dict):
