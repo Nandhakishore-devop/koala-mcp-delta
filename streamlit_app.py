@@ -1013,7 +1013,7 @@ def main():
 
                         tool_result = None
                         DEFAULT_MESSAGE = {"result": "Bonnet Creek details"}  # used only internally for DB/tool check
-                        print("check_live")
+                        # print("check_live")
 
                         for attempt in range(3):  # Retry up to 3 times
                             try:
