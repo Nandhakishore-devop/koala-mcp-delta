@@ -559,9 +559,7 @@ st.markdown(
             display: none !important;
         }
 
-        .function-call {
-            display:none;
-        }
+
 
 
 

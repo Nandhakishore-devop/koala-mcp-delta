@@ -19,9 +19,8 @@ class AssistantThread:
         “Book Now ” → takes the user directly into the booking process for the selected listing.
         “Visit Resort ” → takes the user to the resort’s main details page (overview, amenities, photos, etc.).
         "Book Now" or "Visit Resort".
-        If input contains "US" → interpret as “United States” or “United States of America”.
-        If input contains "Aruba" alone → interpret as a country (Aruba).
-        If input contains "Aruba Surf" → interpret as the resort name “Aruba Surf Club”.
+       If the user input is “US” → map to country = "United States".
+       If the user input is “Aruba Surf” (or contains "Surf") → map to resort_name = "Aruba Surf Club".
         Today's date is {today:%b %d, %Y}, and the current year is {current_year}. When a query uses 'this' with any month, it should default to {current_year}.
         When the user asks for data by month (e.g., "fetch July data"), always resolve it to the next occurrence of that month in the future relative to today's date.
         -If today's date is past that month in the current year, interpret it as that month in the next year.
