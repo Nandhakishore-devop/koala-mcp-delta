@@ -681,19 +681,6 @@ def display_message(message, is_user=True):
             message
         )
 
-        # Replace "Visit Resort" / "Visit Resort!"
-        message = re.sub(
-            r'(?i)\bvisit\s*resort!?',
-            r'<p class="visitresort-btn">Visit Resort</p>',
-            message
-        )
-
-        # Replace "Visit Here" / "Visit Here!"
-        message = re.sub(
-            r'(?i)\bvisit\s*here!?',
-            r'<p class="visitresort-btn">Visit Resort</p>',
-            message
-        )
 
     if is_user:
         st.markdown(f"""
