@@ -1028,7 +1028,7 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
         skip_fields = {
             "year", "month", "day", "listing_check_in", "listing_check_out",
             "price_sort", "limit", "update_fields", "min_guests",
-            "resort_name", "unit_type_slug"  # ✅ skip custom handled
+            "resort_name", "unit_type_slug","unit_type_name"  # ✅ skip custom handled
         }
         for field_name, value in filters.items():
             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
