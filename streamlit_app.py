@@ -493,11 +493,16 @@ st.markdown(
             height: auto;
             padding: 7px 20px;
             text-decoration: none;
-            margin: 10px 0 30px !important;
+            margin: 12px 0px !important;
             margin-left: 0;
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
+            min-width: 200px;
+            text-align: center;
+        }
+        .booknow-btn::after, .booknow-btn::before{
+            display: none !important;
         }
         .booknow-btn:hover{
             transition: all 0.3s ease;
@@ -559,9 +564,6 @@ st.markdown(
             display: none !important;
         }
 
-        .function-call {
-            display:none;
-        }
 
 
 
@@ -681,6 +683,19 @@ def display_message(message, is_user=True):
             message
         )
 
+        # Replace "Visit Resort" / "Visit Resort!"
+        message = re.sub(
+            r'(?i)\bvisit\s*resort!?',
+            r'<p class="booknow-btn">Visit Resort</p>',
+            message
+        )
+
+        # Replace "Visit Here" / "Visit Here!"
+        message = re.sub(
+            r'(?i)\bvisit\s*here!?',
+            r'<p class="booknow-btn">Visit Resort</p>',
+            message
+        )
 
     if is_user:
         st.markdown(f"""
