@@ -342,6 +342,7 @@ st.markdown(
         .chat-message.assistant-message img{ 
             border-radius: 10px; margin: 20px 0 10px;
             align-items: center;
+            margin-top: 9px;
         }
 
         .chat-message.assistant-message a{ 
@@ -955,6 +956,7 @@ def main():
 
                         tool_result = None
                         DEFAULT_MESSAGE = {"result": "Bonnet Creek details"}  # used only internally for DB/tool check
+                        print("check_live")
 
                         for attempt in range(3):  # Retry up to 3 times
                             try:

@@ -703,7 +703,7 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
                     },
 
                     # Unit / type filters
-                    "unit_type": {
+                    "unit_type_name": {
                         "type": "string",
                         "description": "Specific unit type (e.g., Studio, 1 Bedroom, Suite)."
                     },

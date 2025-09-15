@@ -248,8 +248,8 @@ class PtRtListing(Base):
     unit_type_id = Column(Integer, ForeignKey('unit_types.id'), nullable=True)
     # pro_unit_type_id = Column(Integer, default=0)
     # unit_has_deleted = Column(Integer, default=0)
-    # unit_type_slug = Column(String(255))
-    # unit_type_name = Column(String(255))
+    unit_type_slug = Column(String(255))
+    unit_type_name = Column(String(255))
     # unit_kitchenate = Column(String(255))
     # unit_status = Column(String(255))
     unit_sleeps = Column(String(50))  # Changed to String to match possible formats
@@ -792,6 +792,209 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
 
 
 
+# def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, Any]]:
+#     session = SessionLocal()
+#     try:
+#         query = (
+#             session.query(
+#                 PtRtListing.id,
+#                 PtRtListing.resort_id,
+#                 PtRtListing.resort_name,
+#                 PtRtListing.resort_slug,
+#                 PtRtListing.listing_check_in,
+#                 PtRtListing.listing_check_out,
+#                 PtRtListing.listing_price_night,
+#                 PtRtListing.listing_cancelation_policy_option,
+#                 PtRtListing.listing_cancelation_date,
+#                 PtRtListing.unit_type_name,
+#                 UnitType.sleeps,
+#                 UnitType.name.label("unit_type_name"),
+#                 UnitType.id.label("unit_type_id"),
+#             )
+#             .join(UnitType, PtRtListing.unit_type_id == UnitType.id)
+#             .distinct()
+#         )
+
+#         filter_conditions = []
+
+#         # ---------------- Resort name filter ----------------
+#         resort_name = filters.get("resort_name")
+#         if resort_name:
+#             filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
+            
+
+#         # ---------------- Non-date filters ----------------
+#         skip_fields = {
+#             "year", "month", "day", "listing_check_in", "listing_check_out",
+#             "price_sort", "limit", "update_fields", "min_guests", "resort_name"
+#         }
+#         for field_name, value in filters.items():
+#             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
+#                 column = getattr(PtRtListing, field_name)
+#                 filter_conditions.append(
+#                     column.ilike(f"%{value.strip()}%") if isinstance(value, str) else column == value
+#                 )
+
+#         # ---------------- Date filters ----------------
+#         check_in_str = filters.get("listing_check_in")
+#         check_out_str = filters.get("listing_check_out")
+#         year = filters.get("year")
+#         month = filters.get("month")
+#         day = filters.get("day")
+
+#         try:
+#             if check_in_str and check_out_str:
+#                 # ✅ Exact match for specified dates
+#                 ci_str, co_str = normalize_future_dates(check_in_str, check_out_str)
+#                 check_in_date = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_out_date = datetime.strptime(co_str, "%Y-%m-%d")
+
+#                 filter_conditions += [
+#                     PtRtListing.listing_check_in == check_in_date,
+#                     PtRtListing.listing_check_out == check_out_date,
+#                 ]
+
+#             elif month and not check_in_str and not check_out_str:
+#                 # ✅ Month filtering (range)
+#                 ci_str, co_str = get_month_year_range(month, year)
+#                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
+
+#                 if day:
+#                     # ✅ Exact single date in month
+#                     specific_date = datetime(int(year), int(month), int(day))
+#                     filter_conditions += [
+#                         PtRtListing.listing_check_in == specific_date,
+#                         PtRtListing.listing_check_out == specific_date,
+#                     ]
+#                 else:
+#                     # ✅ Whole month range
+#                     filter_conditions += [
+#                         PtRtListing.listing_check_in >= check_in_start,
+#                         PtRtListing.listing_check_in <= check_in_end,
+#                     ]
+
+#             elif year or month or day:
+#                 # ✅ Partial date (only year, or year+month, etc.)
+#                 col = PtRtListing.listing_check_in
+#                 conditions = []
+#                 if year: conditions.append(extract("year", col) == int(year))
+#                 if month: conditions.append(extract("month", col) == int(month))
+#                 if day: conditions.append(extract("day", col) == int(day))
+#                 if conditions:
+#                     filter_conditions.append(and_(*conditions))
+
+#         except ValueError as ve:
+#             print(f"⚠ Date parsing error: {ve}")
+
+
+#         # # ---------------- Guests filter ----------------
+#         # min_guests = filters.get("min_guests")
+#         # if min_guests:
+#         #     try:
+#         #         min_guests = int(min_guests)
+#         #         query = query.filter(func.abs(UnitType.sleeps) >= min_guests)
+#         #     except ValueError:
+#         #         print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
+
+
+#         # ---------------- Guests filter ----------------
+#         min_guests = filters.get("min_guests")
+#         if min_guests:
+#             try:
+#                 min_guests = int(min_guests)
+#                 query = query.filter(func.abs(UnitType.sleeps) >= min_guests)
+#             except ValueError:
+#                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
+
+#         # ---------------- Unit type slug filter ----------------
+#         unit_type_name = filters.get("unit_type_slug")
+#         if unit_type_name:
+#             try:
+#                 unit_type_name = str(unit_type_name).strip()
+#                 filter_conditions.append(PtRtListing.unit_type_name.ilike(f"%{unit_type_name}%"))
+#             except Exception as e:
+#                 print(f"⚠ Error filtering by unit_type_name: {e}")
+
+
+#         # ---------------- Apply collected filters ----------------
+#         if filter_conditions:
+#             query = query.filter(and_(*filter_conditions))
+
+#         # ---------------- Price sorting ----------------
+#         price_sort = filters.get("price_sort", "asc")
+#         price_col_numeric = cast(PtRtListing.listing_price_night, Numeric)
+
+#         if price_sort == "asc":
+#             query = query.order_by(asc(func.abs(price_col_numeric)))
+#         elif price_sort == "desc":
+#             query = query.order_by(desc(func.abs(price_col_numeric)))
+#         elif price_sort == "cheapest":
+#             query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
+#         elif price_sort == "average":
+#             query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
+#         elif price_sort == "highest":
+#             query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
+
+#         # ---------------- Limit ----------------
+#         limit = int(filters.get("limit", 10))
+#         results = query.limit(limit).all()
+#         # print("ruban",query)
+
+#         # ---------------- Build Structured Result ----------------
+#         results_list = []
+#         for row in results:
+#             cancel_date_raw = row.listing_cancelation_date
+#             cancel_date = (
+#                 str(cancel_date_raw).split(" ")[0]
+#                 if cancel_date_raw and cancel_date_raw not in ["0000-00-00", "0000-00-00 00:00:00", None, ""]
+#                 else "Date not specified"
+#             )
+#             policy_desc = CANCELLATION_POLICY_DESCRIPTIONS.get(
+#                 row.listing_cancelation_policy_option, "Policy not specified"
+#             )
+#             slug = row.resort_slug or slugify_resort_name(row.resort_name) if row.resort_name else None
+#             resort_url = f"{BASE_LIST_URL}{slug}?startD=&endD=&adults=0&months=&dateOption=7" if slug else None
+#             booking_url = None
+#             if slug and row.id and row.listing_check_in and row.listing_check_out:
+#                 booking_url = (
+#                     f"{BASE_LIST_URL}{slug}"
+#                     f"?startD={row.listing_check_in.strftime('%Y-%m-%d')}"
+#                     f"&endD={row.listing_check_out.strftime('%Y-%m-%d')}"
+#                     f"&adults=0&months=&dateOption=7"
+#                 )
+
+#             display_price = (
+#                 f"from ${row.listing_price_night} per night"
+#                 if row.listing_price_night else "Price not available"
+#             )
+
+#             results_list.append({
+#                 "resort_id": row.resort_id,
+#                 "resort_name": row.resort_name,
+#                 "unit_type": row.unit_type_name,
+#                 "sleeps": int(row.sleeps) if row.sleeps is not None else None,
+#                 "check_in": row.listing_check_in.strftime("%Y-%m-%d") if row.listing_check_in else None,
+#                 "check_out": row.listing_check_out.strftime("%Y-%m-%d") if row.listing_check_out else None,
+#                 "price_per_night": display_price,
+#                 "cancellation_policy_description": policy_desc,
+#                 "listing_cancelation_date": cancel_date,
+#                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
+#                 "resort_url": resort_url,
+#                 "booking_url": booking_url
+#             })
+
+#         return results_list
+
+#     except Exception as e:
+#         print(f"❌ Error in search_available_future_listings_enhanced_v2: {str(e)}")
+#         session.rollback()
+#         return []
+#     finally:
+#         session.close()
+
+
+
 def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
@@ -806,8 +1009,8 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
                 PtRtListing.listing_price_night,
                 PtRtListing.listing_cancelation_policy_option,
                 PtRtListing.listing_cancelation_date,
-                UnitType.sleeps,
-                UnitType.name.label("unit_type_name"),
+                PtRtListing.unit_type_name,   # ✅ keep this
+                UnitType.sleeps,              # ✅ from UnitType
                 UnitType.id.label("unit_type_id"),
             )
             .join(UnitType, PtRtListing.unit_type_id == UnitType.id)
@@ -820,12 +1023,12 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
         resort_name = filters.get("resort_name")
         if resort_name:
             filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
-            
 
         # ---------------- Non-date filters ----------------
         skip_fields = {
             "year", "month", "day", "listing_check_in", "listing_check_out",
-            "price_sort", "limit", "update_fields", "min_guests", "resort_name"
+            "price_sort", "limit", "update_fields", "min_guests",
+            "resort_name", "unit_type_slug"  # ✅ skip custom handled
         }
         for field_name, value in filters.items():
             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
@@ -843,38 +1046,29 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
 
         try:
             if check_in_str and check_out_str:
-                # ✅ Exact match for specified dates
                 ci_str, co_str = normalize_future_dates(check_in_str, check_out_str)
                 check_in_date = datetime.strptime(ci_str, "%Y-%m-%d")
                 check_out_date = datetime.strptime(co_str, "%Y-%m-%d")
-
                 filter_conditions += [
                     PtRtListing.listing_check_in == check_in_date,
                     PtRtListing.listing_check_out == check_out_date,
                 ]
-
             elif month and not check_in_str and not check_out_str:
-                # ✅ Month filtering (range)
                 ci_str, co_str = get_month_year_range(month, year)
                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
-
                 if day:
-                    # ✅ Exact single date in month
                     specific_date = datetime(int(year), int(month), int(day))
                     filter_conditions += [
                         PtRtListing.listing_check_in == specific_date,
                         PtRtListing.listing_check_out == specific_date,
                     ]
                 else:
-                    # ✅ Whole month range
                     filter_conditions += [
                         PtRtListing.listing_check_in >= check_in_start,
                         PtRtListing.listing_check_in <= check_in_end,
                     ]
-
             elif year or month or day:
-                # ✅ Partial date (only year, or year+month, etc.)
                 col = PtRtListing.listing_check_in
                 conditions = []
                 if year: conditions.append(extract("year", col) == int(year))
@@ -882,10 +1076,8 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
                 if day: conditions.append(extract("day", col) == int(day))
                 if conditions:
                     filter_conditions.append(and_(*conditions))
-
         except ValueError as ve:
             print(f"⚠ Date parsing error: {ve}")
-
 
         # ---------------- Guests filter ----------------
         min_guests = filters.get("min_guests")
@@ -896,25 +1088,16 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
             except ValueError:
                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
 
+        from sqlalchemy import or_
 
-        # # ---------------- Guests filter ----------------
-        # min_guests = filters.get("min_guests")
-        # if min_guests:
-        #     try:
-        #         min_guests = int(min_guests)
-        #         query = query.filter(func.abs(UnitType.sleeps) >= min_guests)
-        #     except ValueError:
-        #         print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
-
-        # # ---------------- Unit type slug filter ----------------
-        # unit_type_name = filters.get("unit_type_slug")
-        # if unit_type_name:
-        #     try:
-        #         unit_type_name = str(unit_type_name).strip()
-        #         filter_conditions.append(UnitType.name.ilike(f"%{unit_type_name}%"))
-        #     except Exception as e:
-        #         print(f"⚠ Error filtering by unit_type_name: {e}")
-
+        # ---------------- Unit type slug filter ----------------
+        unit_type_name = filters.get("unit_type_name")
+        if unit_type_name:
+            try:
+                unit_type_name = str(unit_type_name).strip()
+                filter_conditions.append(PtRtListing.unit_type_name.ilike(f"%{unit_type_name}%"))
+            except Exception as e:
+                print(f"⚠ Error filtering by unit_type_name: {e}")
 
 
         # ---------------- Apply collected filters ----------------
@@ -939,7 +1122,6 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
         # ---------------- Limit ----------------
         limit = int(filters.get("limit", 10))
         results = query.limit(limit).all()
-        # print("ruban",query)
 
         # ---------------- Build Structured Result ----------------
         results_list = []
@@ -972,7 +1154,7 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
             results_list.append({
                 "resort_id": row.resort_id,
                 "resort_name": row.resort_name,
-                "unit_type": row.unit_type_name,
+                "unit_type_name": row.unit_type_name,   # ✅ from PtRtListing
                 "sleeps": int(row.sleeps) if row.sleeps is not None else None,
                 "check_in": row.listing_check_in.strftime("%Y-%m-%d") if row.listing_check_in else None,
                 "check_out": row.listing_check_out.strftime("%Y-%m-%d") if row.listing_check_out else None,
@@ -992,9 +1174,6 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
         return []
     finally:
         session.close()
-
-
-
 
 
 
