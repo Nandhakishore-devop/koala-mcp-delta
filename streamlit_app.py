@@ -514,12 +514,53 @@ st.markdown(
             width: 50px;
         }
 
+        .visitresort-btn{
+            height: 40px;
+            margin: auto;
+            border: 0;
+            border-radius: 6px;
+            color: #fff;
+            font-family: proxima_nova_rgsbold, Arial, Helvetica, sans-serif;
+            font-size: 15px;
+            line-height: 22px;
+            background: linear-gradient(261.34deg, #1CB954 11.4%, #0B6E4F 53.43%);
+            width: max-content;
+            display: inline-block;
+            height: auto;
+            padding: 7px 20px;
+            text-decoration: none;
+            margin: 10px 0 30px !important;
+            margin-left: 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .visitresort-btn:hover{
+            transition: all 0.3s ease;
+            background: linear-gradient(261.34deg, #1CB954 11.4%, #1CB954 53.43%);
+        }
+
+        .visitresort-btn:before{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50px;
+            bottom: 0;
+            background-color: #F8F7F6;
+            width: 50px;
+        }
+
         .stTextArea div[data-baseweb="textarea"] + div {
             display: none !important;
         }
 
         .stIFrame.st-emotion-cache-fsrfgf.evfee5y0 {
             display: none !important;
+        }
+
+        .function-call {
+            display:none;
         }
 
 
@@ -626,18 +667,34 @@ def display_message(message, is_user=True):
         #     message
         # )
 
+        # Replace "Book Now" / "Book Now!"
         message = re.sub(
             r'(?i)\bbook\s*now!?',
             r'<p class="booknow-btn">Book Now</p>',
             message
         )
+
         # Replace "Book Here" / "Book Here!"
         message = re.sub(
             r'(?i)\bbook\s*here!?',
             r'<p class="booknow-btn">Book Here</p>',
             message
         )
-        
+
+        # Replace "Visit Resort" / "Visit Resort!"
+        message = re.sub(
+            r'(?i)\bvisit\s*resort!?',
+            r'<p class="visitresort-btn">Visit Resort</p>',
+            message
+        )
+
+        # Replace "Visit Here" / "Visit Here!"
+        message = re.sub(
+            r'(?i)\bvisit\s*here!?',
+            r'<p class="visitresort-btn">Visit Resort</p>',
+            message
+        )
+
     if is_user:
         st.markdown(f"""
         <div class="chat-message user-message">
