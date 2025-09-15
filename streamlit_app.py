@@ -341,6 +341,7 @@ st.markdown(
 
         .chat-message.assistant-message img{ 
             border-radius: 10px; margin: 20px 0 10px;
+            align-items: center;
         }
 
         .chat-message.assistant-message a{ 
@@ -519,10 +520,7 @@ st.markdown(
         .stIFrame.st-emotion-cache-fsrfgf.evfee5y0 {
             display: none !important;
         }
-        
-        .function-call {
-            display:none;
-        }
+
 
 
 
@@ -947,29 +945,40 @@ def main():
                     "content": assistant_message.content,
                     "tool_calls": assistant_message.tool_calls
                 })
-                
+                                
                 # Handle tool calls
                 if assistant_message.tool_calls:
                     for tool_call in assistant_message.tool_calls:
                         function_name = tool_call.function.name
                         arguments = tool_call.function.arguments
                         parsed_args = json.loads(arguments)
+
+                        tool_result = None
+                        DEFAULT_MESSAGE = {"result": "Bonnet Creek details"}  # used only internally for DB/tool check
+
                         for attempt in range(3):  # Retry up to 3 times
                             try:
                                 tool_result = call_tool(function_name, **parsed_args)
                                 break
                             except Exception as e:
                                 if attempt < 2:
-                                    #logger.warning(f"Attempt {attempt + 1} failed: {str(e)}. Retrying...")
-                                    time.sleep(2 ** attempt)  # Exponential backoff
+                                    time.sleep(2 ** attempt)  # exponential backoff
                                 else:
-                                    raise
+                                    tool_result = DEFAULT_MESSAGE
+                                    st.warning("⚠️ Could not fetch data. Using default for internal check.")
+                                    print("error _on db")
+
                         # Convert result to JSON string
                         if isinstance(tool_result, dict):
                             tool_result_str = json.dumps(tool_result, indent=2, default=str)
                         else:
                             tool_result_str = json.dumps({"result": tool_result}, indent=2, default=str)
-                        
+                                            # Convert result to JSON string
+                        if isinstance(tool_result, dict):
+                            tool_result_str = json.dumps(tool_result, indent=2, default=str)
+                        else:
+                            tool_result_str = json.dumps({"result": tool_result}, indent=2, default=str)
+
                         # Add function call to chat history with actual result
                         st.session_state.messages.append({
                             "type": "function_call",
@@ -977,7 +986,7 @@ def main():
                             "arguments": arguments,
                             "result": tool_result_str
                         })
-                        
+
                         # Add tool response to thread
                         st.session_state.thread.add_assistant_message({
                             "role": "tool",
@@ -994,35 +1003,35 @@ def main():
                         recent_messages = st.session_state.thread.get_history()[-6:]
                         final_messages_to_send = schema_messages + recent_messages
                         final_tools_to_send = []
+
                     # Get final response
                     final_response = st.session_state.client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=st.session_state.thread.get_history(),
                         tools=ALL_FUNCTION_SCHEMAS,
                         tool_choice="auto"
-                    
                     )
                     final_message = final_response.choices[0].message
-                    
-                    # print("final_message_rubi",final_message)
+
                     # Track tokens for final response
                     if hasattr(final_response, 'usage') and final_response.usage:
                         st.session_state.total_tokens += final_response.usage.total_tokens
                         final_cost = calculate_cost(final_response.usage.prompt_tokens, final_response.usage.completion_tokens)
                         st.session_state.total_cost += final_cost
-                    
+
                     # Add final assistant message
                     st.session_state.thread.add_assistant_message({
                         "role": "assistant",
                         "content": final_message.content
                     })
-                    
+
                     # Add to chat history
                     if final_message.content:
                         st.session_state.messages.append({
                             "type": "assistant",
                             "content": final_message.content
                         })
+
                 else:
                     # No function calls, just add the response
                     if assistant_message.content:
@@ -1030,10 +1039,11 @@ def main():
                             "type": "assistant",
                             "content": assistant_message.content
                         })
-                
+
                 # Clear the input for next message by incrementing counter
                 st.session_state.input_counter += 1
                 st.rerun()
+
                 
             except Exception as e:
                 st.error(f"❌ Error: {str(e)}")

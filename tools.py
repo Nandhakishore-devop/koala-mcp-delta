@@ -820,6 +820,7 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
         resort_name = filters.get("resort_name")
         if resort_name:
             filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
+            
 
         # ---------------- Non-date filters ----------------
         skip_fields = {
@@ -885,6 +886,7 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
         except ValueError as ve:
             print(f"⚠ Date parsing error: {ve}")
 
+
         # ---------------- Guests filter ----------------
         min_guests = filters.get("min_guests")
         if min_guests:
@@ -893,6 +895,27 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
                 query = query.filter(func.abs(UnitType.sleeps) >= min_guests)
             except ValueError:
                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
+
+
+        # # ---------------- Guests filter ----------------
+        # min_guests = filters.get("min_guests")
+        # if min_guests:
+        #     try:
+        #         min_guests = int(min_guests)
+        #         query = query.filter(func.abs(UnitType.sleeps) >= min_guests)
+        #     except ValueError:
+        #         print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
+
+        # # ---------------- Unit type slug filter ----------------
+        # unit_type_name = filters.get("unit_type_slug")
+        # if unit_type_name:
+        #     try:
+        #         unit_type_name = str(unit_type_name).strip()
+        #         filter_conditions.append(UnitType.name.ilike(f"%{unit_type_name}%"))
+        #     except Exception as e:
+        #         print(f"⚠ Error filtering by unit_type_name: {e}")
+
+
 
         # ---------------- Apply collected filters ----------------
         if filter_conditions:
@@ -957,7 +980,6 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
                 "cancellation_policy_description": policy_desc,
                 "listing_cancelation_date": cancel_date,
                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
-
                 "resort_url": resort_url,
                 "booking_url": booking_url
             })

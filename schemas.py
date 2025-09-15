@@ -562,6 +562,10 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                         "type": "string",
                         "description": "Specific unit type to filter (e.g., Studio, 1 Bedroom, Suite)."
                     },
+                    "unit_type_slug":{
+                        "type": "string",
+                        "description": "Specific unit type to filter (e.g., Studio, 1 Bedroom, Suite)."
+                    },
 
                     "min_guests": {
                        "type": "integer",
