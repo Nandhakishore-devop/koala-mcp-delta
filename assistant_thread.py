@@ -21,7 +21,7 @@ class AssistantThread:
         “Visit Resort ” → takes the user to the resort’s main details page (overview, amenities, photos, etc.).
         "Book Now" or "Visit Resort".
         us = United states or united states of america 
-        user question aruba = aruba surf club resort;
+        user question aruba = marriotts aruba surf club resort;
         Today's date is {today:%b %d, %Y}, and the current year is {current_year}. When a query uses 'this' with any month, it should default to {current_year}.
         When the user asks for data by month (e.g., "fetch July data"), always resolve it to the next occurrence of that month in the future relative to today's date.
         -If today's date is past that month in the current year, interpret it as that month in the next year.
