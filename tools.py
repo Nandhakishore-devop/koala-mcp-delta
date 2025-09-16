@@ -717,28 +717,28 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
         # Default limit logic
         if price_sort == "asc":
             query = query.order_by(asc(func.abs(price_col_numeric)))
-            default_limit = 20
+            default_limit = 80
         elif price_sort == "desc":
             query = query.order_by(desc(func.abs(price_col_numeric)))
-            default_limit = 15
+            default_limit = 85
         elif price_sort == "cheapest":
             query = query.filter(func.abs(price_col_numeric) <= 333)\
                         .order_by(asc(func.abs(price_col_numeric)))
-            default_limit = 20
+            default_limit = 80
         elif price_sort == "average":
             query = query.filter(func.abs(price_col_numeric).between(334, 666))\
                         .order_by(asc(func.abs(price_col_numeric)))
-            default_limit = 20
+            default_limit = 80
         elif price_sort == "highest":
             query = query.filter(func.abs(price_col_numeric) >= 667)\
                         .order_by(desc(func.abs(price_col_numeric)))
-            default_limit = 15
+            default_limit = 85
         else:
             default_limit = 80  # fallback
 
         # ---------------- Fetch + deduplicate ----------------
         limit = int(filters.get("limit", default_limit))  # user limit overrides defaults
-        fetch_limit = limit * 5  # small buffer for deduplication
+        fetch_limit = limit * 10  # small buffer for deduplication
         results = query.limit(fetch_limit).all()
 
         unique_results = (

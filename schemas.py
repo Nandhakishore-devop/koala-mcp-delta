@@ -379,7 +379,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                     # Options
                     "limit": {
                         "type": "integer",
-                        "description": "Maximum number of results to return (default: 20 for price range, 30 for listings)."
+                        "description": "Maximum number of results to return (default: 80 for listings)."
                     },
                     "flexible_dates": {
                         "type": "boolean",
