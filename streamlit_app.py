@@ -465,6 +465,7 @@ st.markdown(
         }
         .stSpinner > div { 
             justify-content: center;
+            color: #504538 !important;
         }
 
         .stSpinner i{ 
@@ -564,6 +565,26 @@ st.markdown(
             display: none !important;
         }
 
+        
+
+
+
+      
+        .chat-message_s {
+            padding: 1rem;
+            border-radius: 20px;
+            background-color: transparent;
+            
+            color: black;
+            font-family: proxima-nova, sans-serif;
+        }
+
+        .st-emotion-cache-r44huj {
+            
+            margin-bottom: 1rem;
+            margin-top: 30px;
+            
+        }
 
 
 
@@ -740,6 +761,42 @@ def display_function_call(function_name, arguments, result=None):
     """, unsafe_allow_html=True)
 
 
+def display_schema(schema_name, schema_content):
+    """Display schema details in UI."""
+    st.markdown(f"""
+    <div class="chat-message_s schema-display">
+        <strong>📑 Schema:</strong> {schema_name}<br>
+        <details>
+            <summary>Click to expand</summary>
+            <pre>{json.dumps(schema_content, indent=2)}</pre>
+        </details>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# def display_tools(tools):
+#     """Display available tools in UI."""
+#     if not tools:
+#         return
+
+#     tools_html = ""
+#     for tool in tools:
+#         tools_html += f"""
+#         <li>
+#             <strong>{tool.get('name','Unknown')}</strong>  
+#             <br><span>{tool.get('description','No description')}</span>
+#         </li>
+#         """
+
+    # st.markdown(f"""
+    # <div class="chat-message tools-display">
+    #     <strong>🛠 Available Tools:</strong>
+    #     <ul>{tools_html}</ul>
+    # </div>
+    # """, unsafe_allow_html=True)
+
+
+
 def main():
     # Display cost information in sidebar
     display_cost_info()
@@ -770,6 +827,10 @@ def main():
                 message["arguments"],
                 message.get("result")
             )
+        elif message["type"] == "schema":
+            display_schema(message["schema_name"], message["schema_content"])
+        # elif message["type"] == "tools":
+        #     display_tools(message["tools"])    
 
 
    
@@ -964,7 +1025,7 @@ def main():
 
         # Process with OpenAI       
         with st.spinner("🐨 Gathering info for you…"):
-            # time.sleep(100)
+            time.sleep(100)
             try:
                 # Decide whether to include schemas
                 include_schema = st.session_state.schema_limit_counter < 2
@@ -972,16 +1033,42 @@ def main():
                 # Get message history
                 history = st.session_state.thread.get_history()
 
-                if include_schema:
-                    messages_to_send = history
-                    tools_to_send = ALL_FUNCTION_SCHEMAS
-                    st.session_state.schema_limit_counter += 1
-                else:
-                    schema_messages = history[:3]
-                    recent_messages = history[-6:]  # Last 3 user-assistant pairs
-                    messages_to_send = schema_messages + recent_messages
-                    tools_to_send = []
+                # if include_schema:
+                #     messages_to_send = history
+                #     tools_to_send = ALL_FUNCTION_SCHEMAS
+                #     st.session_state.schema_limit_counter += 1
+                #     print("include_schema_1",messages_to_send)
+                #     print("include_schema tools_to_send_2",tools_to_send)
+                # else:
+                #     schema_messages = history[:3]
+                #     recent_messages = history[-6:]  # Last 3 user-assistant pairs
+                #     messages_to_send = schema_messages + recent_messages
+                #     tools_to_send = []
 
+
+#---------------- Updated Logic Here -----------------
+                if include_schema:
+                        messages_to_send = history
+                        tools_to_send = ALL_FUNCTION_SCHEMAS
+                        st.session_state.schema_limit_counter += 1
+
+                        # 🔹 Add schema & tools to chat history for UI rendering
+                        st.session_state.messages.append({
+                            "type": "schema",
+                            "schema_name": "Function Schemas",
+                            "schema_content": ALL_FUNCTION_SCHEMAS
+                        })
+                        st.session_state.messages.append({
+                            "type": "tools",
+                            "tools": ALL_FUNCTION_SCHEMAS
+                        })
+                else:
+                        schema_messages = history[:3]
+                        recent_messages = history[-6:]  # Last 3 user-assistant pairs
+                        messages_to_send = schema_messages + recent_messages
+                        tools_to_send = []
+
+#----------------------------------------------------
 
                 # First API call
                 response = st.session_state.client.chat.completions.create(
@@ -1042,6 +1129,7 @@ def main():
                             "arguments": arguments,
                             "result": tool_result_str
                         })
+                        print("tool_result_str_1",tool_result_str)
 
                         # Add tool response to thread
                         st.session_state.thread.add_assistant_message({
@@ -1051,7 +1139,7 @@ def main():
                         })
 
                     # Use same schema rule for final response (don’t include after limit)
-                    if st.session_state.schema_limit_counter < 2:
+                    if st.session_state.schema_limit_counter < 10:
                         final_messages_to_send = st.session_state.thread.get_history()
                         final_tools_to_send = ALL_FUNCTION_SCHEMAS
                     else:
@@ -1080,6 +1168,8 @@ def main():
                         "role": "assistant",
                         "content": final_message.content
                     })
+
+                    print("final_message_1",final_message)
 
                     # Add to chat history
                     if final_message.content:

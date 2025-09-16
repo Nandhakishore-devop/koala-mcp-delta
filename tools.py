@@ -1396,7 +1396,7 @@ def get_available_resorts(
                 )
                 .group_by(PtRtListing.resort_id)
                 .order_by(func.count(PtRtListing.id).desc())
-                .limit(80)
+                
                 .subquery()
             )
 
