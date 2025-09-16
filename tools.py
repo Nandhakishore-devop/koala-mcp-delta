@@ -18,7 +18,6 @@ from sqlalchemy import text
 import random
 
 
-
 # Load environment variables
 load_dotenv()
 
@@ -711,32 +710,42 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
                 query = query.filter(func.abs(UnitType.sleeps) >= min_guests)
             except ValueError:
                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
-
         # ---------------- Price sorting ----------------
         price_sort = filters.get("price_sort", "asc")
         price_col_numeric = cast(PtRtListing.listing_price_night, Numeric)
 
+        # Default limit logic
         if price_sort == "asc":
             query = query.order_by(asc(func.abs(price_col_numeric)))
-            # print("ruban_asc",query)
+            default_limit = 20
         elif price_sort == "desc":
             query = query.order_by(desc(func.abs(price_col_numeric)))
-            # print("ruban_desc",query)
-        elif price_sort in ["cheapest", "average", "highest"]:
-            if price_sort == "cheapest": query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
-            if price_sort == "average": query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
-            if price_sort == "highest": query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
-
-        # Always apply limit 20 if not specified
-        query = query.limit(20)    
+            default_limit = 15
+        elif price_sort == "cheapest":
+            query = query.filter(func.abs(price_col_numeric) <= 333)\
+                        .order_by(asc(func.abs(price_col_numeric)))
+            default_limit = 20
+        elif price_sort == "average":
+            query = query.filter(func.abs(price_col_numeric).between(334, 666))\
+                        .order_by(asc(func.abs(price_col_numeric)))
+            default_limit = 20
+        elif price_sort == "highest":
+            query = query.filter(func.abs(price_col_numeric) >= 667)\
+                        .order_by(desc(func.abs(price_col_numeric)))
+            default_limit = 15
+        else:
+            default_limit = 80  # fallback
 
         # ---------------- Fetch + deduplicate ----------------
-        limit = int(filters.get("limit", 10))
-        fetch_limit = limit * 30
+        limit = int(filters.get("limit", default_limit))  # user limit overrides defaults
+        fetch_limit = limit * 5  # small buffer for deduplication
         results = query.limit(fetch_limit).all()
-        unique_results = deduplicate_by_resort_id(results) if price_sort != "avg_price" else results
+
+        unique_results = (
+            deduplicate_by_resort_id(results) if price_sort != "avg_price" else results
+        )
+
         final_results = unique_results[:limit]
-        # print("ruban",query)
 
         # ---------------- Build Structured Result ----------------
         results_list = []
@@ -1094,7 +1103,7 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
             except ValueError:
                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
 
-        
+        from sqlalchemy import or_
 
         # ---------------- Unit type slug filter ----------------
         unit_type_name = filters.get("unit_type_name")
@@ -1116,28 +1125,22 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
 
         if price_sort == "asc":
             query = query.order_by(asc(func.abs(price_col_numeric)))
-            limit = 20  # top 20 asc
+            # print("ruban1",query)
         elif price_sort == "desc":
             query = query.order_by(desc(func.abs(price_col_numeric)))
-            limit = 15  # top 15 desc
         elif price_sort == "cheapest":
-            query = query.filter(func.abs(price_col_numeric) <= 333)\
-                        .order_by(asc(func.abs(price_col_numeric)))
-            limit = 20
+            query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
         elif price_sort == "average":
-            query = query.filter(func.abs(price_col_numeric).between(334, 666))\
-                        .order_by(asc(func.abs(price_col_numeric)))
-            limit = 20
+            query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
         elif price_sort == "highest":
-            query = query.filter(func.abs(price_col_numeric) >= 667)\
-                        .order_by(desc(func.abs(price_col_numeric)))
-            limit = 15
-        else:
-            # default
-            limit = int(filters.get("limit", 10))
+            query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
+            # print("ruban",query)
 
+        query = query.limit(20)    
+
+        # ---------------- Limit ----------------
+        limit = int(filters.get("limit", 10))
         results = query.limit(limit).all()
-
 
         # ---------------- Build Structured Result ----------------
         results_list = []
