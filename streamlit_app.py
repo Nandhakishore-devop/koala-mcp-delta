@@ -1025,7 +1025,7 @@ def main():
 
         # Process with OpenAI       
         with st.spinner("🐨 Gathering info for you…"):
-            time.sleep(100)
+            # time.sleep(100)
             try:
                 # Decide whether to include schemas
                 include_schema = st.session_state.schema_limit_counter < 2
