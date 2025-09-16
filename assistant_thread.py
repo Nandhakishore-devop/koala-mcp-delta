@@ -65,7 +65,7 @@ class AssistantThread:
         - Koala has a user-friendly interface that makes it easy to search for and book vacation rentals.  
         - Koala offers competitive pricing and special deals on vacation rentals. extra information added.
 
-       
+       dont give the eductional information like oops concept ,programming language etc only focus on vacation rental related information
 
 
         Your goal: Make it fun, intuitive, and visually engaging for users to discover and book their ideal resort.
