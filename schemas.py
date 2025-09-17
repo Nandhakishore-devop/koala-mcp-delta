@@ -287,33 +287,24 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                     },
 
                     # Date filters
-                    "listing_check_in": {
-                        "type": "string",
-                        "description": (
-                            "Check-in date in YYYY-MM-DD format. "
-                            "If not specified, return all available resorts or ask the user to define the date."
-                        )
-                    },
-                    "listing_check_out": {
-                        "type": "string",
-                        "description": (
-                            "Check-out date in YYYY-MM-DD format. "
-                            "If not specified, return all available resorts or ask the user to define the date."
-                        )
-                    },
+
                     "month": {
-                        "type": "string",
-                        "description": (
-                            "Filter for check-in month (name or number, e.g., 'Jan' or 1-12). "
-                            "Always used with automatic future year mapping if year not explicitly set."
-                        )
+                    "type": "string",
+                    "description": "Check-in month (name or number, e.g., 'Jan', 'January', or 1-12). Auto-maps to the nearest future year if year not provided."
                     },
                     "year": {
-                        "type": "integer",
-                        "description": (
-                            "Optional filter for check-in year. "
-                            "If not provided, the system automatically resolves to the correct future year."
-                        )
+                    "type": "integer",
+                    "description": "Optional year for check-in. If missing, automatically inferred based on current date."
+                    },
+                    "listing_check_in": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Explicit check-in date in YYYY-MM-DD format. Overrides month/year if provided."
+                    },
+                    "listing_check_out": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Explicit check-out date in YYYY-MM-DD format. Must be later than check-in."
                     },
 
                     # Pricing / currency
@@ -432,35 +423,24 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
                     },
 
                     # Date filters
-                    "month": {
-                        "type": "string",
-                        "description": (
-                            "Filter for check-in month (name or number, e.g., 'Jan' or 1-12). "
-                            "If year not provided, automatically maps to the next future year."
-                        )
-                    },
-                    "year": {
-                        "type": "integer",
-                        "description": (
-                            "Optional filter for check-in year. "
-                            "If not provided, defaults to the next valid future year."
-                        )
-                    },
                     "listing_check_in": {
-                        "type": "string",
-                        "description": (
-                            "Check-in date in 'YYYY-MM-DD' format."
-                            "only prompt the user to provide a specific date."
-                        )
-                    },
+                            "type": "string",
+                            "format": "date",
+                            "description": "Explicit check-in date in YYYY-MM-DD format. If provided with check-out, these take highest priority."
+                        },
                     "listing_check_out": {
-                        "type": "string",
-                        "description": (
-                            "Check-out date in 'YYYY-MM-DD' format."
-                            "only prompt the user to provide a specific date."
-                        )
-                    },
-
+                            "type": "string",
+                            "format": "date",
+                            "description": "Explicit check-out date in YYYY-MM-DD format. Must be later than check-in. If provided, overrides month/year."
+                        },
+                    "month": {
+                            "type": "string",
+                            "description": "Check-in month (name or number, e.g., 'Jan', 'January', or 1-12). Used only if check-in/check-out not provided. Auto-maps to nearest future year if 'year' not specified."
+                        },
+                    "year": {
+                            "type": "integer",
+                            "description": "Optional check-in year. If not provided, automatically inferred based on current date and future mapping."
+                        },
                     # Pricing / sorting
                     "price_sort": {
                         "type": "string",

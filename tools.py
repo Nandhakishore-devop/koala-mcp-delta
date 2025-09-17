@@ -466,7 +466,13 @@ def get_database_url():
         return f"mysql+pymysql://{user}@{host}/{database}"
 
 DATABASE_URL = get_database_url()
-engine = create_engine(DATABASE_URL, echo=False)
+engine = create_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_recycle=3600,      # Recycle connections every 60 minutes
+    pool_pre_ping=True      # Check connection before using
+)
+print("DATABASE_check",DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # print("engine",engine)
 # print("se_db",SessionLocal)
@@ -718,21 +724,26 @@ def search_available_future_listings_enhanced(**filters) -> List[Dict[str, Any]]
         if price_sort == "asc":
             query = query.order_by(asc(func.abs(price_col_numeric)))
             default_limit = 80
+            print("asc",query)
         elif price_sort == "desc":
             query = query.order_by(desc(func.abs(price_col_numeric)))
             default_limit = 85
+            print("desc",query)
         elif price_sort == "cheapest":
             query = query.filter(func.abs(price_col_numeric) <= 333)\
                         .order_by(asc(func.abs(price_col_numeric)))
             default_limit = 80
+            print("cheapest",query)
         elif price_sort == "average":
             query = query.filter(func.abs(price_col_numeric).between(334, 666))\
                         .order_by(asc(func.abs(price_col_numeric)))
             default_limit = 80
+            print("average",query)
         elif price_sort == "highest":
             query = query.filter(func.abs(price_col_numeric) >= 667)\
                         .order_by(desc(func.abs(price_col_numeric)))
             default_limit = 85
+            print("highest",query)
         else:
             default_limit = 80  # fallback
 
@@ -1031,6 +1042,7 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
             .join(UnitType, PtRtListing.unit_type_id == UnitType.id)
             .distinct()
         )
+        print("ruban_top",query)
 
         filter_conditions = []
 
@@ -1118,6 +1130,7 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
         # ---------------- Apply collected filters ----------------
         if filter_conditions:
             query = query.filter(and_(*filter_conditions))
+            print("ruban1",query)
 
         # ---------------- Price sorting ----------------
         price_sort = filters.get("price_sort", "asc")
@@ -1125,7 +1138,7 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
 
         if price_sort == "asc":
             query = query.order_by(asc(func.abs(price_col_numeric)))
-            # print("ruban1",query)
+            print("ruban_p)",query)
         elif price_sort == "desc":
             query = query.order_by(desc(func.abs(price_col_numeric)))
         elif price_sort == "cheapest":
@@ -1134,9 +1147,9 @@ def search_available_future_listings_enhanced_v2(**filters) -> List[Dict[str, An
             query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
         elif price_sort == "highest":
             query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
-            # print("ruban",query)
+            print("ruban",query)
 
-        query = query.limit(20)    
+        query = query.limit(80)    
 
         # ---------------- Limit ----------------
         limit = int(filters.get("limit", 10))
@@ -1367,21 +1380,6 @@ def get_available_resorts(
     List top resorts from ResortMigration filtered by location and sorted
     by number of active listings.
     """
-    # with SessionLocal() as session:
-    #     try:
-    #         # Subquery: top 30 resorts by active listings
-    #         listing_subq = (
-    #             session.query(
-    #                 Listing.resort_id,
-    #                 func.count(Listing.id).label("active_count")
-    #             )
-    #             .filter(Listing.status == "active")
-    #             .group_by(Listing.resort_id)
-    #             .order_by(func.count(Listing.id).desc())
-    #             .limit(80)
-    #             .subquery()
-    #         )
-    
     with SessionLocal() as session:
         try:
             # Subquery: top 80 resorts by active pt_rt_listings
@@ -1396,9 +1394,9 @@ def get_available_resorts(
                 )
                 .group_by(PtRtListing.resort_id)
                 .order_by(func.count(PtRtListing.id).desc())
-                
                 .subquery()
             )
+            print("ruban_sub",listing_subq)
 
 
             # Join ResortMigration with listing counts
@@ -1408,23 +1406,29 @@ def get_available_resorts(
                 .filter(ResortMigration.resort_has_deleted == 0)
                 .filter(ResortMigration.resort_status == resort_status)
             )
+            print("ruban_query_resort",query)
 
             # Apply optional filters
             if country:
                 query = query.filter(ResortMigration.country.ilike(f"%{country.strip()}%"))
+                print("ruban_country",query)
             if city:
                 query = query.filter(ResortMigration.city.ilike(f"%{city.strip()}%"))
+                print("ruban_city",query)
             if state:
                 query = query.filter(ResortMigration.state.ilike(f"%{state.strip()}%"))
+                print("ruban_state",query)
             if country:
                 query = query.filter(ResortMigration.country.ilike(f"%{country.strip()}%"))
+                print("ruban_country",query)
             if location_type:
                 query = query.filter(ResortMigration.location_types.ilike(f"%{location_type.strip()}%"))
+                print("ruban_location",query)
 
             # Fetch results ordered by active_count and limited by `limit`
             resorts = query.order_by(listing_subq.c.active_count.desc()).all()
-            # print("count",resorts)
-            # print("ruban",query)
+            print("count",resorts)
+            print("ruban",query)
 
             # Format results
             result = []
@@ -1441,7 +1445,6 @@ def get_available_resorts(
                     "location_types": [t.strip() for t in resort.location_types.split(",")] if resort.location_types else [],
                     "resort_status": resort.resort_status,
                     "resort_google_rating": resort.resort_google_rating,
-
                     
                 })
 
@@ -1508,10 +1511,13 @@ def get_resort_details(
                 .join(User, Resort.creator_id == User.id)
                 .filter(Resort.has_deleted == 0)
             )
+            print("ruban_top",query)
             if resort_id:
                 query = query.filter(Resort.id == resort_id)
+                print("ruban_detail_id",query)
             else:
                 query = query.filter(Resort.name.ilike(f"%{resort_name.strip()}%"))
+                print("ruban_detail_na",query)
 
             resort = query.first()
             if not resort:
@@ -1581,7 +1587,7 @@ def get_resort_details(
                 .limit(3)
                 .all()
                  )
-            # print("ruban",query)
+            print("ruban_revi",query)
 
             reviews_data = [
                 {

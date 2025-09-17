@@ -17,6 +17,8 @@ import base64
 import streamlit.components.v1 as components
 import time
 import re
+import sqlite3
+import pandas as pd
 
 
 
@@ -796,6 +798,23 @@ def display_schema(schema_name, schema_content):
     # """, unsafe_allow_html=True)
 
 
+def execute_sql(query: str, db_path="mydb.sqlite"):
+    """Execute a SQL query and return results, while printing the query."""
+    print("\n[LLM → SQL] Executing query:\n", query)  # 👈 print query in console
+
+    try:
+        conn = sqlite3.connect(db_path)
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+        print("[SQL → Result] Query executed successfully ✅")  # log success
+        return df
+    except Exception as e:
+        print("[SQL → Error] ❌", str(e))  # log error
+        return {"error": str(e)}
+        
+
+
+
 
 def main():
     # Display cost information in sidebar
@@ -830,27 +849,8 @@ def main():
         elif message["type"] == "schema":
             display_schema(message["schema_name"], message["schema_content"])
         # elif message["type"] == "tools":
-        #     display_tools(message["tools"])    
-
-
-   
+        #     display_tools(message["tools"])  
         
-
-    # # # Always scroll down after rendering messages
-    # components.html(
-    #     """
-    #     <script>
-    #         function scrollToLastMessage() {
-    #             const chatElems = window.parent.document.querySelectorAll('.stMarkdown');
-    #             if (chatElems.length > 0) {
-    #                 chatElems[chatElems.length - 1].scrollIntoView({ behavior: "smooth" });
-    #             }
-    #         }
-    #         scrollToLastMessage();
-    #     </script>
-    #     """,
-    #     height=0,
-    # )
 
 
     components.html(
@@ -899,28 +899,6 @@ def main():
 
     if 'input_counter' not in st.session_state:
         st.session_state.input_counter = 0
-
-
-    # # --- Hide all form submit buttons ---
-    # hide_submit_css = """
-    # <style>
-    # form > div.stButton > button {
-    #     display: none;
-    #     c
-    # }
-
-    # .stForm button{
-    #     display: none;
-        
-    # }
-    # .stForm{
-    #     border: none;
-    #     margin-top :-200 px;
-
-    # }
-    # </style>
-    # """
-    # st.markdown(hide_submit_css, unsafe_allow_html=True)
 
     st.markdown(
         """
@@ -983,6 +961,7 @@ def main():
         
         # Check if this is a simple greeting first
         greeting_response = handle_simple_greetings(user_input)
+        print("greeting_response",greeting_response)
         
         if greeting_response:
             # Handle greeting locally without LLM call
@@ -1028,7 +1007,7 @@ def main():
             # time.sleep(100)
             try:
                 # Decide whether to include schemas
-                include_schema = st.session_state.schema_limit_counter < 2
+                include_schema = st.session_state.schema_limit_counter < 10
 
                 # Get message history
                 history = st.session_state.thread.get_history()
@@ -1076,7 +1055,9 @@ def main():
                     messages=st.session_state.thread.get_history(),
                     tools=ALL_FUNCTION_SCHEMAS,
                     tool_choice="auto"
+                    
                 )
+                print("response_1",response)
                 
                 assistant_message = response.choices[0].message
                 
