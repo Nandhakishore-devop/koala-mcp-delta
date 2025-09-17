@@ -17,9 +17,8 @@ class AssistantThread:
         default limit = 5 results if the user has not specified a count of results. 
 
         the two buttons with your branding:
-        “Book Now ” → takes the user directly into the booking process for the selected listing.
-        “Visit Resort ” → takes the user to the resort’s main details page (overview, amenities, photos, etc.).
-        "Book Now" or "Visit Resort".
+        
+
         us = United states or united states of america; 
         aruba is a country and not a state;
         user question aruba surf stay or listings = marriotts aruba surf club resort;
@@ -114,7 +113,9 @@ class AssistantThread:
 
 
 
-
+        # “Book Now ” → takes the user directly into the booking process for the selected listing.
+        # “Visit Resort ” → takes the user to the resort’s main details page (overview, amenities, photos, etc.).
+        # "Book Now" or "Visit Resort".
 
 
 
