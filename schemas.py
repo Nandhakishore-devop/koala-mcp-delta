@@ -402,6 +402,8 @@ def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
             "name": "search_available_future_listings_enhanced_v2",
             "description": (
                 "Search for AVAILABLE LISTINGS at a specific resort ONLY. "
+                "mainly used when user says things like with specific resort name with more listings and stays and etc"
+                "i want more listings and more details. in specific resort call this tool"
                 "Requires either 'resort_name' or 'resort_id'. "
                 "Use this tool when the user asks about availability, stays, or prices at ONE resort. "
                 "Example: 'Show me listings at Club Wyndham Ocean Walk in March under $200/night' or "
