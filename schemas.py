@@ -227,87 +227,88 @@ def current_date():
     """Get the current date in YYYY-MM-DD format."""
     return datetime.datetime.now().strftime("%Y-%m-%d")
 
-def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
+
+
+def search_available_future_listings_merged_schema() -> Dict[str, Any]:
+    """
+    Unified schema for searching available listings across multiple resorts or a specific resort.
+    Combines functionality of search_available_future_listings_enhanced (multi-resort) and
+    search_available_future_listings_enhanced_v2 (single resort).
+    
+    Features:
+    - Flexible location search (country, state, city, resort name/ID)
+    - Date filters: exact check-in/check-out or month/year/day
+    - Pricing and currency filters
+    - Unit type and guest capacity filters
+    - Cancellation policies and dates
+    - URLs and booking info
+    - Sorting and limits
+    - Debugging options
+    """
+
     today = current_date()
     current_year = datetime.datetime.now().year
-    """
-    Schema for searching available listings by city, state, country, or general location.
-    Unified schema for the search_available_future_listings_enhanced function.
-    Supports flexible resort search with filters for location, pricing, unit type,
-    currency, sorting, debugging, and date logic.
-    Always ensures check-in/check-out dates are in the future (auto-adjusted).
 
-    specifically:
-    -> if specified all three year,month,day it will take as it is checkin and check out in pt_rt table .
-    1. If no year/month/day is provided, defaults to future dates.
-    2. If only month is provided (no year), it resolves to the next upcoming occurrence.
-
-    
-    If only month is provided (no year), it resolves to the next upcoming occurrence.
-    If year is explicitly provided, it is used as-is (even if past).
-    """
-    
     return {
         "type": "function",
         "function": {
-            "name": "search_available_future_listings_enhanced",
+            "name": "search_available_future_listings_merged",
             "description": (
-                "Search for AVAILABLE LISTINGS or PRICE RANGE SUMMARY across multiple resorts "
-                "in a location (state, city, country, or by holiday). "
-                "Use this tool when the user asks about availability, pricing, or comparisons "
-                "in a general area instead comman questions "
-                "Example: 'Find me available resorts in Florida in February' or "
-                "'Show me listings in Hawaii this summer.' "
-                "Do NOT use this tool for static resort details (use get_resort_details). "
-                "Use this tool also when user asks about cheapest/most expensive price ranges."
+                "Search for AVAILABLE LISTINGS either across multiple resorts or at a specific resort. "
+                "Use this tool when the user asks about availability, pricing, or comparisons. "
+                "If the user mentions a specific resort name or ID, it will search only that resort. "
+                "Otherwise, it searches across multiple resorts in the specified location."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
-                    # Resort/location filters
+                    # Resort / location filters
                     "resort_id": {
                         "type": "integer",
-                        "description": "Unique resort ID (optional)."
+                        "description": "Unique resort ID (optional, used for single-resort searches)."
                     },
                     "resort_name": {
                         "type": "string",
-                        "description": "Name of the resort to search for (optional if location is provided)."
+                        "description": "Name of the resort to search for (optional for multi-resort, required for single resort)."
                     },
                     "resort_country": {
                         "type": "string",
-                        "description": "Country where the resort is located."
+                        "description": "Country where the resort is located (optional)."
                     },
                     "resort_state": {
                         "type": "string",
-                        "description": "State or province where the resort is located."
+                        "description": "State or province where the resort is located (optional)."
                     },
                     "resort_city": {
                         "type": "string",
-                        "description": "City where the resort is located."
+                        "description": "City where the resort is located (optional)."
                     },
 
                     # Date filters
-
-                    "month": {
-                    "type": "string",
-                    "description": "Check-in month (name or number, e.g., 'Jan', 'January', or 1-12). Auto-maps to the nearest future year if year not provided."
-                    },
-                    "year": {
-                    "type": "integer",
-                    "description": "Optional year for check-in. If missing, automatically inferred based on current date."
-                    },
                     "listing_check_in": {
-                    "type": "string",
-                    "format": "date",
-                    "description": "Explicit check-in date in YYYY-MM-DD format. Overrides month/year if provided."
+                        "type": "string",
+                        "format": "date",
+                        "description": "Explicit check-in date in YYYY-MM-DD format. Overrides month/year if provided."
                     },
                     "listing_check_out": {
-                    "type": "string",
-                    "format": "date",
-                    "description": "Explicit check-out date in YYYY-MM-DD format. Must be later than check-in."
+                        "type": "string",
+                        "format": "date",
+                        "description": "Explicit check-out date in YYYY-MM-DD format. Must be later than check-in."
+                    },
+                    "month": {
+                        "type": "string",
+                        "description": "Check-in month (name or number, e.g., 'Jan', 'January', or 1-12). Auto-maps to nearest future year if year not provided."
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Optional check-in year. If missing, automatically inferred based on current date."
+                    },
+                    "day": {
+                        "type": "integer",
+                        "description": "Optional day of the month for check-in. Can be used with month and/or year."
                     },
 
-                    # Pricing / currency
+                    # Pricing / sorting
                     "currency_code": {
                         "type": "string",
                         "description": "Currency code for price (e.g., USD, EUR, INR)."
@@ -315,16 +316,15 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                     "price_sort": {
                         "type": "string",
                         "description": (
-                            "Order to sort results by price. "
-                            "Use 'asc' for cheapest listings, 'desc' for most expensive listings. "
-                            "Also supports 'avg_price', 'cheapest', 'average', 'highest' for summaries."
+                            "Sort results by price. Use 'asc' for lowest to highest, 'desc' for highest to lowest, "
+                            "'avg_price' for resort average, 'cheapest', 'average', or 'highest'."
                         )
                     },
 
                     # Unit / type filters
                     "unit_type_name": {
                         "type": "string",
-                        "description": "Specific unit type to filter (e.g., Studio, 1 Bedroom, Suite)."
+                        "description": "Specific unit type (e.g., Studio, 1 Bedroom, Suite)."
                     },
                     "unit_type_slug": {
                         "type": "string",
@@ -339,10 +339,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                     "listing_cancelation_date": {
                         "type": "string",
                         "format": "date",
-                        "description": (
-                            "The date when the user can cancel the booking, in YYYY-MM-DD format. "
-                            "Example: Cancellation: Full refund if canceled at least 16 days before check-in. (By 2025-12-07)."
-                        )
+                        "description": "Date when the user can cancel the booking (YYYY-MM-DD)."
                     },
                     "cancellation_policy": {
                         "type": "string",
@@ -364,7 +361,7 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                     },
                     "booking_url": {
                         "type": "string",
-                        "description": "The URL to book the resort directly with the given check-in and check-out dates."
+                        "description": "The URL to book the resort with the given check-in and check-out dates."
                     },
 
                     # Options
@@ -381,125 +378,14 @@ def search_available_future_listings_enhanced_schema() -> Dict[str, Any]:
                         "description": "Enable debug output (default: false)."
                     }
                 },
+                # For single resort search, either resort_name or resort_id is required
                 "required": [],
                 "additionalProperties": False
             }
         }
     }
 
-def search_available_future_listings_enhanced_v2_schema() -> Dict[str, Any]:
-    today = current_date()
-    current_year = datetime.datetime.now().year
-    """
-    Unified schema for the search_available_future_listings_enhanced_v2 function.
-    This function ONLY works for one specific resort (by name or ID).
-    Supports filters for pricing, unit type, guest capacity, and cancellation policy.
-    Example: "Show me listings at Club Wyndham Ocean Walk in March under $200/night"
-    """
-    return {
-        "type": "function",
-        "function": {
-            "name": "search_available_future_listings_enhanced_v2",
-            "description": (
-                "Search for AVAILABLE LISTINGS at a specific resort ONLY. "
-                "mainly used when user says things like with specific resort name with more listings and stays and etc"
-                "i want more listings and more details. in specific resort call this tool"
-                "Requires either 'resort_name' or 'resort_id'. "
-                "Use this tool when the user asks about availability, stays, or prices at ONE resort. "
-                "Example: 'Show me listings at Club Wyndham Ocean Walk in March under $200/night' or "
-                "'Find me a 2-bedroom deluxe at Bonnet Creek for 6 guests in July.' "
-                "Do NOT use this tool for general area searches across multiple resorts "
-                "(use search_available_future_listings_enhanced instead)."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    # Resort filter (required)
-                    "resort_id": {
-                        "type": "integer",
-                        "description": "Unique resort ID (alternative to resort_name)."
-                    },
-                    "resort_name": {
-                        "type": "string",
-                        "description": "Name of the resort to search for."
-                    },
 
-                    # Date filters
-                    "listing_check_in": {
-                            "type": "string",
-                            "format": "date",
-                            "description": "Explicit check-in date in YYYY-MM-DD format. If provided with check-out, these take highest priority."
-                        },
-                    "listing_check_out": {
-                            "type": "string",
-                            "format": "date",
-                            "description": "Explicit check-out date in YYYY-MM-DD format. Must be later than check-in. If provided, overrides month/year."
-                        },
-                    "month": {
-                            "type": "string",
-                            "description": "Check-in month (name or number, e.g., 'Jan', 'January', or 1-12). Used only if check-in/check-out not provided. Auto-maps to nearest future year if 'year' not specified."
-                        },
-                    "year": {
-                            "type": "integer",
-                            "description": "Optional check-in year. If not provided, automatically inferred based on current date and future mapping."
-                        },
-                    # Pricing / sorting
-                    "price_sort": {
-                        "type": "string",
-                        "description": (
-                            "Sort results by price. "
-                            "Use 'asc' for lowest to highest, 'desc' for highest to lowest, "
-                            "'avg_price' for resort average, 'cheapest', 'average', or 'highest'."
-                        )
-                    },
-
-                    # Unit / type filters
-                    "unit_type_name": {
-                        "type": "string",
-                        "description": "Specific unit type (e.g., Studio, 1 Bedroom, Suite)."
-                    },
-                    "min_guests": {
-                        "type": "integer",
-                        "description": "Minimum guest capacity (filters by unit_types.sleeps)."
-                    },
-
-                    # Cancellation filters
-                    "listing_cancelation_date": {
-                        "type": "string",
-                        "format": "date",
-                        "description": "Date when cancellation is allowed (YYYY-MM-DD)."
-                    },
-                    "cancellation_policy": {
-                        "type": "string",
-                        "description": "Filter listings by cancellation policy.",
-                        "enum": ["flexible", "relaxed", "moderate", "firm", "strict"]
-                    },
-
-                    # URLs
-                    "listing_url": {
-                        "type": "string",
-                        "description": "The URL to the resort's listing page."
-                    },
-                    "booking_url": {
-                        "type": "string",
-                        "description": "The URL to book the resort with given dates."
-                    },
-
-                    # Options
-                    "flexible_dates": {
-                        "type": "boolean",
-                        "description": "Search for alternative dates if exact not available (default: true)."
-                    },
-                    "debug": {
-                        "type": "boolean",
-                        "description": "Enable verbose output for debugging (default: false)."
-                    }
-                },
-                "required": ["resort_name"],  # <-- enforce single resort search
-                "additionalProperties": False
-            }
-        }
-    }
 
 # Updated get_all_function_schemas to include the new functions
 def get_all_function_schemas() -> List[Dict[str, Any]]:
@@ -513,8 +399,9 @@ def get_all_function_schemas() -> List[Dict[str, Any]]:
         get_user_bookings_schema(),
         get_user_profile_schema(),
         test_database_connection_schema(),
-        search_available_future_listings_enhanced_schema(),  # Enhanced version
-        search_available_future_listings_enhanced_v2_schema(),  # New v2 version
+        # search_available_future_listings_enhanced_schema(),  # Enhanced version
+        # search_available_future_listings_enhanced_v2_schema(),  # New v2 version
+        search_available_future_listings_merged_schema(),  # Merged version
     ]
 
 # Export all schemas as a list
