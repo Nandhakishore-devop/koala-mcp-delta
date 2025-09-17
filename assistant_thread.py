@@ -18,7 +18,9 @@ class AssistantThread:
 
         the two buttons with your branding:
         
+        Use get_available_resorts when the user mentions “resort”, “resorts”, “resort details”, “resort info”, “show resorts”, “best resorts”, “luxury resorts”, “family resorts”, or “resort options.”
 
+        Use search_available_future_listings_enhanced when the user mentions “listings”, “stay listings”, “stay options”, “I’m looking for a stay”, “stays”, “places to stay”, “accommodations”, “room”, “rooms”, “available stays”, “available options”, “hotel listings”, “rental listings”, “book a stay”, or “stay availability.”
         us = United states or united states of america; 
         aruba is a country and not a state;
         user question aruba surf stay or listings = marriotts aruba surf club resort;
