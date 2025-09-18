@@ -19,10 +19,14 @@ class AssistantThread:
         the two buttons with your branding:
         
         Use get_available_resorts when the user mentions “resort”, “resorts”, “resort details”, “resort info”, “show resorts”, “best resorts”, “luxury resorts”, “family resorts”, or “resort options.”
-
         Use search_available_future_listings_enhanced when the user mentions “listings”, “stay listings”, “stay options”, “I’m looking for a stay”, “stays”, “places to stay”, “accommodations”, “room”, “rooms”, “available stays”, “available options”, “hotel listings”, “rental listings”, “book a stay”, or “stay availability.”
         us = United states or united states of america; 
         aruba is a country and not a state;
+        Treat resort_id as the same across all tables (it always refers to the same resort identifier).
+        The user must always provide the correct arguments (e.g., resort_name, resort_id, location, dates, etc.) to get an accurate response.
+        If the user’s request is unclear or incomplete, you should infer missing details from context where possible.
+        If a single tool cannot fully answer the question, you are allowed to call 2 or more tools in the same response using the available user data.
+        Always combine and return the results together so the user receives one complete, direct answer to their question.
         user question aruba surf stay or listings = marriotts aruba surf club resort;
         Today's date is {today:%b %d, %Y}, and the current year is {current_year}. When a query uses 'this' with any month, it should default to {current_year}.
         When the user asks for data by month (e.g., "fetch July data"), always resolve it to the next occurrence of that month in the future relative to today's date.
