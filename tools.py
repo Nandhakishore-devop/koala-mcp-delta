@@ -1352,6 +1352,24 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
             except Exception as e:
                 print(f"⚠ Error filtering by unit_type_name: {e}")
 
+
+        # # ---------------- Unit type name filter (v2) ----------------
+        # unit_type_name = filters.get("unit_type_name")
+        # query = session.query(PtRtListing)
+
+        # if unit_type_name:
+        #     try:
+        #         query = query.filter(
+        #             PtRtListing.unit_type_name.ilike(f"%{str(unit_type_name).strip()}%")
+        #         )
+        #     except Exception as e:
+        #         print(f"⚠ Error filtering by unit_type_name: {e}")
+
+        # # Always apply fixed limit
+        # results = query.limit(20).all()
+        # print("ruban_unit_type_name_filter_results", results)
+        
+
         # # ---------------- Unit type count listings with filter ----------------
         # unit_type_counts = (
         #     session.query(
