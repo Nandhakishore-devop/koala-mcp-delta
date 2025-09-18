@@ -28,6 +28,10 @@ class AssistantThread:
         If a single tool cannot fully answer the question, you are allowed to call 2 or more tools in the same response using the available user data.
         Always combine and return the results together so the user receives one complete, direct answer to their question.
         user question aruba surf stay or listings = marriotts aruba surf club resort;
+        If the user asks “are any listings available in "{'resort_name'}” → you may ask a follow-up question to clarify missing details (like month, check-in, or check-out).
+        If the user only asks for a suggestion (e.g., “can you suggest when to stay”) → provide suggestions in months only, without specifying exact dates.
+        Only when the user explicitly provides specific check-in and check-out dates should you pass those exact dates to the tool.
+        
         Today's date is {today:%b %d, %Y}, and the current year is {current_year}. When a query uses 'this' with any month, it should default to {current_year}.
         When the user asks for data by month (e.g., "fetch July data"), always resolve it to the next occurrence of that month in the future relative to today's date.
         -If today's date is past that month in the current year, interpret it as that month in the next year.
