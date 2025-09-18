@@ -1267,12 +1267,13 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
             .group_by(PtRtListing.unit_type_name)
             .all()
         )
+        unit_type_breakdown = [ut[1] for ut in unit_type_counts]
 
-        # Convert unit_type_counts query result into dict list
-        unit_type_breakdown = [
-            {"unit_type_name": ut[0], "listing_count": ut[1]}
-            for ut in unit_type_counts
-        ]
+        # # Convert unit_type_counts query result into dict list
+        # unit_type_breakdown = [
+        #     {"unit_type_name": ut[0], "listing_count": ut[1]}
+        #     for ut in unit_type_counts
+        # ]
 
         # print("ruban_total_count_listings", total_count_listings)
         # print("ruban_unit_type_counts", unit_type_counts)
@@ -1492,7 +1493,7 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
                 "unit_type_breakdown": unit_type_breakdown   # <--- added here}
             })
 
-        return results_list
+        return results_list.limit(1).all()
 
     except Exception as e:
         print(f"❌ Error in search_available_future_listings_merged: {str(e)}")
