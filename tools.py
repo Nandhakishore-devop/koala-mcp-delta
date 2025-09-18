@@ -1493,7 +1493,7 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
                 "unit_type_breakdown": unit_type_breakdown   # <--- added here}
             })
 
-        return results_list.limit(1).all()
+        return results_list.limit(20).all()
 
     except Exception as e:
         print(f"❌ Error in search_available_future_listings_merged: {str(e)}")
