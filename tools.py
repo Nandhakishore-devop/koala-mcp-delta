@@ -1244,16 +1244,41 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
         if resort_name:
             filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
 
-
         # ---------------- Total count listings with filter ----------------
         total_count_listings = (
-            session.query(PtRtListing.resort_id, func.count(PtRtListing.id).label("count"))
-            .filter(*filter_conditions)   # <-- apply filters here
+            session.query(
+                PtRtListing.resort_id,
+                func.count(PtRtListing.id).label("count")
+            )
+            .filter(*filter_conditions)   # Apply full filters (resort_name, dates, etc.)
             .group_by(PtRtListing.resort_id)
             .all()
         )
 
-        # print("ruban_top", total_count_listings)
+        # ---------------- Unit type counts (separate filtering) ----------------
+        unit_type_filters = [f for f in filter_conditions if not f.left.key == "unit_type_name"]
+
+        unit_type_counts = (
+            session.query(
+                PtRtListing.unit_type_name,
+                func.count(PtRtListing.id).label("count")
+            )
+            .filter(*unit_type_filters)   # Exclude explicit unit_type_name filter
+            .group_by(PtRtListing.unit_type_name)
+            .all()
+        )
+
+        # Convert unit_type_counts query result into dict list
+        unit_type_breakdown = [
+            {"unit_type_name": ut[0], "listing_count": ut[1]}
+            for ut in unit_type_counts
+        ]
+
+        # print("ruban_total_count_listings", total_count_listings)
+        # print("ruban_unit_type_counts", unit_type_counts)
+        # print("ruban_unit_type_breakdown", unit_type_breakdown)
+
+
 
         # ---------------- Non-date filters ----------------
         skip_fields = {
@@ -1327,6 +1352,52 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
             except Exception as e:
                 print(f"⚠ Error filtering by unit_type_name: {e}")
 
+        # # ---------------- Unit type count listings with filter ----------------
+        # unit_type_counts = (
+        #     session.query(
+        #         PtRtListing.unit_type_name,
+        #         func.count(PtRtListing.id).label("count")
+        #     )
+        #     .filter(*filter_conditions)   # apply existing filters (resort_name, etc.)
+        #     .group_by(PtRtListing.unit_type_name)
+        #     .all()
+        # )
+
+        # print("ruban_unit_type_counts", unit_type_counts)
+
+
+
+        # # ---------------- Unit type name filter (v2) ----------------
+        # unit_type_name = filters.get("unit_type_name")
+        # if unit_type_name:
+        #     try:
+        #         filter_conditions.append(
+        #             PtRtListing.unit_type_name.ilike(f"%{str(unit_type_name).strip()}%")
+        #         )
+        #     except Exception as e:
+        #         print(f"⚠ Error filtering by unit_type_name: {e}")
+
+        # # ---------------- Unit type count listings ----------------
+        # try:
+        #     # ✅ Only apply "other" filters (exclude the direct unit_type_name filter)
+        #     base_conditions = [fc for fc in filter_conditions if not str(fc).startswith("PtRtListing.unit_type_name")]
+
+        #     unit_type_counts = (
+        #         session.query(
+        #             PtRtListing.unit_type_name,
+        #             func.count(PtRtListing.id).label("count")
+        #         )
+        #         .filter(*base_conditions)   # apply resort_name, guests, etc.
+        #         .group_by(PtRtListing.unit_type_name)
+        #         .all()
+        #     )
+
+        #     print("ruban_unit_type_counts", unit_type_counts)
+        # except Exception as e:
+        #     print(f"⚠ Error fetching unit_type_counts: {e}")
+
+                
+
         # ---------------- Apply collected filters ----------------
         if filter_conditions:
             query = query.filter(and_(*filter_conditions))
@@ -1398,7 +1469,9 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
                 "resort_url": resort_url,
                 "booking_url": booking_url,
-                "total_listings_for_resort": next((item.count for item in total_count_listings if item.resort_id == row.resort_id), 0)
+                "total_listings_for_resort": next((item.count for item in total_count_listings if item.resort_id == row.resort_id), 0),
+                "total_unit_for_resort": sum(ut[1] for ut in unit_type_counts),
+                "unit_type_breakdown": unit_type_breakdown   # <--- added here}
             })
 
         return results_list
