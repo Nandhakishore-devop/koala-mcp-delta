@@ -1244,6 +1244,17 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
         if resort_name:
             filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
 
+
+        # ---------------- Total count listings with filter ----------------
+        total_count_listings = (
+            session.query(PtRtListing.resort_id, func.count(PtRtListing.id).label("count"))
+            .filter(*filter_conditions)   # <-- apply filters here
+            .group_by(PtRtListing.resort_id)
+            .all()
+        )
+
+        # print("ruban_top", total_count_listings)
+
         # ---------------- Non-date filters ----------------
         skip_fields = {
             "year", "month", "day", "listing_check_in", "listing_check_out",
@@ -1386,7 +1397,8 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
                 "listing_cancelation_date": cancel_date,
                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
                 "resort_url": resort_url,
-                "booking_url": booking_url
+                "booking_url": booking_url,
+                "total_listings_for_resort": next((item.count for item in total_count_listings if item.resort_id == row.resort_id), 0)
             })
 
         return results_list
