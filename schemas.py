@@ -326,10 +326,6 @@ def search_available_future_listings_merged_schema() -> Dict[str, Any]:
                         "type": "string",
                         "description": "Specific unit type (e.g., Studio, 1 Bedroom, Suite)."
                     },
-                    "unit_type_slug": {
-                        "type": "string",
-                        "description": "Specific unit type slug filter (e.g., studio, 1-bedroom, suite)."
-                    },
                     "min_guests": {
                         "type": "integer",
                         "description": "Minimum guest capacity required (filters by unit_types.sleeps)."

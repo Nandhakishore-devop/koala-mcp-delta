@@ -1284,7 +1284,7 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
         skip_fields = {
             "year", "month", "day", "listing_check_in", "listing_check_out",
             "price_sort", "limit", "update_fields", "min_guests",
-            "resort_name", "unit_type_slug", "unit_type_name"
+            "resort_name", "unit_type_name"
         }
         for field_name, value in filters.items():
             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
@@ -1368,7 +1368,7 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
         # # Always apply fixed limit
         # results = query.limit(20).all()
         # print("ruban_unit_type_name_filter_results", results)
-        
+
 
         # # ---------------- Unit type count listings with filter ----------------
         # unit_type_counts = (
