@@ -16,6 +16,7 @@ from calendar import monthrange
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import random
+from sqlalchemy import case
 
 
 # Load environment variables
@@ -81,88 +82,95 @@ class ResortMigration(Base):
     id = Column(BigInteger, primary_key=True)
     pt_rt_id = Column(Integer, nullable=False)
     listing_id = Column(Integer)
-    listing_check_in = Column(DateTime)
-    listing_check_out = Column(DateTime)
-    listing_cancelation_date = Column(DateTime)
-    listing_price_night = Column(String(50))
-    listing_nights = Column(Integer)
-    listing_publish_type = Column(String(50))
-    listing_has_deleted = Column(Integer, default=0)
-    listing_status = Column(String(50))
-    listing_currency_id = Column(Integer, default=0)
-    listing_currency_code = Column(String(255))
-    has_weekend = Column(Integer, default=0)
-    listing_owner_id = Column(Integer, default=0)  # Remove ForeignKey to avoid issues
-    listing_count = Column(Integer, default=0)
-    unit_type_id = Column(Integer, default=0)  # Remove ForeignKey to avoid issues
-    available_count = Column(String(255))
-    exactlisting_listing_count = Column(String(255))
-    unit_type_slug = Column(String(255))
-    unit_type_name = Column(String(255))
-    unit_bedrooms = Column(String(5))
-    unit_bathrooms = Column(String(7))
-    unit_sleeps = Column(Integer, default=0)
-    unit_kitchenate = Column(String(255))
-    unit_has_deleted = Column(Integer, default=0)
-    unit_type_images = Column(Text)  # JSON
-    featured_amenities = Column(String(150))
-    unit_status = Column(String(255))
-    unit_cancelation_policy_option = Column(String(255))
     resort_id = Column(Integer, default=0)  # This is just an identifier, not a foreign key
     resort_slug = Column(String(255))
     resort_name = Column(String(255))
-    lattitude = Column(String(255))
-    longitude = Column(String(255))
     distance = Column(String(255))
     address = Column(String(255))
     location_types = Column(String(255))
-    county = Column(String(255))
+    resort_has_deleted = Column(Integer, default=0)
     country = Column(String(255))
     city = Column(String(255))
     state = Column(String(255))
     zip = Column(String(255))
     is_featured = Column(Integer, default=0)
-    popular = Column(Integer, default=0)
-    is_fitness_center = Column(Integer, default=0)
-    is_free_wifi = Column(Integer, default=0)
-    is_restaurant = Column(Integer, default=0)
-    is_swimming_pool = Column(Integer, default=0)
-    hotel_star = Column(Integer, default=0)
-    top_21_resort = Column(Integer, default=0)
-    resort_amenities = Column(Text)  # JSON
-    reslrt_updated_at = Column(DateTime)
+    unit_has_deleted = Column(Integer, default=0) 
     resort_google_rating = Column(Integer, default=0)
-    resort_has_deleted = Column(Integer, default=0)
     resort_status = Column(String(50))
-    google_rating = Column(Integer, default=0)
-    user_ratings_total = Column(Integer, default=0)
-    google_rating_default = Column(String(8))
-    pets_friendly = Column(Integer, default=0)
-    unit_rates_price = Column(String(50))
-    offer = Column(String(255))
-    offer_price = Column(String(255))
-    offer_popup = Column(String(255))
-    drivetime = Column(String(255))
-    image = Column(String(255))
-    images = Column(Text)  # JSON
-    resort_images = Column(Text)  # JSON
-    resort_aminities = Column(Text)  # JSON
-    amenities = Column(Text)  # JSON
-    highlight_quote = Column(String(255))
-    hotelStar = Column(String(255))
-    is_open_availability = Column(String(255))
-    brand_id = Column(Integer, default=0)
-    brand_name = Column(String(255))
-    brand_slug = Column(String(255))
-    brand_order = Column(String(255))
-    unit_rate_id = Column(Integer, default=0)
-    unit_rate_start_date = Column(DateTime)
-    unit_rate_availability = Column(String(255))
-    unit_rate_number_available = Column(String(255))
-    unit_rate_nightly_price = Column(String(255))
-    unit_rates_count = Column(String(255))
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+
+    # listing_check_in = Column(DateTime)
+    # listing_check_out = Column(DateTime)
+    # listing_cancelation_date = Column(DateTime)
+    # listing_price_night = Column(String(50))
+    # listing_nights = Column(Integer)
+    # listing_publish_type = Column(String(50))
+    # listing_has_deleted = Column(Integer, default=0)
+    # listing_status = Column(String(50))
+    # listing_currency_id = Column(Integer, default=0)
+    # listing_currency_code = Column(String(255))
+    # has_weekend = Column(Integer, default=0)
+    # listing_owner_id = Column(Integer, default=0)  # Remove ForeignKey to avoid issues
+    # listing_count = Column(Integer, default=0)
+    # unit_type_id = Column(Integer, default=0)  # Remove ForeignKey to avoid issues
+    # available_count = Column(String(255))
+    # exactlisting_listing_count = Column(String(255))
+    # unit_type_slug = Column(String(255))
+    # unit_type_name = Column(String(255))
+    # unit_bedrooms = Column(String(5))
+    # unit_bathrooms = Column(String(7))
+    # unit_sleeps = Column(Integer, default=0)
+    # unit_kitchenate = Column(String(255))
+   
+    # unit_type_images = Column(Text)  # JSON
+    # featured_amenities = Column(String(150))
+    # unit_status = Column(String(255))
+    # unit_cancelation_policy_option = Column(String(255))
+    # lattitude = Column(String(255))
+    # longitude = Column(String(255))
+    # county = Column(String(255))
+
+    # popular = Column(Integer, default=0)
+    # is_fitness_center = Column(Integer, default=0)
+    # is_free_wifi = Column(Integer, default=0)
+    # is_restaurant = Column(Integer, default=0)
+    # is_swimming_pool = Column(Integer, default=0)
+    # hotel_star = Column(Integer, default=0)
+    # top_21_resort = Column(Integer, default=0)
+    # resort_amenities = Column(Text)  # JSON
+    # reslrt_updated_at = Column(DateTime)
+    
+    
+   
+    # google_rating = Column(Integer, default=0)
+    # user_ratings_total = Column(Integer, default=0)
+    # google_rating_default = Column(String(8))
+    # pets_friendly = Column(Integer, default=0)
+    # unit_rates_price = Column(String(50))
+    # offer = Column(String(255))
+    # offer_price = Column(String(255))
+    # offer_popup = Column(String(255))
+    # drivetime = Column(String(255))
+    # image = Column(String(255))
+    # images = Column(Text)  # JSON
+    # resort_images = Column(Text)  # JSON
+    # resort_aminities = Column(Text)  # JSON
+    # amenities = Column(Text)  # JSON
+    # highlight_quote = Column(String(255))
+    # hotelStar = Column(String(255))
+    # is_open_availability = Column(String(255))
+    # brand_id = Column(Integer, default=0)
+    # brand_name = Column(String(255))
+    # brand_slug = Column(String(255))
+    # brand_order = Column(String(255))
+    # unit_rate_id = Column(Integer, default=0)
+    # unit_rate_start_date = Column(DateTime)
+    # unit_rate_availability = Column(String(255))
+    # unit_rate_number_available = Column(String(255))
+    # unit_rate_nightly_price = Column(String(255))
+    # unit_rates_count = Column(String(255))
+    # created_at = Column(DateTime)
+    # updated_at = Column(DateTime)
+
 
 
 
@@ -1267,17 +1275,18 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
             .group_by(PtRtListing.unit_type_name)
             .all()
         )
-        unit_type_breakdown = [ut[1] for ut in unit_type_counts]
+        
+        # unit_type_breakdown = [ut[1] for ut in unit_type_counts]
 
-        # # Convert unit_type_counts query result into dict list
-        # unit_type_breakdown = [
-        #     {"unit_type_name": ut[0], "listing_count": ut[1]}
-        #     for ut in unit_type_counts
-        # ]
+        # Convert unit_type_counts query result into dict list
+        unit_type_breakdown = [
+            {"unit_type_name": ut[0], "listing_count": ut[1]}
+            for ut in unit_type_counts
+        ]
 
         # print("ruban_total_count_listings", total_count_listings)
         # print("ruban_unit_type_counts", unit_type_counts)
-        # print("ruban_unit_type_breakdown", unit_type_breakdown)
+        print("ruban_unit_type_breakdown", unit_type_breakdown)
 
 
 
@@ -1477,7 +1486,6 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
             results_list.append({
                 "resort_id": row.resort_id,
                 "resort_name": row.resort_name,
-                # prefer PtRtListing.unit_type_name, fallback to UnitType.name
                 "unit_type_name": row.unit_type_name or row.unit_type_name_fallback,
                 "sleeps": int(row.sleeps) if row.sleeps is not None else None,
                 "check_in": row.listing_check_in.strftime("%Y-%m-%d") if row.listing_check_in else None,
@@ -1488,22 +1496,29 @@ def search_available_future_listings_merged(**filters) -> List[Dict[str, Any]]:
                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
                 "resort_url": resort_url,
                 "booking_url": booking_url,
-                "total_listings_for_resort": next((item.count for item in total_count_listings if item.resort_id == row.resort_id), 0),
-                "total_unit_for_resort": sum(ut[1] for ut in unit_type_counts),
-                "unit_type_breakdown": unit_type_breakdown   # <--- added here}
+               
             })
 
-        return results_list
+        # ✅ Wrap everything in one dict
+        final_result = {
+            "results": results_list,
+            "unit_type_breakdown": unit_type_breakdown,
+            "total_listings_for_resort": next(
+                (item.count for item in total_count_listings if item.resort_id == row.resort_id), 0
+            ),
+            "total_unit_for_resort": sum(ut[1] for ut in unit_type_counts)
+        }
+
+
+        return final_result
 
     except Exception as e:
         print(f"❌ Error in search_available_future_listings_merged: {str(e)}")
         session.rollback()
-        return []
+        return {"results": [], "unit_type_breakdown": {}}
+
     finally:
         session.close()
-
-
-
 
 
 #----------search_avaliable_future..... end 
@@ -1522,8 +1537,6 @@ def deduplicate_by_resort_id(listings):
             seen.add(listing.resort_id)
             unique_listings.append(listing)
     return unique_listings
-
-
 
 
 def get_user_bookings(
@@ -2126,6 +2139,7 @@ AVAILABLE_TOOLS = {
     "get_city_from_resort":get_city_from_resort,
     "search_resorts_by_amenities": search_resorts_by_amenities,
     "get_user_profile": get_user_profile,
+  
 }
 
 def call_tool(tool_name: str, **kwargs) -> Any:
@@ -2168,14 +2182,14 @@ if __name__ == "__main__":
         
         # Test get_available_resorts
         print("Testing get_available_resorts...")
-        resorts = call_tool("get_available_resorts", limit=3)
+        resorts = call_tool("get_available_resorts", limit=5)
         print(f"Found {len(resorts)} resorts")
         
     
         
         # Test search_resorts_by_amenities
         print("Testing search_resorts_by_amenities...")
-        amenity_resorts = call_tool("search_resorts_by_amenities", amenities=["pool"], limit=3)
+        amenity_resorts = call_tool("search_resorts_by_amenities", amenities=["pool"], limit=5)
         print(f"Found {len(amenity_resorts)} resorts with pool amenity")
     else:
         print("\n❌ Database connection failed!")

@@ -28,7 +28,7 @@ class AssistantThread:
         user question aruba surf stay or listings = marriotts aruba surf club resort;
        
         If the user only asks for a suggestion (e.g., “can you suggest when to stay”) → provide suggestions in months only, without specifying exact dates.
-
+        Always respond with a single paragraph showing the resort name, total listings, unit type counts, and upcoming stays with dates and prices, without extra explanation.
         
 
         Today's date is {today:%b %d, %Y}, and the current year is {current_year}. When a query uses 'this' with any month, it should default to {current_year}.
