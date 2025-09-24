@@ -1883,6 +1883,7 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
         year = filters.get("year")
         month = filters.get("month")
         day = filters.get("day")
+        next_90 = filters.get("next_90")  # ✅ new flag for "next 90 days"
 
         try:
             if check_in and check_out:
@@ -1911,14 +1912,35 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
                     filter_conditions.append(and_(*conditions))
                     date_filters_applied = True
 
-            # Remove default 90-day filter entirely
+            # # Remove default 90-day filter entirely
+            # if not date_filters_applied:
+            #     today = datetime.combine(datetime.today().date(), datetime.min.time())
+            #     ninety_days = today + timedelta(days=90)
+            #     filter_conditions.append(PtRtListing.listing_check_in.between(today, ninety_days))
+            
+             # ✅ Default to 90-day window if no date filter applied
+  
             if not date_filters_applied:
                 today = datetime.combine(datetime.today().date(), datetime.min.time())
                 ninety_days = today + timedelta(days=90)
-                filter_conditions.append(PtRtListing.listing_check_in.between(today, ninety_days))
+
+                # First check 0–90 days
+                first_window = query.filter(
+                    PtRtListing.listing_check_in.between(today, ninety_days)
+                )
+                preview_results = first_window.limit(1).all()
+
+                if preview_results:
+                    # Apply first 90-day filter
+                    filter_conditions.append(PtRtListing.listing_check_in.between(today, ninety_days))
+                else:
+                    # Else fallback: 91 days onwards
+                    start_date = today + timedelta(days=91)
+                    filter_conditions.append(PtRtListing.listing_check_in >= start_date)
 
         except ValueError as ve:
             print(f"⚠ Date parsing error: {ve}")
+
 
         # ---------------- Guests filter ----------------
         min_guests = filters.get("min_guests")
@@ -1934,27 +1956,6 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
             query = query.filter(and_(*filter_conditions))
             print("ruban_final_query", query)
 
-        # # ---------------- Total count listings ----------------
-        # total_count_listings = (
-        #     session.query(
-        #         PtRtListing.resort_id,
-        #         func.count(PtRtListing.id).label("count")
-        #     )
-        #     .filter(*filter_conditions)
-        #     .group_by(PtRtListing.resort_id)
-        #     .all()
-        # )
-
-        # # ---------------- Unit type counts ----------------
-        # unit_type_counts = (
-        #     session.query(
-        #         PtRtListing.unit_type_name,
-        #         func.count(PtRtListing.id).label("count")
-        #     )
-        #     .filter(*filter_conditions)
-        #     .group_by(PtRtListing.unit_type_name)
-        #     .all()
-        # )
         unit_type_breakdown = [{"unit_type_name": ut[0], "listing_count": ut[1]} for ut in unit_type_counts]
 
         # ---------------- Price sorting ----------------
