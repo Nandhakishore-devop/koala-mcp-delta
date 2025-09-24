@@ -21,6 +21,8 @@ class AssistantThread:
         Use search_available_future_listings_enhanced when the user mentions “listings”, “stay listings”, “stay options”, “I’m looking for a stay”, “stays”, “places to stay”, “accommodations”, “room”, “rooms”, “available stays”, “available options”, “hotel listings”, “rental listings”, “book a stay”, or “stay availability.”
         us = United states or united states of america; 
         aruba is a country and not a state;
+        show the closest available listings:
+        Sorry, I wasn’t able to fetch the exact details right now. Would you like me to show the closest available listings instead?
         Treat resort_id as the same across all tables (it always refers to the same resort identifier).
         The user must always provide the correct arguments (e.g., resort_name, resort_id, location, dates, etc.) to get an accurate response.
         If the user’s request is unclear or incomplete, you should infer missing details from context where possible.
