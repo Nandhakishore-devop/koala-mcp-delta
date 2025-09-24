@@ -1542,6 +1542,260 @@ def get_month_year_range(month_input: str, year_input: int = None):
 
 
 
+# def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
+#     session = SessionLocal()
+#     try:
+#         # ---------------- Base query ----------------
+#         query = (
+#             session.query(
+#                 PtRtListing.id,
+#                 PtRtListing.resort_id,
+#                 PtRtListing.resort_name,
+#                 PtRtListing.resort_slug,
+#                 PtRtListing.listing_check_in,
+#                 PtRtListing.listing_check_out,
+#                 PtRtListing.listing_price_night,
+#                 PtRtListing.listing_cancelation_policy_option,
+#                 PtRtListing.listing_cancelation_date,
+#                 PtRtListing.unit_type_name,  # From v2
+#                 UnitType.sleeps,             # From v1
+#                 UnitType.name.label("unit_type_name_fallback"),
+#                 UnitType.id.label("unit_type_id"),
+#             )
+#             .join(UnitType, PtRtListing.unit_type_id == UnitType.id)
+#             .distinct()
+            
+             
+#         )
+#         print("ruban_top",query)
+
+#         filter_conditions = []
+
+#         # ---------------- Resort name filter ----------------
+#         resort_name = filters.get("resort_name")
+#         if resort_name:
+#             filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
+#         print("ruban_resort_name_filter",filter_conditions)
+
+
+            
+#         # ---------------- Total count listings with filter ----------------
+#         total_count_listings = (
+#             session.query(
+#                 PtRtListing.resort_id,
+#                 func.count(PtRtListing.id).label("count")
+#             )
+#             .filter(*filter_conditions)   # Apply full filters (resort_name, dates, etc.)
+#             .group_by(PtRtListing.resort_id)
+#             .all()
+#         )
+
+#         # ---------------- Unit type counts for a specific resort ----------------
+#         unit_type_filters = [f for f in filter_conditions if not f.left.key == "unit_type_name"]
+#         if resort_name:
+#             # Use ilike for partial match, just like total_count_listings
+#             unit_type_filters.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
+
+#         unit_type_counts = (
+#             session.query(
+#                 PtRtListing.unit_type_name,
+#                 func.count(PtRtListing.id).label("count")
+#             )
+#             .filter(*unit_type_filters)
+#             .group_by(PtRtListing.unit_type_name)
+#             .all()
+#         )
+#         print("ruban_unit_type_counts", unit_type_counts)
+
+
+
+#         # ---------------- Non-date filters ----------------
+#         skip_fields = {
+#             "year", "month", "day", "listing_check_in", "listing_check_out",
+#             "price_sort", "limit", "update_fields", "min_guests",
+#             "resort_name", "unit_type_name"
+#         }
+#         for field_name, value in filters.items():
+#             if value is not None and hasattr(PtRtListing, field_name) and field_name not in skip_fields:
+#                 column = getattr(PtRtListing, field_name)
+#                 filter_conditions.append(
+#                     column.ilike(f"%{value.strip()}%") if isinstance(value, str) else column == value
+#                 )
+
+#         # ---------------- Date filters ----------------
+#         today = datetime.combine(datetime.today().date(), datetime.min.time())
+#         ninety_days = today + timedelta(days=90)
+
+#         check_in = filters.get("check_in")
+#         check_out = filters.get("check_out")
+#         check_in_str = filters.get("listing_check_in")
+#         check_out_str = filters.get("listing_check_out")
+#         year = filters.get("year")
+#         month = filters.get("month")
+#         day = filters.get("day")
+
+#         try:
+#             if check_in and check_out:
+#                 ci_date = datetime.strptime(check_in, "%Y-%m-%d")
+#                 co_date = datetime.strptime(check_out, "%Y-%m-%d")
+#                 filter_conditions.append(PtRtListing.listing_check_in.between(ci_date, co_date))
+
+#             elif check_in_str and check_out_str:
+#                 ci_str, co_str = normalize_future_dates(check_in_str, check_out_str)
+#                 check_in_date = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_out_date = datetime.strptime(co_str, "%Y-%m-%d")
+#                 filter_conditions += [
+#                     PtRtListing.listing_check_in == check_in_date,
+#                     PtRtListing.listing_check_out == check_out_date,
+#                 ]
+
+#             elif month and not check_in_str and not check_out_str:
+#                 ci_str, co_str = get_month_year_range(month, year)
+#                 check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
+#                 check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
+#                 if day:
+#                     specific_date = datetime(int(year), int(month), int(day))
+#                     filter_conditions += [
+#                         PtRtListing.listing_check_in == specific_date,
+#                         PtRtListing.listing_check_out == specific_date,
+#                     ]
+#                 else:
+#                     filter_conditions += [
+#                         PtRtListing.listing_check_in >= check_in_start,
+#                         PtRtListing.listing_check_in <= check_in_end,
+#                     ]
+
+#             elif year or month or day:
+#                 col = PtRtListing.listing_check_in
+#                 conditions = []
+#                 if year: conditions.append(extract("year", col) == int(year))
+#                 if month: conditions.append(extract("month", col) == int(month))
+#                 if day: conditions.append(extract("day", col) == int(day))
+#                 if conditions:
+#                     filter_conditions.append(and_(*conditions))
+#             else:
+#                 # Default 90-day window
+#                 filter_conditions.append(PtRtListing.listing_check_in.between(today, ninety_days))
+#         except ValueError as ve:
+#             print(f"⚠ Date parsing error: {ve}")
+#             filter_conditions.append(PtRtListing.listing_check_in.between(today, ninety_days))
+
+#             print("ruban_date_filters",check_in,check_out,check_in_str,check_out_str,year,month,day)
+
+#         # ---------------- Guests filter ----------------
+#         min_guests = filters.get("min_guests")
+#         if min_guests:
+#             try:
+#                 min_guests = int(min_guests)
+#                 query = query.filter(func.abs(UnitType.sleeps) >= min_guests)
+#             except ValueError:
+#                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
+
+#         # ---------------- Unit type filter ----------------
+#         unit_type_name = filters.get("unit_type_name")
+#         if unit_type_name:
+#             filter_conditions.append(PtRtListing.unit_type_name.ilike(f"%{str(unit_type_name).strip()}%"))
+
+#         # ---------------- Apply filters ----------------
+#         if filter_conditions:
+#             query = query.filter(and_(*filter_conditions))
+#         print("ruban_final_query",query)
+
+#         # ---------------- Unit type counts ----------------
+#         unit_type_filters = [f for f in filter_conditions if getattr(getattr(f, "left", None), "key", None) != "unit_type_name"]
+#         if resort_name:
+#             unit_type_filters.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
+
+#         unit_type_breakdown = [{"unit_type_name": ut[0], "listing_count": ut[1]} for ut in unit_type_counts]
+
+#         # ---------------- Price sorting ----------------
+#         price_sort = filters.get("price_sort", "asc")
+#         price_col_numeric = cast(PtRtListing.listing_price_night, Numeric)
+#         default_limit = 80
+
+#         if price_sort == "asc":
+#             query = query.order_by(asc(func.abs(price_col_numeric)))
+#         elif price_sort == "desc":
+#             query = query.order_by(desc(func.abs(price_col_numeric)))
+#             default_limit = 85
+#         elif price_sort == "cheapest":
+#             query = query.filter(func.abs(price_col_numeric) <= 333).order_by(asc(func.abs(price_col_numeric)))
+#         elif price_sort == "average":
+#             query = query.filter(func.abs(price_col_numeric).between(334, 666)).order_by(asc(func.abs(price_col_numeric)))
+#         elif price_sort == "highest":
+#             query = query.filter(func.abs(price_col_numeric) >= 667).order_by(desc(func.abs(price_col_numeric)))
+#             default_limit = 85
+
+#         # ---------------- Limit ----------------
+#         limit = int(filters.get("limit", default_limit))
+#         results = query.limit(limit).all()
+#         print("ruban_limited_results",results)
+
+#         # ---------------- Build structured results ----------------
+#         results_list = []
+#         for row in results:
+#             cancel_date_raw = row.listing_cancelation_date
+#             cancel_date = (
+#                 str(cancel_date_raw).split(" ")[0]
+#                 if cancel_date_raw and cancel_date_raw not in ["0000-00-00", "0000-00-00 00:00:00", None, ""]
+#                 else "Date not specified"
+#             )
+#             policy_desc = CANCELLATION_POLICY_DESCRIPTIONS.get(row.listing_cancelation_policy_option, "Policy not specified")
+#             slug = row.resort_slug or slugify_resort_name(row.resort_name) if row.resort_name else None
+#             resort_url = f"{BASE_LIST_URL}{slug}?startD=&endD=&adults=0&months=&dateOption=7" if slug else None
+#             booking_url = None
+#             if slug and row.id and row.listing_check_in and row.listing_check_out:
+#                 booking_url = (
+#                     f"{BASE_LIST_URL}{slug}"
+#                     f"?startD={row.listing_check_in.strftime('%Y-%m-%d')}"
+#                     f"&endD={row.listing_check_out.strftime('%Y-%m-%d')}"
+#                     f"&adults=0&months=&dateOption=7"
+#                 )
+
+#             display_price = f"from ${row.listing_price_night} per night" if row.listing_price_night else "Price not available"
+
+#             results_list.append({
+#                 "resort_id": row.resort_id,
+#                 "resort_name": row.resort_name,
+#                 "unit_type_name": row.unit_type_name or row.unit_type_name_fallback,
+#                 "sleeps": int(row.sleeps) if row.sleeps is not None else None,
+#                 "check_in": row.listing_check_in.strftime("%Y-%m-%d") if row.listing_check_in else None,
+#                 "check_out": row.listing_check_out.strftime("%Y-%m-%d") if row.listing_check_out else None,
+#                 "price_per_night": display_price,
+#                 "cancellation_policy_description": policy_desc,
+#                 "listing_cancelation_date": cancel_date,
+#                 "cancellation_info": f"{policy_desc} (By {cancel_date})",
+#                 "resort_url": resort_url,
+#                 "booking_url": booking_url,
+#             })
+
+#         # ---------------- Totals ----------------
+#         total_listings_for_resort = 0
+#         if results_list:
+#             first_resort_id = results_list[0]['resort_id']
+#             total_listings_for_resort = next((item.count for item in total_count_listings if item.resort_id == first_resort_id), 0)
+
+#             print("ruban_total_listings_for_resort", total_count_listings)
+
+#         final_result = {
+#             "results": results_list,
+#             "unit_type_breakdown": unit_type_breakdown,
+#             "total_listings_for_resort": total_listings_for_resort,
+#             "total_unit_for_resort": sum(ut[1] for ut in unit_type_counts)
+#         }
+
+#         return final_result
+
+#     except Exception as e:
+#         print(f"❌ Error in search_available_future_listings_merged: {str(e)}")
+#         session.rollback()
+#         return {"results": [], "unit_type_breakdown": {}}
+
+#     finally:
+#         session.close()
+
+
+
 def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
     session = SessionLocal()
     try:
@@ -1557,14 +1811,15 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
                 PtRtListing.listing_price_night,
                 PtRtListing.listing_cancelation_policy_option,
                 PtRtListing.listing_cancelation_date,
-                PtRtListing.unit_type_name,  # From v2
-                UnitType.sleeps,             # From v1
+                PtRtListing.unit_type_name,
+                UnitType.sleeps,
                 UnitType.name.label("unit_type_name_fallback"),
                 UnitType.id.label("unit_type_id"),
             )
             .join(UnitType, PtRtListing.unit_type_id == UnitType.id)
             .distinct()
         )
+        print("ruban_top", query)
 
         filter_conditions = []
 
@@ -1572,9 +1827,13 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
         resort_name = filters.get("resort_name")
         if resort_name:
             filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
+        print("ruban_resort_name_filter", filter_conditions)
 
-
-            
+        # ---------------- Unit type filter ----------------
+        unit_type_name = filters.get("unit_type_name")
+        if unit_type_name:
+            filter_conditions.append(PtRtListing.unit_type_name.ilike(f"%{unit_type_name.strip()}%"))
+        
         # ---------------- Total count listings with filter ----------------
         total_count_listings = (
             session.query(
@@ -1601,9 +1860,6 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
             .group_by(PtRtListing.unit_type_name)
             .all()
         )
-        # print("ruban_unit_type_counts", unit_type_counts)
-
-
 
         # ---------------- Non-date filters ----------------
         skip_fields = {
@@ -1619,9 +1875,7 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
                 )
 
         # ---------------- Date filters ----------------
-        today = datetime.combine(datetime.today().date(), datetime.min.time())
-        ninety_days = today + timedelta(days=90)
-
+        date_filters_applied = False
         check_in = filters.get("check_in")
         check_out = filters.get("check_out")
         check_in_str = filters.get("listing_check_in")
@@ -1635,6 +1889,7 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
                 ci_date = datetime.strptime(check_in, "%Y-%m-%d")
                 co_date = datetime.strptime(check_out, "%Y-%m-%d")
                 filter_conditions.append(PtRtListing.listing_check_in.between(ci_date, co_date))
+                date_filters_applied = True
 
             elif check_in_str and check_out_str:
                 ci_str, co_str = normalize_future_dates(check_in_str, check_out_str)
@@ -1644,24 +1899,9 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
                     PtRtListing.listing_check_in == check_in_date,
                     PtRtListing.listing_check_out == check_out_date,
                 ]
+                date_filters_applied = True
 
-            elif month and not check_in_str and not check_out_str:
-                ci_str, co_str = get_month_year_range(month, year)
-                check_in_start = datetime.strptime(ci_str, "%Y-%m-%d")
-                check_in_end = datetime.strptime(co_str, "%Y-%m-%d")
-                if day:
-                    specific_date = datetime(int(year), int(month), int(day))
-                    filter_conditions += [
-                        PtRtListing.listing_check_in == specific_date,
-                        PtRtListing.listing_check_out == specific_date,
-                    ]
-                else:
-                    filter_conditions += [
-                        PtRtListing.listing_check_in >= check_in_start,
-                        PtRtListing.listing_check_in <= check_in_end,
-                    ]
-
-            elif year or month or day:
+            elif month or year or day:
                 col = PtRtListing.listing_check_in
                 conditions = []
                 if year: conditions.append(extract("year", col) == int(year))
@@ -1669,36 +1909,52 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
                 if day: conditions.append(extract("day", col) == int(day))
                 if conditions:
                     filter_conditions.append(and_(*conditions))
-            else:
-                # Default 90-day window
+                    date_filters_applied = True
+
+            # Remove default 90-day filter entirely
+            if not date_filters_applied:
+                today = datetime.combine(datetime.today().date(), datetime.min.time())
+                ninety_days = today + timedelta(days=90)
                 filter_conditions.append(PtRtListing.listing_check_in.between(today, ninety_days))
+
         except ValueError as ve:
             print(f"⚠ Date parsing error: {ve}")
-            filter_conditions.append(PtRtListing.listing_check_in.between(today, ninety_days))
 
         # ---------------- Guests filter ----------------
         min_guests = filters.get("min_guests")
         if min_guests:
             try:
                 min_guests = int(min_guests)
-                query = query.filter(func.abs(UnitType.sleeps) >= min_guests)
+                query = query.filter(func.abs(UnitType.sleeps) == min_guests)
             except ValueError:
                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
-
-        # ---------------- Unit type filter ----------------
-        unit_type_name = filters.get("unit_type_name")
-        if unit_type_name:
-            filter_conditions.append(PtRtListing.unit_type_name.ilike(f"%{str(unit_type_name).strip()}%"))
 
         # ---------------- Apply filters ----------------
         if filter_conditions:
             query = query.filter(and_(*filter_conditions))
+            print("ruban_final_query", query)
 
-        # ---------------- Unit type counts ----------------
-        unit_type_filters = [f for f in filter_conditions if getattr(getattr(f, "left", None), "key", None) != "unit_type_name"]
-        if resort_name:
-            unit_type_filters.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
+        # # ---------------- Total count listings ----------------
+        # total_count_listings = (
+        #     session.query(
+        #         PtRtListing.resort_id,
+        #         func.count(PtRtListing.id).label("count")
+        #     )
+        #     .filter(*filter_conditions)
+        #     .group_by(PtRtListing.resort_id)
+        #     .all()
+        # )
 
+        # # ---------------- Unit type counts ----------------
+        # unit_type_counts = (
+        #     session.query(
+        #         PtRtListing.unit_type_name,
+        #         func.count(PtRtListing.id).label("count")
+        #     )
+        #     .filter(*filter_conditions)
+        #     .group_by(PtRtListing.unit_type_name)
+        #     .all()
+        # )
         unit_type_breakdown = [{"unit_type_name": ut[0], "listing_count": ut[1]} for ut in unit_type_counts]
 
         # ---------------- Price sorting ----------------
@@ -1766,8 +2022,6 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
         if results_list:
             first_resort_id = results_list[0]['resort_id']
             total_listings_for_resort = next((item.count for item in total_count_listings if item.resort_id == first_resort_id), 0)
-
-            print("ruban_total_listings_for_resort", total_count_listings)
 
         final_result = {
             "results": results_list,
