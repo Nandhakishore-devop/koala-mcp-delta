@@ -19,8 +19,8 @@ import time
 import re
 import sqlite3
 import pandas as pd
-from streamlit_mic_recorder import mic_recorder
-import pyttsx3
+# from streamlit_mic_recorder import mic_recorder
+# import pyttsx3
 
 
 
