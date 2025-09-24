@@ -1255,32 +1255,32 @@ def get_month_year_range(month_input: str, year_input: int = None):
 #         if resort_name:
 #             filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
 
-#         # ---------------- Total count listings with filter ----------------
-#         total_count_listings = (
-#             session.query(
-#                 PtRtListing.resort_id,
-#                 func.count(PtRtListing.id).label("count")
-#             )
-#             .filter(*filter_conditions)   # Apply full filters (resort_name, dates, etc.)
-#             .group_by(PtRtListing.resort_id)
-#             .all()
-#         )
+        # # ---------------- Total count listings with filter ----------------
+        # total_count_listings = (
+        #     session.query(
+        #         PtRtListing.resort_id,
+        #         func.count(PtRtListing.id).label("count")
+        #     )
+        #     .filter(*filter_conditions)   # Apply full filters (resort_name, dates, etc.)
+        #     .group_by(PtRtListing.resort_id)
+        #     .all()
+        # )
 
-#         # ---------------- Unit type counts for a specific resort ----------------
-#         unit_type_filters = [f for f in filter_conditions if not f.left.key == "unit_type_name"]
-#         if resort_name:
-#             # Use ilike for partial match, just like total_count_listings
-#             unit_type_filters.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
+        # # ---------------- Unit type counts for a specific resort ----------------
+        # unit_type_filters = [f for f in filter_conditions if not f.left.key == "unit_type_name"]
+        # if resort_name:
+        #     # Use ilike for partial match, just like total_count_listings
+        #     unit_type_filters.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
 
-#         unit_type_counts = (
-#             session.query(
-#                 PtRtListing.unit_type_name,
-#                 func.count(PtRtListing.id).label("count")
-#             )
-#             .filter(*unit_type_filters)
-#             .group_by(PtRtListing.unit_type_name)
-#             .all()
-#         )
+        # unit_type_counts = (
+        #     session.query(
+        #         PtRtListing.unit_type_name,
+        #         func.count(PtRtListing.id).label("count")
+        #     )
+        #     .filter(*unit_type_filters)
+        #     .group_by(PtRtListing.unit_type_name)
+        #     .all()
+        # )
 
 
 #         # # ---------------- Unit type counts (separate filtering) ----------------
@@ -1829,12 +1829,7 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
             filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
         print("ruban_resort_name_filter", filter_conditions)
 
-        # ---------------- Unit type filter ----------------
-        unit_type_name = filters.get("unit_type_name")
-        if unit_type_name:
-            filter_conditions.append(PtRtListing.unit_type_name.ilike(f"%{unit_type_name.strip()}%"))
-        
-        # ---------------- Total count listings with filter ----------------
+                # ---------------- Total count listings with filter ----------------
         total_count_listings = (
             session.query(
                 PtRtListing.resort_id,
@@ -1844,12 +1839,14 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
             .group_by(PtRtListing.resort_id)
             .all()
         )
+        print("ruban_total_count_listings", total_count_listings)
 
         # ---------------- Unit type counts for a specific resort ----------------
         unit_type_filters = [f for f in filter_conditions if not f.left.key == "unit_type_name"]
         if resort_name:
             # Use ilike for partial match, just like total_count_listings
             unit_type_filters.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
+        print("ruban_unit_type_filters", unit_type_filters)    
 
         unit_type_counts = (
             session.query(
@@ -1860,7 +1857,7 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
             .group_by(PtRtListing.unit_type_name)
             .all()
         )
-
+        print("ruban_unit_type_counts", unit_type_counts)
         # ---------------- Non-date filters ----------------
         skip_fields = {
             "year", "month", "day", "listing_check_in", "listing_check_out",
@@ -2026,9 +2023,9 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
 
         final_result = {
             "results": results_list,
-            "unit_type_breakdown": unit_type_breakdown,
             "total_listings_for_resort": total_listings_for_resort,
-            "total_unit_for_resort": sum(ut[1] for ut in unit_type_counts)
+            "unit_type_breakdown": unit_type_breakdown,
+            # "total_unit_for_resort": sum(ut[1] for ut in unit_type_counts)
         }
 
         return final_result
