@@ -243,6 +243,8 @@ def search_available_future_listings_merged_schema() -> Dict[str, Any]:
     - Cancellation policies and dates
     - URLs and booking info
     - Sorting and limits
+    - 90-day default window if no date specified
+    - Option to restrict to next 90 days using `next_90`
     - Debugging options
     """
 
