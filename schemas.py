@@ -333,6 +333,11 @@ def search_available_future_listings_merged_schema() -> Dict[str, Any]:
                         "description": "Minimum guest capacity required (filters by unit_types.sleeps)."
                     },
 
+                    "min_nights": {
+                        "type": "integer",
+                        "description": "Minimum number of nights required for the stay (filters by pt_rt_listings.listing_nights)."
+                    },
+
                     # Cancellation / policies
                     "listing_cancelation_date": {
                         "type": "string",

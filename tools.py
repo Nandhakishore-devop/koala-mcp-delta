@@ -2523,6 +2523,16 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
             except ValueError:
                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
 
+         # --------------nights stays filter ---------------
+        min_nights = filters.get("min_nights")
+        if min_nights:
+            try:
+                min_nights = int(min_nights)
+                filter_conditions.append(func.abs(PtRtListing.listing_nights) >= min_nights)
+            except ValueError:
+                print(f"⚠ Invalid min_nights value: {filters['min_nights']}") 
+            print("ruban_min_nights", min_nights)          
+
         # ---------------- Unit type filter ----------------
         if unit_type_name:
             filter_conditions.append(PtRtListing.unit_type_name.ilike(f"%{str(unit_type_name).strip()}%"))

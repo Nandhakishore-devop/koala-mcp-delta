@@ -247,3 +247,5 @@ class AssistantThread:
 #         If the user only asks for a suggestion (e.g., “can you suggest when to stay”) → provide suggestions in months only, without specifying exact dates.
 #         Only when the user explicitly provides specific check-in and check-out dates should you pass those exact dates to the tool.
         
+
+        
