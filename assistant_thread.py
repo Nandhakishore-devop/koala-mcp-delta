@@ -37,14 +37,6 @@ class AssistantThread:
         - When the user mentions a **specific resort name** (e.g., “Marriott’s Summit Watch”) or a **resort_id** and is asking about staying/availability.  
         - When the user specifies **dates or a time range** (e.g., “in November,” “next week,” “Jan 2026”).  
 
-        - Use **get_available_resorts** when the user mentions:
-        - Keywords related to resorts, hotels, or properties:  
-            “resort”, “resorts”, “resort details”, “resort info”,  
-            “show resorts”, “best resorts”, “luxury resorts”,  
-            “family resorts”, “resort options”, “nearby resorts”,  
-            “ski resorts”, “hotel”, “hotels”, “properties”.
-        - When the user specifies **a location** (country, state, city, region) without mentioning dates or stay terms.  
-            Examples: “Resorts in Park City,” “Show me hotels in Utah,” “Best resorts in Aruba.” 
 
 
             
