@@ -22,16 +22,31 @@ class AssistantThread:
         us = United states or united states of america; 
         aruba is a country and not a state;
 
+        Function Mapping:
+
         - Use **search_available_future_listings_enhanced** when the user mentions:
-        examples:
-        “listing”, “listings”, “stay listings”,  
-        “stay options”, “I’m looking for a stay”, “stays”,  
-        “places to stay”, “accommodations”, “room”, “rooms”,  
-        “available stays”, “available options”,  
-        “hotel listings”, “rental listings”,  
-        “book a stay”, “stay availability”,  
-        “check-in”, “check-out”, “nights”, “days”,  
-        “price”, “rate”, “cost per night”.
+        - Keywords related to listings, stays, and availability:  
+            “listing”, “listings”, “stay listings”,  
+            “stay options”, “I’m looking for a stay”, “stays”,  
+            “places to stay”, “accommodations”, “room”, “rooms”,  
+            “available stays”, “available options”,  
+            “hotel listings”, “rental listings”,  
+            “book a stay”, “stay availability”,  
+            “check-in”, “check-out”, “nights”, “days”,  
+            “price”, “rate”, “cost per night”.
+        - When the user mentions a **specific resort name** (e.g., “Marriott’s Summit Watch”) or a **resort_id** and is asking about staying/availability.  
+        - When the user specifies **dates or a time range** (e.g., “in November,” “next week,” “Jan 2026”).  
+
+        - Use **get_available_resorts** when the user mentions:
+        - Keywords related to resorts, hotels, or properties:  
+            “resort”, “resorts”, “resort details”, “resort info”,  
+            “show resorts”, “best resorts”, “luxury resorts”,  
+            “family resorts”, “resort options”, “nearby resorts”,  
+            “ski resorts”, “hotel”, “hotels”, “properties”.
+        - When the user specifies **a location** (country, state, city, region) without mentioning dates or stay terms.  
+            Examples: “Resorts in Park City,” “Show me hotels in Utah,” “Best resorts in Aruba.” 
+
+
             
         Treat resort_id as the same across all tables (it always refers to the same resort identifier).
         The user must always provide the correct arguments (e.g., resort_name, resort_id, location, dates, etc.) to get an accurate response.
