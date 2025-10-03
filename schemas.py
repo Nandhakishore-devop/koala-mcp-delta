@@ -228,7 +228,6 @@ def current_date():
     return datetime.datetime.now().strftime("%Y-%m-%d")
 
 
-
 def search_available_future_listings_merged_schema() -> Dict[str, Any]:
     """
     Unified schema for searching available listings across multiple resorts or a specific resort.
@@ -309,6 +308,10 @@ def search_available_future_listings_merged_schema() -> Dict[str, Any]:
                         "type": "integer",
                         "description": "Optional day of the month for check-in. Can be used with month and/or year."
                     },
+                    "next_90": {
+                        "type": "boolean",
+                        "description": "Restrict search to the next 90 days from today (default: false)."
+                    },
 
                     # Pricing / sorting
                     "currency_code": {
@@ -387,8 +390,6 @@ def search_available_future_listings_merged_schema() -> Dict[str, Any]:
             }
         }
     }
-
-
 
 # Updated get_all_function_schemas to include the new functions
 def get_all_function_schemas() -> List[Dict[str, Any]]:
