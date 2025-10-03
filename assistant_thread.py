@@ -22,23 +22,19 @@ class AssistantThread:
         us = United states or united states of america; 
         aruba is a country and not a state;
 
-        Function Mapping:
-
         - Use **search_available_future_listings_enhanced** when the user mentions:
-        - Keywords related to listings, stays, and availability:  
-            “listing”, “listings”, “stay listings”,  
-            “stay options”, “I’m looking for a stay”, “stays”,  
-            “places to stay”, “accommodations”, “room”, “rooms”,  
-            “available stays”, “available options”,  
-            “hotel listings”, “rental listings”,  
-            “book a stay”, “stay availability”,  
-            “check-in”, “check-out”, “nights”, “days”,  
-            “price”, “rate”, “cost per night”.
-        - When the user mentions a **specific resort name** (e.g., “Marriott’s Summit Watch”) or a **resort_id** and is asking about staying/availability.  
-        - When the user specifies **dates or a time range** (e.g., “in November,” “next week,” “Jan 2026”).  
+        examples:
+        with mensione the resort nme or resort id
+        “listing”, “listings”, “stay listings”,  
+        “stay options”, “I’m looking for a stay”, “stays”,  
+        “places to stay”, “accommodations”, “room”, “rooms”,  
+        “available stays”, “available options”,  
+        “hotel listings”, “rental listings”,  
+        “book a stay”, “stay availability”,  
+        “check-in”, “check-out”, “nights”, “days”,  
+        “price”, “rate”, “cost per night”.
 
-
-
+        
             
         Treat resort_id as the same across all tables (it always refers to the same resort identifier).
         The user must always provide the correct arguments (e.g., resort_name, resort_id, location, dates, etc.) to get an accurate response.
