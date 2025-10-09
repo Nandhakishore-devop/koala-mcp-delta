@@ -25,7 +25,7 @@ class AssistantThread:
         “price”, “rate”, “cost per night”.
         examples:
         (I'm going to Park City this November and would like to stay near the ski resort. We are a family of 4. 2 adults and 2 children in listings only)
-
+         city : park city
         the query is maxmim about “listings”
          
         Ensure that when a user provides only a year (e.g., “I’m going in 2026”) without a specific month or date, the assistant asks a clarifying question before fetching results.

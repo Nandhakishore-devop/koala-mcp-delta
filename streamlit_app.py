@@ -928,7 +928,7 @@ def main():
     with st.form(key="chat_form", clear_on_submit=True):
             # Render the text as <p>
             st.markdown(
-                '<p class="sticky-small-note">I can guide you with resort options and availability to make your vacation planning easier:</p>',
+                '<p class="sticky-small-note">I can guide you with resort options and availability to make your vacation planning easier:.</p>',
                 unsafe_allow_html=True
             )
             user_input = st.text_area(
