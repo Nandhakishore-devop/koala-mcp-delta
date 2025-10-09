@@ -2519,7 +2519,7 @@ def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
         if min_guests:
             try:
                 min_guests = int(min_guests)
-                filter_conditions.append(func.abs(UnitType.sleeps) == min_guests)
+                filter_conditions.append(func.abs(UnitType.sleeps) >= min_guests)
             except ValueError:
                 print(f"⚠ Invalid min_guests value: {filters['min_guests']}")
 
