@@ -1008,121 +1008,64 @@ def main():
 
         
 
-#         # Process with OpenAI       
-#         with st.spinner("🐨 Gathering info for you…"):
-#             # time.sleep(100)
-#             try:
-#                 # Decide whether to include schemas
-#                 include_schema = st.session_state.schema_limit_counter < 10
-
-#                 # Get message history
-#                 history = st.session_state.thread.get_history()
-
-#                 # if include_schema:
-#                 #     messages_to_send = history
-#                 #     tools_to_send = ALL_FUNCTION_SCHEMAS
-#                 #     st.session_state.schema_limit_counter += 1
-#                 #     print("include_schema_1",messages_to_send)
-#                 #     print("include_schema tools_to_send_2",tools_to_send)
-#                 # else:
-#                 #     schema_messages = history[:3]
-#                 #     recent_messages = history[-6:]  # Last 3 user-assistant pairs
-#                 #     messages_to_send = schema_messages + recent_messages
-#                 #     tools_to_send = []
-
-
-# #---------------- Updated Logic Here -----------------
-#                 if include_schema:
-#                         messages_to_send = history
-#                         tools_to_send = ALL_FUNCTION_SCHEMAS
-#                         st.session_state.schema_limit_counter += 1
-
-#                         # 🔹 Add schema & tools to chat history for UI rendering
-#                         st.session_state.messages.append({
-#                             "type": "schema",
-#                             "schema_name": "Function Schemas",
-#                             "schema_content": ALL_FUNCTION_SCHEMAS
-#                         })
-#                         st.session_state.messages.append({
-#                             "type": "tools",
-#                             "tools": ALL_FUNCTION_SCHEMAS
-#                         })
-#                 else:
-#                         schema_messages = history[:3]
-#                         recent_messages = history[-6:]  # Last 3 user-assistant pairs
-#                         messages_to_send = schema_messages + recent_messages
-#                         tools_to_send = []
-
-# #----------------------------------------------------
-
-#                 # First API call
-#                 response = st.session_state.client.chat.completions.create(
-#                     model="gpt-4o-mini",
-#                     messages=st.session_state.thread.get_history(),
-#                     tools=ALL_FUNCTION_SCHEMAS,
-#                     tool_choice="auto"
-                    
-#                 )
-#                 print("response_1",response)
-                
-#                 assistant_message = response.choices[0].message
-
         # Process with OpenAI       
         with st.spinner("🐨 Gathering info for you…"):
+            # time.sleep(100)
             try:
                 # Decide whether to include schemas
                 include_schema = st.session_state.schema_limit_counter < 10
 
-                # Get message history from thread
+                # Get message history
                 history = st.session_state.thread.get_history()
 
-                # Updated Logic: include schema if under limit
+                # if include_schema:
+                #     messages_to_send = history
+                #     tools_to_send = ALL_FUNCTION_SCHEMAS
+                #     st.session_state.schema_limit_counter += 1
+                #     print("include_schema_1",messages_to_send)
+                #     print("include_schema tools_to_send_2",tools_to_send)
+                # else:
+                #     schema_messages = history[:3]
+                #     recent_messages = history[-6:]  # Last 3 user-assistant pairs
+                #     messages_to_send = schema_messages + recent_messages
+                #     tools_to_send = []
+
+
+#---------------- Updated Logic Here -----------------
                 if include_schema:
-                    messages_to_send = history
-                    tools_to_send = ALL_FUNCTION_SCHEMAS
-                    st.session_state.schema_limit_counter += 1
+                        messages_to_send = history
+                        tools_to_send = ALL_FUNCTION_SCHEMAS
+                        st.session_state.schema_limit_counter += 1
 
-                    # Add schema & tools to UI rendering
-                    st.session_state.messages.append({
-                        "type": "schema",
-                        "schema_name": "Function Schemas",
-                        "schema_content": ALL_FUNCTION_SCHEMAS
-                    })
-                    st.session_state.messages.append({
-                        "type": "tools",
-                        "tools": ALL_FUNCTION_SCHEMAS
-                    })
+                        # 🔹 Add schema & tools to chat history for UI rendering
+                        st.session_state.messages.append({
+                            "type": "schema",
+                            "schema_name": "Function Schemas",
+                            "schema_content": ALL_FUNCTION_SCHEMAS
+                        })
+                        st.session_state.messages.append({
+                            "type": "tools",
+                            "tools": ALL_FUNCTION_SCHEMAS
+                        })
                 else:
-                    schema_messages = history[:3]
-                    recent_messages = history[-6:]  # Last 3 user-assistant pairs
-                    messages_to_send = schema_messages + recent_messages
-                    tools_to_send = []
+                        schema_messages = history[:3]
+                        recent_messages = history[-6:]  # Last 3 user-assistant pairs
+                        messages_to_send = schema_messages + recent_messages
+                        tools_to_send = []
 
-                # ---------------- API Call -----------------
+#----------------------------------------------------
+
+                # First API call
                 response = st.session_state.client.chat.completions.create(
                     model="gpt-4o-mini",
-                    messages=messages_to_send,   # Use messages_to_send instead of full history
-                    tools=tools_to_send,         # Use filtered tools
+                    messages=st.session_state.thread.get_history(),
+                    tools=ALL_FUNCTION_SCHEMAS,
                     tool_choice="auto"
+                    
                 )
-                print("response_1", response)
-
-                # Safely extract assistant message content
+                print("response_1",response)
+                
                 assistant_message = response.choices[0].message
-                reply_text = assistant_message.get("content", "Sorry, no response generated.")
-
-                # Append assistant message to UI state
-                st.session_state.messages.append({
-                    "type": "assistant",
-                    "content": reply_text
-                })
-
-                # Display in Streamlit
-                st.write(reply_text)
-
-            except Exception as e:
-                st.error(f"❌ Something went wrong: {str(e)}")
-
                 
                 # Track tokens and cost
                 if hasattr(response, 'usage') and response.usage:
@@ -1239,197 +1182,65 @@ def main():
                 st.error(f"❌ Error: {str(e)}")
 
 
-# def main():
-#     st.set_page_config(page_title="AI Resort Chatbot", page_icon="🏖️", layout="wide")
-#     st.title("🏖️ AI-Powered Resort Booking Assistant")
-
-#     # ------------------- Initialize Session State -------------------
-#     if "messages" not in st.session_state:
-#         st.session_state.messages = []
-#     if "thread" not in st.session_state:
-#         st.session_state.thread = Thread()
-#     if "schema_limit_counter" not in st.session_state:
-#         st.session_state.schema_limit_counter = 0
-#     if "input_counter" not in st.session_state:
-#         st.session_state.input_counter = 0
-#     if "total_tokens" not in st.session_state:
-#         st.session_state.total_tokens = 0
-#     if "total_cost" not in st.session_state:
-#         st.session_state.total_cost = 0
-
-#     # ------------------- Display Sidebar Cost Info -------------------
-#     display_cost_info()
-
-#     # ------------------- Header -------------------
-#     st.markdown(
-#         """
-#         <div class="main-header" style="text-align:center;">
-#             <img src="https://koalaadmin-prod.s3.us-east-2.amazonaws.com/static/assets/img/Koala-Home-hero-logo.svg" 
-#                 alt="Header Image" width="200">
-#         </div>
-#         """,
-#         unsafe_allow_html=True
-#     )
-
-#     # ------------------- Show Previous Messages -------------------
-#     for message in st.session_state.messages:
-#         if message["type"] == "user":
-#             display_message(message["content"], is_user=True)
-#         elif message["type"] == "assistant":
-#             display_message(message["content"], is_user=False)
-#         elif message["type"] == "function_call":
-#             display_function_call(
-#                 message["function_name"],
-#                 message["arguments"],
-#                 message.get("result")
-#             )
-#         elif message["type"] == "schema":
-#             display_schema(message["schema_name"], message["schema_content"])
-
-#     # ------------------- Voice Input -------------------
-#     st.markdown("🎤 **Speak your query instead of typing**")
-#     voice_input = mic_recorder(
-#         start_prompt="Start Recording",
-#         stop_prompt="Stop Recording",
-#         just_once=True,
-#         use_container_width=True,
-#         format="wav"
-#     )
-
-#     user_input = None
-#     if voice_input:
-#         with open("temp_audio.wav", "wb") as f:
-#             f.write(voice_input["bytes"])
-#         with open("temp_audio.wav", "rb") as audio_file:
-#             transcript = st.session_state.client.audio.transcriptions.create(
-#                 model="whisper-1",
-#                 file=audio_file
-#             )
-#         st.success(f"🗣️ You said: {transcript.text}")
-#         user_input = transcript.text
-
-#     # ------------------- Text Input -------------------
-#     with st.form(key=f"chat_form_{st.session_state.input_counter}", clear_on_submit=True):
-#         st.markdown(
-#             '<p class="sticky-small-note">I can guide you with resort options and availability to make your vacation planning easier:</p>',
-#             unsafe_allow_html=True
-#         )
-#         text_input = st.text_area("User Input", key="user_input", label_visibility="collapsed")
-#         submit_button = st.form_submit_button("Submit")
-
-#     if submit_button and text_input.strip():
-#         user_input = text_input
-
-#     # ------------------- Process Input -------------------
-#     if user_input:
-#         # Save user message
-#         st.session_state.messages.append({"type": "user", "content": user_input})
-#         st.session_state.thread.add_user_message(user_input)
-#         display_message(user_input, is_user=True)
-
-#         # Handle greetings locally
-#         greeting_response = handle_simple_greetings(user_input)
-#         if greeting_response:
-#             st.session_state.messages.append({"type": "assistant", "content": greeting_response})
-#             display_message(greeting_response, is_user=False)
-#             st.session_state.input_counter += 1
-#             st.rerun()
-#             return
-
-#         # ------------------- GPT Processing -------------------
-#         with st.spinner("🐨 Gathering info for you…"):
-#             try:
-#                 include_schema = st.session_state.schema_limit_counter < 10
-#                 if include_schema:
-#                     messages_to_send = st.session_state.thread.get_history()
-#                     tools_to_send = ALL_FUNCTION_SCHEMAS
-#                     st.session_state.schema_limit_counter += 1
-#                     st.session_state.messages.append({
-#                         "type": "schema",
-#                         "schema_name": "Function Schemas",
-#                         "schema_content": ALL_FUNCTION_SCHEMAS
-#                     })
-#                 else:
-#                     schema_messages = st.session_state.thread.get_history()[:3]
-#                     recent_messages = st.session_state.thread.get_history()[-6:]
-#                     messages_to_send = schema_messages + recent_messages
-#                     tools_to_send = []
-
-#                 # First API call
-#                 response = st.session_state.client.chat.completions.create(
-#                     model="gpt-4o-mini",
-#                     messages=messages_to_send,
-#                     tools=tools_to_send,
-#                     tool_choice="auto"
-#                 )
-#                 assistant_message = response.choices[0].message
-
-#                 if hasattr(response, "usage") and response.usage:
-#                     st.session_state.total_tokens += response.usage.total_tokens
-#                     st.session_state.total_cost += calculate_cost(
-#                         response.usage.prompt_tokens,
-#                         response.usage.completion_tokens
-#                     )
-
-#                 # Save assistant message
-#                 st.session_state.thread.add_assistant_message({
-#                     "role": "assistant",
-#                     "content": assistant_message.content,
-#                     "tool_calls": assistant_message.tool_calls
-#                 })
-
-#                 # ------------------- Tool Calls -------------------
-#                 if assistant_message.tool_calls:
-#                     for tool_call in assistant_message.tool_calls:
-#                         fn_name = tool_call.function.name
-#                         arguments = json.loads(tool_call.function.arguments)
-#                         tool_result = call_tool(fn_name, **arguments)
-#                         tool_result_str = json.dumps(tool_result, indent=2, default=str)
-
-#                         st.session_state.messages.append({
-#                             "type": "function_call",
-#                             "function_name": fn_name,
-#                             "arguments": tool_call.function.arguments,
-#                             "result": tool_result_str
-#                         })
-#                         st.session_state.thread.add_assistant_message({
-#                             "role": "tool",
-#                             "tool_call_id": tool_call.id,
-#                             "content": tool_result_str
-#                         })
-
-#                     # Final GPT response
-#                     final_response = st.session_state.client.chat.completions.create(
-#                         model="gpt-4o-mini",
-#                         messages=st.session_state.thread.get_history(),
-#                         tools=tools_to_send,
-#                         tool_choice="auto"
-#                     )
-#                     final_message = final_response.choices[0].message
-#                     if final_message.content:
-#                         st.session_state.messages.append({
-#                             "type": "assistant",
-#                             "content": final_message.content
-#                         })
-#                         display_message(final_message.content, is_user=False)
-#                         speak_text(final_message.content)
-#                 else:
-#                     if assistant_message.content:
-#                         st.session_state.messages.append({
-#                             "type": "assistant",
-#                             "content": assistant_message.content
-#                         })
-#                         display_message(assistant_message.content, is_user=False)
-#                         speak_text(assistant_message.content)
-
-#                 st.session_state.input_counter += 1
-#                 st.rerun()
-
-#             except Exception as e:
-#                 st.error(f"❌ Error: {str(e)}")
-
-
-
 
 if __name__ == "__main__":
     main()
+
+
+
+
+        # # Process with OpenAI       
+        # with st.spinner("🐨 Gathering info for you…"):
+        #     try:
+        #         # Decide whether to include schemas
+        #         include_schema = st.session_state.schema_limit_counter < 10
+
+        #         # Get message history from thread
+        #         history = st.session_state.thread.get_history()
+
+        #         # Updated Logic: include schema if under limit
+        #         if include_schema:
+        #             messages_to_send = history
+        #             tools_to_send = ALL_FUNCTION_SCHEMAS
+        #             st.session_state.schema_limit_counter += 1
+
+        #             # Add schema & tools to UI rendering
+        #             st.session_state.messages.append({
+        #                 "type": "schema",
+        #                 "schema_name": "Function Schemas",
+        #                 "schema_content": ALL_FUNCTION_SCHEMAS
+        #             })
+        #             st.session_state.messages.append({
+        #                 "type": "tools",
+        #                 "tools": ALL_FUNCTION_SCHEMAS
+        #             })
+        #         else:
+        #             schema_messages = history[:3]
+        #             recent_messages = history[-6:]  # Last 3 user-assistant pairs
+        #             messages_to_send = schema_messages + recent_messages
+        #             tools_to_send = []
+
+        #         # ---------------- API Call -----------------
+        #         response = st.session_state.client.chat.completions.create(
+        #             model="gpt-4o-mini",
+        #             messages=messages_to_send,   # Use messages_to_send instead of full history
+        #             tools=tools_to_send,         # Use filtered tools
+        #             tool_choice="auto"
+        #         )
+        #         print("response_1", response)
+
+        #         # Safely extract assistant message content
+        #         assistant_message = response.choices[0].message
+        #         reply_text = assistant_message.get("content", "Sorry, no response generated.")
+
+        #         # Append assistant message to UI state
+        #         st.session_state.messages.append({
+        #             "type": "assistant",
+        #             "content": reply_text
+        #         })
+
+        #         # Display in Streamlit
+        #         st.write(reply_text)
+
+        #     except Exception as e:
+        #         st.error(f"❌ Something went wrong: {str(e)}")

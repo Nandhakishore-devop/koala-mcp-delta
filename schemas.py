@@ -88,7 +88,7 @@ def get_available_resorts_schema() -> Dict[str, Any]:
     return {
         "type": "function",
         "function": {
-            "name": "get_available_resorts",
+            "name": "search_available_future_listings_merged",
             "description": (
                 "Get a list of resorts from the resort_migration table. "
                 "Supports filtering by country, city, state, county, and location type. "
