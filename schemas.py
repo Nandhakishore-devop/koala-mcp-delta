@@ -88,7 +88,7 @@ def get_available_resorts_schema() -> Dict[str, Any]:
     return {
         "type": "function",
         "function": {
-            "name": "search_available_future_listings_merged",
+            "name": "get_available_resorts",
             "description": (
                 "Get a list of resorts from the resort_migration table. "
                 "Supports filtering by country, city, state, county, and location type. "
@@ -183,7 +183,7 @@ def get_user_bookings_schema() -> Dict[str, Any]:
                     },
                     "year": {
                         "type": "integer",
-                        "description": "Optional filter for the check-in year (e.g., 2028)."
+                        "description": "Optional filter for the check-in year (e.g., 2025)."
                     },
                     "month": {
                         "type": "integer",
@@ -259,6 +259,7 @@ def search_available_future_listings_merged_schema() -> Dict[str, Any]:
                 "Use this tool when the user asks about availability, pricing, or comparisons. "
                 "If the user mentions a specific resort name or ID, it will search only that resort. "
                 "Otherwise, it searches across multiple resorts in the specified location."
+                "keywords: availability, available listings, listings ,stays , lookings stays , compare, booking, reserve, related for bookable listings.... etc"
             ),
             "parameters": {
                 "type": "object",
