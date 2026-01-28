@@ -8,8 +8,7 @@ from threading import Thread
 import streamlit as st
 from typing import Dict, Any, List
 from openai import OpenAI
-from schemas import ALL_FUNCTION_SCHEMAS
-from tools import call_tool
+from tools import call_tool, ALL_FUNCTION_SCHEMAS
 from dotenv import load_dotenv
 from assistant_thread import AssistantThread
 import time
@@ -633,7 +632,7 @@ def handle_simple_greetings(user_input: str) -> str:
     # Define greeting patterns and responses
     greeting_responses = {
         # Basic greetings
-        # 'hi': "Hey there! 😊 How can I assist you today? Are you looking for a fantastic vacation rental or resort?",
+        'hi': "Hey there! 😊 How can I assist you today? Are you looking for a fantastic vacation rental or resort?",
         'hey': "Hey! 😊 Ready to plan your next vacation? I'm here to help you find amazing resorts!",
         'good morning': "Good morning! ☀️ What a beautiful day to plan a resort getaway! How can I assist you?",
         'good afternoon': "Good afternoon! 🌅 Hope you're having a great day! Let's find you an amazing resort experience.",
@@ -658,13 +657,9 @@ def handle_simple_greetings(user_input: str) -> str:
     # Check for exact matches first
     if user_input_lower in greeting_responses:
         return greeting_responses[user_input_lower]
+
     
-    # Check for partial matches
-    for greeting, response in greeting_responses.items():
-        if greeting in user_input_lower:
-            return response
-    
-    # Return None if no greeting pattern matches
+    # Return None if no exact greeting pattern matches
     return None
     """Process a function call from OpenAI and return the result."""
     function_name = function_call.name
