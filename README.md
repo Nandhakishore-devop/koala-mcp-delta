@@ -1,6 +1,6 @@
 Koala Chat Bot (Koala MCP Delta)
 
-A sophisticated AI-powered chatbot designed for resort booking and vacation planning. This application leverages Streamlit for the user interface and OpenAI's GPT models with function calling (MCP tools) to provide real-time resort availability, listings, and detailed information.
+A sophisticated AI-powered chatbot designed for resort booking and vacation planning. This application leverages Streamlit for the user interface and OpenAI's GPT models with function calling to provide real-time resort availability, listings, and detailed information.
 
 Features
 
