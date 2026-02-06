@@ -224,7 +224,6 @@ class ResortAmenity(Base):
     id = Column(Integer, primary_key=True)
     resort_id = Column(Integer, ForeignKey("resorts.id"), nullable=False)
     amenity_id = Column(Integer, ForeignKey("amenities.id"), nullable=False)
-    has_deleted = Column(Integer, default=0)
     resort = relationship("Resort", back_populates="resort_amenities")
     amenity = relationship("Amenity", back_populates="resort_amenities")
 

@@ -174,22 +174,19 @@ def get_resort_details(
             # 1. Try by ID first if provided
             if resort_id:
                 try:
-                    # Ensure it's an integer
                     rid = int(resort_id)
                     resort = session.query(Resort).filter(Resort.id == rid, Resort.has_deleted == 0).first()
                 except (ValueError, TypeError):
-                    pass # Not a valid integer ID
+                    pass
             
             # 2. Try by Name if ID failed or wasn't provided
             if not resort and resort_name:
                 name_search = resort_name.strip()
                 resort = session.query(Resort).filter(Resort.name.ilike(f"%{name_search}%"), Resort.has_deleted == 0).first()
                 
-                # 3. Fuzzy fallback: If name is long, try matching parts of it 
-                # (e.g., "Club Wyndham Bonnet Creek" -> try "Bonnet Creek")
+                # 3. Fuzzy fallback
                 if not resort and len(name_search.split()) > 2:
                     words = name_search.split()
-                    # Try the last two words which usually contain the core name
                     short_name = " ".join(words[-2:])
                     resort = session.query(Resort).filter(Resort.name.ilike(f"%{short_name}%"), Resort.has_deleted == 0).first()
 
@@ -227,14 +224,21 @@ def get_resort_details(
                 UnitType.resort_id == resort.id, UnitType.has_deleted == 0
             ).all()
 
+            # Expanded statuses for richer data
+            statuses = ['active', 'pending', 'booked', 'needs_fulfiment', 'fulfilment_request']
             listings_stats = {
                 status: session.query(Listing).filter(
                     Listing.resort_id == resort.id,
                     Listing.has_deleted == 0,
                     Listing.status == status
                 ).count()
-                for status in ['active', 'pending', 'booked']
+                for status in statuses
             }
+
+            # Total bookings count
+            total_bookings = session.query(Booking).join(
+                Listing, Booking.listing_id == Listing.id
+            ).filter(Listing.resort_id == resort.id).count()
 
             reviews = (
                 session.query(ResortReview)
@@ -251,16 +255,54 @@ def get_resort_details(
             return {
                 "id": resort.id,
                 "name": resort.name,
+                "slug": resort.slug,
                 "address": resort.address,
                 "city": resort.city,
+                "state": resort.state,
+                "country": resort.country,
+                "zip": resort.zip,
+                "county": resort.county,
+                "highlight_quote": resort.highlight_quote,
                 "description": resort.description,
-                "unit_types": [{"id": ut.id, "name": ut.name} for ut in unit_types],
+                "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}" if resort.creator else "Unknown",
+                "creator_email": resort.creator.email if resort.creator else "Unknown",
+                "status": resort.status,
+                "unit_types": [{"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types],
                 "listings_by_status": listings_stats,
+                "total_bookings": total_bookings,
                 "top_image": image_data,
                 "amenities": amenities_data,
                 "reviews": reviews_data
             }
         return {"error": "Missing parameters."}
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        session.close()
+
+def get_user_profile(user_email: str) -> Dict[str, Any]:
+    """Get user profile information including booking and listing counts."""
+    session = SessionLocal()
+    try:
+        user = session.query(User).filter(User.email == user_email, User.has_deleted == 0).first()
+        if not user:
+            return {"error": f"User with email {user_email} not found"}
+        
+        bookings_count = session.query(Booking).filter(Booking.user_id == user.id).count()
+        owned_listings_count = session.query(Booking).filter(Booking.owner_id == user.id).count()
+        created_resorts_count = session.query(Resort).filter(Resort.creator_id == user.id, Resort.has_deleted == 0).count()
+        
+        return {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "phone_number": user.phone_number,
+            "status": user.status,
+            "total_bookings": bookings_count,
+            "owned_listings": owned_listings_count,
+            "created_resorts": created_resorts_count
+        }
     except Exception as e:
         return {"error": str(e)}
     finally:
@@ -273,38 +315,52 @@ def search_resorts_by_amenities(
 ) -> List[Dict[str, Any]]:
     session = SessionLocal()
     try:
-        amenity_ids = [
-            a[0] for a in session.query(Amenity.id)
-            .filter(func.lower(Amenity.name).in_([name.lower() for name in amenities]))
-            .all()
-        ]
-        if not amenity_ids: return []
+        from sqlalchemy.orm import joinedload
+        # Group IDs by the keyword that found them to support match_all logic
+        keyword_to_ids = {}
+        all_found_ids = set()
+
+        for term in amenities:
+            term = term.strip().lower()
+            if not term: continue
+            
+            # Find all amenities that CONTAIN this term
+            # Using .like() with func.lower() for standard SQL compatibility
+            ids = [
+                a[0] for a in session.query(Amenity.id)
+                .filter(func.lower(Amenity.name).like(f"%{term}%"))
+                .all()
+            ]
+            if ids:
+                keyword_to_ids[term] = set(ids)
+                all_found_ids.update(ids)
+
+        if not keyword_to_ids:
+            return []
+
+        # Start with a base query and eager load amenities to avoid lazy-loading issues
+        query = session.query(Resort).filter(Resort.has_deleted == 0)
+        query = query.options(joinedload(Resort.resort_amenities).joinedload(ResortAmenity.amenity))
 
         if match_all:
-            subquery = (
-                session.query(ResortAmenity.resort_id)
-                .filter(ResortAmenity.amenity_id.in_(amenity_ids))
-                .group_by(ResortAmenity.resort_id)
-                .having(func.count(func.distinct(ResortAmenity.amenity_id)) == len(amenity_ids))
-                .subquery()
-            )
-            resorts_query = session.query(Resort).filter(Resort.id.in_(subquery))
+            # Find resorts that match ALL keywords (intersection of resort sets)
+            for keyword, ids in keyword_to_ids.items():
+                # For each keyword, at least one of its matching amenities must be present
+                subq = session.query(ResortAmenity.resort_id).filter(ResortAmenity.amenity_id.in_(list(ids))).subquery()
+                query = query.filter(Resort.id.in_(subq))
         else:
-            resorts_query = (
-                session.query(Resort)
-                .join(ResortAmenity, Resort.id == ResortAmenity.resort_id)
-                .filter(ResortAmenity.amenity_id.in_(amenity_ids))
-                .distinct()
-            )
+            # Any match will do
+            query = query.join(ResortAmenity, Resort.id == ResortAmenity.resort_id)
+            query = query.filter(ResortAmenity.amenity_id.in_(list(all_found_ids))).distinct()
 
-        resorts = resorts_query.filter(Resort.has_deleted == 0).limit(limit).all()
+        results = query.limit(limit).all()
         return [
             {
                 "resort_id": r.id,
                 "resort_name": r.name,
-                "amenities": [ra.amenity.name for ra in r.resort_amenities]
+                "amenities": [ra.amenity.name for ra in r.resort_amenities if ra.amenity]
             }
-            for r in resorts
+            for r in results
         ]
     finally:
         session.close()

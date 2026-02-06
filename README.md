@@ -1,4 +1,4 @@
-Koala Chat Bot (Koala MCP Delta)
+Koala Chat Bot
 
 A sophisticated AI-powered chatbot designed for resort booking and vacation planning. This application leverages Streamlit for the user interface and OpenAI's GPT models with function calling to provide real-time resort availability, listings, and detailed information.
 
@@ -22,7 +22,7 @@ Installation
     python -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate
     ```
-3.  **Install dependencies**:
+3.  Install dependencies:
     ```bash
     pip install -r requirements.txt
     ```

@@ -3,7 +3,8 @@ from tools.resort_tools import (
     get_city_from_resort, 
     get_available_resorts, 
     get_resort_details, 
-    search_resorts_by_amenities
+    search_resorts_by_amenities,
+    get_user_profile
 )
 from tools.booking_tools import (
     get_user_bookings, 
@@ -12,7 +13,7 @@ from tools.booking_tools import (
     get_cancellation_policy
 )
 from tools.search_tools import search_available_future_listings_merged
-from tools.utils import get_user_profile, test_database_connection
+from tools.utils import test_database_connection
 from src.database.db import get_database_url, initialize_database
 from tools.schema_utils import generate_schema
 

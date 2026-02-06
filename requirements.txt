@@ -6,4 +6,3 @@ python-dotenv==1.0.0
 PyMySQL==1.1.1 
 dateparser
 streamlit
-mcp[cli]
