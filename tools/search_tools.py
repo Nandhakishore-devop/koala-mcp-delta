@@ -1,6 +1,6 @@
 import re
 import calendar
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from datetime import datetime, timedelta, date
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_, cast, Numeric, extract, asc, desc
@@ -56,7 +56,55 @@ def get_month_year_range(month_input: str, year_input: int = None):
     ci_str, co_str = normalize_future_dates(first_day.strftime("%Y-%m-%d"), last_day.strftime("%Y-%m-%d"))
     return ci_str, co_str
 
-def search_available_future_listings_merged(**filters) -> Dict[str, Any]:
+def search_available_future_listings_merged(
+    resort_id: Optional[int] = None,
+    resort_name: Optional[str] = None,
+    unit_type_name: Optional[str] = None,
+    check_in: Optional[str] = None,
+    check_out: Optional[str] = None,
+    listing_check_in: Optional[str] = None,
+    listing_check_out: Optional[str] = None,
+    year: Optional[int] = None,
+    month: Optional[Union[str, int]] = None,
+    day: Optional[int] = None,
+    min_guests: Optional[int] = None,
+    min_nights: Optional[int] = None,
+    price_sort: Optional[str] = "asc",
+    limit: Optional[int] = None,
+    **kwargs
+) -> Dict[str, Any]:
+    """
+    Search for available resort listings with various filters.
+    
+    :param resort_id: Internal ID of the resort.
+    :param resort_name: Name of the resort (partial match).
+    :param unit_type_name: Type of unit (e.g., 'Studio', '1 Bedroom').
+    :param check_in: Check-in date (YYYY-MM-DD).
+    :param check_out: Check-out date (YYYY-MM-DD).
+    :param year: Specific year for availability.
+    :param month: Specific month (name or number).
+    :param min_guests: Minimum sleep capacity.
+    :param price_sort: Sort order for price ('asc', 'desc', 'cheapest', etc.).
+    """
+    # Combine explicit args and kwargs into filters dict for existing logic
+    filters = {
+        "resort_id": resort_id,
+        "resort_name": resort_name,
+        "unit_type_name": unit_type_name,
+        "check_in": check_in,
+        "check_out": check_out,
+        "listing_check_in": listing_check_in,
+        "listing_check_out": listing_check_out,
+        "year": year,
+        "month": month,
+        "day": day,
+        "min_guests": min_guests,
+        "min_nights": min_nights,
+        "price_sort": price_sort,
+        "limit": limit
+    }
+    filters.update(kwargs)
+    
     session = SessionLocal()
     try:
         # ---------------- Base query ----------------

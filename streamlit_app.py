@@ -650,8 +650,11 @@ def handle_simple_greetings(user_input: str) -> str:
         'whats up': "Just ready to help you book your dream resort! ✨ What destination interests you?",
         
         'okay': "Perfect! 🌴 How can I help you with your resort booking today?",
-
         
+        # Identity questions
+        'what is koala': "Koala is a premium vacation rental marketplace where you can find and book amazing resort stays! 🐨 We offer a curated selection of verified listings with professional photos and competitive prices. We're currently rated 9.8/10 for our service! 🏖️ Are you looking for any specific destination today?",
+        'who are you': "I'm Myles AI, your personal vacation planning assistant from Koala! 🐨 I'm here to help you discover incredible resorts, check availability, and book your dream vacation. How can I assist you today? 🌴",
+        'what can you do': "I can help you find resorts by location or amenities, check real-time availability for stays, provide details about resort features, and guide you through the booking process! 🐨 Just ask me about a place or a type of vacation you're interested in! 🏨",
     }
     
     # Check for exact matches first
@@ -1071,7 +1074,7 @@ def main():
                 # Add assistant message to thread
                 st.session_state.thread.add_assistant_message({
                     "role": "assistant",
-                    "content": assistant_message.content,
+                    "content": assistant_message.content or "", # Ensure content is never None
                     "tool_calls": assistant_message.tool_calls
                 })
                                 
@@ -1094,11 +1097,6 @@ def main():
 
 
                         # Convert result to JSON string
-                        if isinstance(tool_result, dict):
-                            tool_result_str = json.dumps(tool_result, indent=2, default=str)
-                        else:
-                            tool_result_str = json.dumps({"result": tool_result}, indent=2, default=str)
-                                            # Convert result to JSON string
                         if isinstance(tool_result, dict):
                             tool_result_str = json.dumps(tool_result, indent=2, default=str)
                         else:
@@ -1148,7 +1146,7 @@ def main():
                     # Add final assistant message
                     st.session_state.thread.add_assistant_message({
                         "role": "assistant",
-                        "content": final_message.content
+                        "content": final_message.content or "" # Ensure content is never None
                     })
 
                     print("final_message_1",final_message)
