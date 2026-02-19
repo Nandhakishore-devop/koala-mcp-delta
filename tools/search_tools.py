@@ -215,9 +215,9 @@ def search_available_future_listings_merged(
             elif year or month or day:
                 col = PtRtListing.listing_check_in
                 conditions = []
-                if year: conditions.append(extract("year", col) == int(year))
-                if month: conditions.append(extract("month", col) == int(month))
-                if day: conditions.append(extract("day", col) == int(day))
+                if year is not None: conditions.append(extract("year", col) == int(year))
+                if month is not None: conditions.append(extract("month", col) == int(month))
+                if day is not None: conditions.append(extract("day", col) == int(day))
                 if conditions:
                     date_conditions.append(and_(*conditions))
                     date_filters_applied = True
@@ -227,8 +227,13 @@ def search_available_future_listings_merged(
             two_eighty_days = today + timedelta(days=280)
 
             if not date_filters_applied:
-                # Case A: User never gave a date -> always default 0–90 days first
-                date_conditions.append(PtRtListing.listing_check_in.between(today, ninety_days))
+                # If we are searching for a specific owner's listings, don't restrict to next 90 days by default
+                if filters.get("listing_owner_id"):
+                    # Still show future/current primarily but don't strictly cap at 90 days if nothing found
+                    date_conditions.append(PtRtListing.listing_check_in >= today - timedelta(days=365)) # Show last year to future
+                else:
+                    # Case A: Regular search -> default 0–90 days first
+                    date_conditions.append(PtRtListing.listing_check_in.between(today, ninety_days))
 
             # ---------------- Preview results ----------------
             preview_query = base_query.filter(and_(*filter_conditions), and_(*date_conditions))
@@ -296,7 +301,7 @@ def search_available_future_listings_merged(
             default_limit = 85
 
         # ---------------- Limit ----------------
-        limit = int(filters.get("limit", default_limit))
+        limit = int(filters.get("limit") or default_limit)
         results = query.limit(limit).all()
 
         # ---------------- Build structured results ----------------

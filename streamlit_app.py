@@ -592,6 +592,49 @@ st.markdown(
 
 
 
+        .quick-actions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action-card {
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+            color: #333 !important;
+            flex: 1 1 calc(50% - 12px);
+            min-width: 250px;
+            text-decoration: none;
+        }
+
+        .quick-action-card:hover {
+            border-color: #1CB954;
+            box-shadow: 0 4px 12px rgba(28, 185, 84, 0.15);
+            transform: translateY(-2px);
+            background-color: #f9f9f9;
+        }
+
+        .quick-action-icon {
+            font-size: 20px;
+            background: #f0fdf4;
+            padding: 8px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
     </style>
     """,
     unsafe_allow_html=True
@@ -604,12 +647,24 @@ st.markdown(
 
 
 
+# Handle query parameters for username
+if 'username' not in st.session_state:
+    st.session_state.username = st.query_params.get("username", "Boss")
+
+# Map username to database user ID (Mocking a login/session)
+if 'user_id' not in st.session_state:
+    # Defaulting "Boss" to Priya (ID 4785) who has 172 listings
+    st.session_state.user_id = 4785 if st.session_state.username == "Boss" else None
+
 # Initialize session state
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 if 'thread' not in st.session_state:
-    st.session_state.thread = AssistantThread()
+    st.session_state.thread = AssistantThread(
+        username=st.session_state.username,
+        user_id=st.session_state.user_id
+    )
 
 if 'total_tokens' not in st.session_state:
     st.session_state.total_tokens = 0
@@ -625,63 +680,90 @@ if 'client' not in st.session_state:
     else:
         st.session_state.client = None
 
-def handle_simple_greetings(user_input: str) -> str:
-    """Handle simple greetings and common phrases without calling LLM."""
+
+import re as _re
+
+# Patterns that indicate a greeting or small-talk (no resort intent)
+_GREETING_PATTERNS = _re.compile(
+    r"^("
+    r"hi+|hey+(\s+there)?|hello+|howdy|hiya|yo|sup|what'?s\s*up|greetings|"
+    r"good\s*(morning|afternoon|evening|day|night)|"
+    r"how\s+are\s+you|how\s+r\s+u|how\s+do\s+you\s+do|"
+    r"thank(s|\s+you|\s+u)|thx|ty|"
+    r"ok(ay)?|sure|alright|great|cool|"
+    r"who\s+are\s+you|what\s+(are|is|can)\s+(you|koala)|"
+    r"what\s+do\s+you\s+do"
+    r")(\s+(myles|koala))?[\s!?.]*$",
+    _re.IGNORECASE
+)
+
+def handle_simple_greetings(client, user_input: str, history: List[Dict] = None):
+    """
+    Fast-path: check hardcoded dictionary first.
+    If no match but input looks like a greeting, use a lightweight LLM call.
+    Returns a response string, or None if it's not a greeting at all.
+    """
     user_input_lower = user_input.lower().strip()
-    
-    # Define greeting patterns and responses
+
+    # --- Hardcoded fast-path responses ---
     greeting_responses = {
-        # Basic greetings
-        'hi': "Hey there! 😊 How can I assist you today? Are you looking for a fantastic vacation rental or resort?",
-        'hey': "Hey! 😊 Ready to plan your next vacation? I'm here to help you find amazing resorts!",
-        'good morning': "Good morning! ☀️ What a beautiful day to plan a resort getaway! How can I assist you?",
-        'good afternoon': "Good afternoon! 🌅 Hope you're having a great day! Let's find you an amazing resort experience.",
-        'good evening': "Good evening! 🌙 Perfect time to plan your next vacation! What can I help you with?",
-        
-        # Thank you responses
-        'thank you': "You're very welcome! 😊 Is there anything else I can help you with for your resort booking?",
-        'thanks': "My pleasure! 🌟 Feel free to ask if you need help with anything else!",
-        'thank u': "You're welcome! 💫 Happy to help with your resort needs anytime!",
-        
-        
-        # Other common phrases
-        'how are you': "I'm doing great, thank you for asking! 🤖 I'm here and ready to help you find the perfect resort. How are you doing?",
-        'what\'s up': "Not much, just here to help you plan an amazing vacation! 🏝️ What resort experience are you looking for?",
-        'whats up': "Just ready to help you book your dream resort! ✨ What destination interests you?",
-        
-        'okay': "Perfect! 🌴 How can I help you with your resort booking today?",
-        
-        # Identity questions
-        'what is koala': "Koala is a premium vacation rental marketplace where you can find and book amazing resort stays! 🐨 We offer a curated selection of verified listings with professional photos and competitive prices. We're currently rated 9.8/10 for our service! 🏖️ Are you looking for any specific destination today?",
-        'who are you': "I'm Myles AI, your personal vacation planning assistant from Koala! 🐨 I'm here to help you discover incredible resorts, check availability, and book your dream vacation. How can I assist you today? 🌴",
-        'what can you do': "I can help you find resorts by location or amenities, check real-time availability for stays, provide details about resort features, and guide you through the booking process! 🐨 Just ask me about a place or a type of vacation you're interested in! 🏨",
+        'hi':           "Welcome to Go-Koala! 🐨 Looking for your next getaway? I'll help you find the perfect timeshare.",
+        'hello':        "Hello! Welcome to Go-Koala! 🐨 Looking for your next getaway? I'll help you find the perfect timeshare.",
+        'hey':          "Hey there! Welcome to Go-Koala! 🌴 Ready to explore amazing timeshare resorts? Let's find your perfect match!",
+        'good morning': "Good morning! ☀️ Welcome to Go-Koala! Looking for a great timeshare to start your vacation planning? I'm here to help!",
+        'good afternoon':"Good afternoon! 🌅 Welcome to Go-Koala! Looking for your next getaway? I'll help you find the perfect timeshare.",
+        'good evening': "Good evening! 🌙 Welcome to Go-Koala! Planning a vacation? I'll help you discover the perfect timeshare resort.",
+        'thank you':    "You're very welcome! 😊 Is there anything else I can help you with for your timeshare booking?",
+        'thanks':       "My pleasure! 🌟 Feel free to ask if you need help finding your next Go-Koala getaway!",
+        'thank u':      "You're welcome! 💫 Happy to help with your timeshare needs anytime!",
+        'how are you':  "I'm doing great, thanks for asking! 🐨 I'm here and ready to help you find the perfect timeshare at Go-Koala. How can I assist you?",
+        "what's up":    "Just here to help you plan your next getaway! 🏝️ What kind of timeshare experience are you looking for?",
+        'whats up':     "Ready to help you book your dream timeshare! ✨ What destination interests you?",
+        'okay':         "Perfect! 🌴 How can I help you find your next Go-Koala timeshare today?",
+        'what is koala':"Go-Koala is a premium timeshare marketplace where you can find and book amazing resort stays! 🐨 We offer a curated selection of verified listings with professional photos and competitive prices. We're currently rated 9.8/10 for our service! 🏖️ Are you looking for any specific destination today?",
+        'who are you':  "I'm Myles AI, your personal vacation planning assistant from Go-Koala! 🐨 I'm here to help you discover incredible timeshare resorts, check availability, and book your dream vacation. How can I assist you today? 🌴",
+        'what can you do':"I can help you find timeshare resorts by location or amenities, check real-time availability, provide details about resort features, and guide you through the booking process! 🐨 Just tell me where you'd like to go! 🏨",
+        'hello myles':  "Hello! I'm Myles AI, your personal vacation planning assistant from Go-Koala! 🐨 I'm here to help you discover incredible timeshare resorts, check availability, and book your dream vacation. How can I assist you today? 🌴",
     }
-    
-    # Check for exact matches first
+
+    # 1. Exact match — instant response, no LLM needed
     if user_input_lower in greeting_responses:
         return greeting_responses[user_input_lower]
 
-    
-    # Return None if no exact greeting pattern matches
+    # 2. Pattern match — it's a greeting variant not in the dict, use lightweight LLM
+    if _GREETING_PATTERNS.match(user_input.strip()):
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are Myles AI, a friendly vacation assistant for Go-Koala — "
+                            "a premium timeshare and resort booking marketplace. "
+                            "When a user greets you or makes small talk, respond warmly and briefly "
+                            "in the Go-Koala brand voice. Always welcome them to Go-Koala, "
+                            "mention that you help find timeshares or resort getaways, "
+                            "and invite them to ask about destinations or bookings. "
+                            "Keep it to 1-2 sentences. Use a friendly emoji."
+                        )
+                    },
+                    {"role": "user", "content": user_input}
+                ],
+                max_tokens=120,
+                temperature=0.7,
+            )
+            return response.choices[0].message.content.strip()
+        except Exception:
+            return "Welcome to Go-Koala! 🐨 Looking for your next getaway? I'll help you find the perfect timeshare."
+
+    # 3. Not a greeting — return None so the main LLM handles it
     return None
-    """Process a function call from OpenAI and return the result."""
-    function_name = function_call.name
-    
-    try:
-        arguments = json.loads(function_call.arguments)
-    except json.JSONDecodeError:
-        return json.dumps({"error": "Invalid JSON arguments"})
-    
-    result = call_tool(function_name, **arguments)
-    
-    if isinstance(result, dict):
-        return json.dumps(result, indent=2, default=str)
-    else:
-        return json.dumps({"result": result}, indent=2, default=str)
+
+
 
 def display_message(message, is_user=True):
     """Display a chat message with appropriate styling."""
-
         # Check for "Book Now" keyword and wrap it in a <p> with custom class
     if not is_user:
         
@@ -730,6 +812,8 @@ def display_message(message, is_user=True):
         </div>
         """, unsafe_allow_html=True)
     else:
+        # Render the avatar/name header as HTML, then use st.markdown for the message body
+        # so that markdown (bold, links, bullet points) is properly rendered
         st.markdown(f"""
         <div class="chat-message assistant-message">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -741,6 +825,8 @@ def display_message(message, is_user=True):
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+
 
 def display_function_call(function_name, arguments, result=None):
     """Display function call information."""
@@ -839,6 +925,28 @@ def main():
         st.error("⚠️ OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
         return
     # Display all chat messages
+    if not st.session_state.messages:
+        welcome_msg = f"""<div style="font-family: proxima-nova, sans-serif; color: #333;">
+<p style="font-size: 19px; margin-bottom: 5px;">Hi {st.session_state.username} 👋</p>
+<p style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #000;">Welcome to Go-Koala! 🐨</p>
+<p style="font-size: 16px; margin-bottom: 15px; color: #666;">How can I help you plan your perfect getaway today?</p>
+<div class="quick-actions-container">
+<div class="quick-action-card">
+<div class="quick-action-icon">🔍</div>
+<div><strong>Search Stays</strong><br><span style="font-size: 13px; color: #888;">Find available timeshares</span></div>
+</div>
+<div class="quick-action-card">
+<div class="quick-action-icon">📅</div>
+<div><strong>My Bookings</strong><br><span style="font-size: 13px; color: #888;">Check existing reservations</span></div>
+</div>
+<div class="quick-action-card">
+<div class="quick-action-icon">💎</div>
+<div><strong>Memberships</strong><br><span style="font-size: 13px; color: #888;">Learn about Koala benefits</span></div>
+</div>
+</div>
+</div>"""
+        display_message(welcome_msg, is_user=False)
+    
     for message in st.session_state.messages:
         if message["type"] == "user":
             display_message(message["content"], is_user=True)
@@ -962,23 +1070,18 @@ def main():
         # else:
         #     st.warning("⚠️ Please type a question before submitting.")
 
-        
-        # Check if this is a simple greeting first
-        greeting_response = handle_simple_greetings(user_input)
-        print("greeting_response",greeting_response)
-        
+
+        # Check greetings: hardcoded dict first, then LLM fallback, then main LLM
+        greeting_response = handle_simple_greetings(st.session_state.client, user_input)
         if greeting_response:
-            # Handle greeting locally without LLM call
             st.session_state.messages.append({
                 "type": "assistant",
                 "content": greeting_response
             })
-            
-            # Clear the input for next message by incrementing counter
             st.session_state.input_counter += 1
             st.rerun()
             return
-        
+
         # Add to thread for LLM processing
         st.session_state.thread.add_user_message(user_input)
         

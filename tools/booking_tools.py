@@ -27,7 +27,8 @@ def deduplicate_by_resort_id(listings):
     return unique_listings
 
 def get_user_bookings(
-    user_email: str,
+    user_email: str = None,
+    user_id: int = None,
     upcoming_limit: int = 3,
     past_limit: int = 3,
     year: int = None,
@@ -35,7 +36,7 @@ def get_user_bookings(
     day: int = None
 ) -> Dict[str, Any]:
     """
-    Fetch bookings for a user by email, with optional filtering by year/month/day.
+    Fetch bookings for a user by email or ID, with optional filtering by year/month/day.
     If only the year is specified, show monthly counts if too many bookings.
     """
     session: Session = SessionLocal()
@@ -43,19 +44,26 @@ def get_user_bookings(
     try:
         today = date.today()
 
-        bookings = (
+        query = (
             session.query(Booking)
             .join(User, Booking.user_id == User.id)
             .join(Listing, Booking.listing_id == Listing.id)
             .join(Resort, Listing.resort_id == Resort.id)
             .join(UnitType, Listing.unit_type_id == UnitType.id)
             .outerjoin(BookingMetrics, BookingMetrics.booking_id == Booking.id)  # safe outer join
-            .filter(User.email == user_email)
             .filter(User.has_deleted == 0)
             .filter(Listing.has_deleted == 0)
             .filter(Resort.has_deleted == 0)
-            .all()
         )
+
+        if user_id:
+            query = query.filter(User.id == user_id)
+        elif user_email:
+            query = query.filter(User.email == user_email)
+        else:
+            return {"error": "user_email or user_id required"}
+
+        bookings = query.all()
 
         filtered = []
         monthly_count = defaultdict(int)
