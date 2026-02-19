@@ -280,13 +280,20 @@ def get_resort_details(
     finally:
         session.close()
 
-def get_user_profile(user_email: str) -> Dict[str, Any]:
+def get_user_profile(user_email: str = None, user_id: int = None) -> Dict[str, Any]:
     """Get user profile information including booking and listing counts."""
     session = SessionLocal()
     try:
-        user = session.query(User).filter(User.email == user_email, User.has_deleted == 0).first()
+        if user_id:
+            user = session.query(User).filter(User.id == user_id, User.has_deleted == 0).first()
+        elif user_email:
+            user = session.query(User).filter(User.email == user_email, User.has_deleted == 0).first()
+        else:
+            return {"error": "user_email or user_id required"}
+
         if not user:
-            return {"error": f"User with email {user_email} not found"}
+            identifier = f"ID {user_id}" if user_id else f"email {user_email}"
+            return {"error": f"User with {identifier} not found"}
         
         bookings_count = session.query(Booking).filter(Booking.user_id == user.id).count()
         owned_listings_count = session.query(Booking).filter(Booking.owner_id == user.id).count()
