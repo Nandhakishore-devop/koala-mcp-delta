@@ -80,20 +80,55 @@ def get_available_resorts(
     state: str = None,
     resort_status: str = "active",
     limit: int = 10,
-    location_type: str = None
+    location_type: str = None,
+    brand_id: int = None,
+    brand_name: str = None
 ) -> List[Dict[str, Any]]:
+    """
+    Search for resorts with active inventory based on geographic location and high-level categories.
+    
+    Use this tool when the user specifies a Country, City, or State, or searches for major categories
+    like 'Beach', 'Ski', or 'Golf' resorts. This tool joins with location metadata and amenities
+    internally to provide the most accurate geographic matches.
+    
+    :param country: Filter by country name (e.g., 'Mexico', 'Aruba', 'United States').
+    :param city: Filter by city name (e.g., 'Cabo San Lucas').
+    :param state: Filter by state or region.
+    :param location_type: Primary traveler category (e.g., 'Beach', 'Ski', 'Golf', 'Mountain').
+    :param brand_name: Filter by brand (e.g., 'Marriott', 'Hilton', 'WorldMark').
+    :param limit: Maximum number of resorts to return (default 10).
+    """
     with SessionLocal() as session:
         try:
-            listing_subq = (
+            listing_q = (
                 session.query(
                     PtRtListing.resort_id,
-                    func.count(PtRtListing.id).label("active_count")
+                    func.count(PtRtListing.id).label("active_count"),
+                    func.max(PtRtListing.resort_location_types).label('resort_location_types')
                 )
                 .filter(
                     PtRtListing.listing_status == "active",
                     PtRtListing.listing_has_deleted == 0
                 )
+            )
+
+            if brand_id:
+                listing_q = listing_q.filter(PtRtListing.resort_brand_id == brand_id)
+            if brand_name:
+                listing_q = listing_q.filter(PtRtListing.resort_brand_name.ilike(f"%{brand_name.strip()}%"))
+
+            # Subquery to get location data from ANY listing of the resort (fallback for missing active metadata)
+            loc_fallback_subq = (
+                session.query(
+                    PtRtListing.resort_id,
+                    func.max(PtRtListing.resort_location_types).label('all_locs')
+                )
                 .group_by(PtRtListing.resort_id)
+                .subquery()
+            )
+
+            listing_subq = (
+                listing_q.group_by(PtRtListing.resort_id)
                 .order_by(func.count(PtRtListing.id).desc())
                 .subquery()
             )
@@ -101,9 +136,39 @@ def get_available_resorts(
             query = (
                 session.query(ResortMigration, listing_subq.c.active_count)
                 .join(listing_subq, ResortMigration.resort_id == listing_subq.c.resort_id)
+                .outerjoin(loc_fallback_subq, ResortMigration.resort_id == loc_fallback_subq.c.resort_id)
                 .filter(ResortMigration.resort_has_deleted == 0)
                 .filter(ResortMigration.resort_status == resort_status)
             )
+
+            # Join with LocationType and Amenity if location_type filter is provided
+            if location_type:
+                from src.database.models import LocationType, ResortAmenity, Amenity
+                from sqlalchemy import or_
+                
+                # Standardize search term
+                search_term = location_type.strip().lower()
+                if "beach" in search_term: search_term = "beach"
+                elif "ski" in search_term: search_term = "ski"
+                elif "golf" in search_term: search_term = "golf"
+                
+                # Use outerjoin to avoid filtering out resorts missing in LocationType table 
+                # if they still match via other sources
+                query = query.outerjoin(LocationType, ResortMigration.resort_id == LocationType.resort_id)
+                query = query.outerjoin(ResortAmenity, ResortMigration.resort_id == ResortAmenity.resort_id)
+                query = query.outerjoin(Amenity, ResortAmenity.amenity_id == Amenity.id)
+                
+                query = query.filter(
+                    or_(
+                        LocationType.types.ilike(f"%{search_term}%"),
+                        ResortMigration.location_types.ilike(f"%{search_term}%"),
+                        ResortMigration.resort_name.ilike(f"%{search_term}%"),
+                        loc_fallback_subq.c.all_locs.ilike(f"%{search_term}%"),
+                        Amenity.name.ilike(f"%{search_term}%")
+                    )
+                )
+                # Ensure we don't return duplicate resorts due to multiple matching amenities
+                query = query.distinct()
 
             if country:
                 query = query.filter(ResortMigration.country.ilike(f"%{country.strip()}%"))
@@ -111,8 +176,7 @@ def get_available_resorts(
                 query = query.filter(ResortMigration.city.ilike(f"%{city.strip()}%"))
             if state:
                 query = query.filter(ResortMigration.state.ilike(f"%{state.strip()}%"))
-            if location_type:
-                query = query.filter(ResortMigration.location_types.ilike(f"%{location_type.strip()}%"))
+            # Removed redundant/unreliable ResortMigration.location_types filtering
 
             resorts = query.order_by(listing_subq.c.active_count.desc()).limit(limit).all()
 
@@ -252,6 +316,10 @@ def get_resort_details(
                 for review in reviews
             ]
 
+            # Get additional metadata
+            resort_mig = session.query(ResortMigration).filter(ResortMigration.resort_id == resort.id).first()
+            first_listing = session.query(PtRtListing).filter(PtRtListing.resort_id == resort.id).first()
+            
             return {
                 "id": resort.id,
                 "name": resort.name,
@@ -267,6 +335,8 @@ def get_resort_details(
                 "creator_name": f"{resort.creator.first_name} {resort.creator.last_name}" if resort.creator else "Unknown",
                 "creator_email": resort.creator.email if resort.creator else "Unknown",
                 "status": resort.status,
+                "resort_google_rating": resort_mig.resort_google_rating if resort_mig else 0,
+                "resort_brand_name": first_listing.resort_brand_name if first_listing and first_listing.resort_brand_name else "Independent",
                 "unit_types": [{"id": ut.id, "name": ut.name, "status": ut.status} for ut in unit_types],
                 "listings_by_status": listings_stats,
                 "total_bookings": total_bookings,
@@ -320,6 +390,17 @@ def search_resorts_by_amenities(
     limit: int = 5, 
     match_all: bool = True
 ) -> List[Dict[str, Any]]:
+    """
+    Find resorts based on specific property features and conveniences (amenities).
+    
+    Use this tool for granular feature searches like 'Pool', 'Kitchen', 'Balcony', 'Gym', or 'WiFi'.
+    This tool does NOT support geographic filtering. For searches involving a Country or City, 
+    use 'get_available_resorts' instead.
+    
+    :param amenities: List of strings (e.g., ['Pool', 'Kitchen']).
+    :param match_all: If True, only returns resorts containing ALL specified amenities.
+    :param limit: Maximum number of resorts to return.
+    """
     session = SessionLocal()
     try:
         from sqlalchemy.orm import joinedload
@@ -369,5 +450,142 @@ def search_resorts_by_amenities(
             }
             for r in results
         ]
+    finally:
+        session.close()
+
+def get_platform_stats() -> Dict[str, Any]:
+    """Get aggregate statistics about Go-Koala's resort and listing coverage."""
+    session = SessionLocal()
+    try:
+        total_resorts = session.query(func.count(ResortMigration.id)).filter(ResortMigration.resort_has_deleted == 0).scalar()
+        
+        active_listings = (
+            session.query(func.count(PtRtListing.id))
+            .filter(PtRtListing.listing_status == "active", PtRtListing.listing_has_deleted == 0)
+            .scalar()
+        )
+        
+        country_count = session.query(func.count(func.distinct(ResortMigration.country))).scalar()
+        state_count = session.query(func.count(func.distinct(ResortMigration.state))).scalar()
+        
+        top_cities = (
+            session.query(ResortMigration.city, func.count(PtRtListing.id).label("count"))
+            .join(PtRtListing, ResortMigration.resort_id == PtRtListing.resort_id)
+            .filter(PtRtListing.listing_status == "active", PtRtListing.listing_has_deleted == 0)
+            .group_by(ResortMigration.city)
+            .order_by(func.count(PtRtListing.id).desc())
+            .limit(3)
+            .all()
+        )
+        
+        return {
+            "platform": "Go-Koala",
+            "total_resorts_on_platform": total_resorts,
+            "current_active_listings": active_listings,
+            "geographic_coverage": {
+                "countries": country_count,
+                "states_regions": state_count
+            },
+            "top_cities_by_availability": [
+                {"city": city, "active_listings": count} for city, count in top_cities
+            ],
+            "service_rating": "9.8/10",
+            "description": "Go-Koala is a premium timeshare marketplace focusing on verified, high-quality resort stays."
+        }
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        session.close()
+
+def get_top_rated_resorts(limit: int = 5, min_rating: float = 4.0) -> List[Dict[str, Any]]:
+    """Find highly-rated resorts using Google ratings and count of reviews."""
+    session = SessionLocal()
+    try:
+        # ResortMigration often has ratings in integer/string form
+        top_resorts = (
+            session.query(ResortMigration)
+            .filter(ResortMigration.resort_has_deleted == 0)
+            .filter(ResortMigration.resort_google_rating >= min_rating)
+            .order_by(ResortMigration.resort_google_rating.desc())
+            .limit(limit)
+            .all()
+        )
+        
+        results = []
+        for r in top_resorts:
+            # Get a sample review snippet if available
+            review = session.query(ResortReview).filter(ResortReview.resort_id == r.resort_id).first()
+            
+            results.append({
+                "resort_id": r.resort_id,
+                "name": r.resort_name,
+                "city": r.city,
+                "rating": r.resort_google_rating,
+                "address": r.address,
+                "featured_review": review.text[:150] + "..." if review else "Great choice for vacationers."
+            })
+        return results
+    except Exception as e:
+        return [{"error": str(e)}]
+    finally:
+        session.close()
+
+def get_nearby_poi(resort_id: int, limit: int = 5) -> List[Dict[str, Any]]:
+    """Get local points of interest (attractions, dining, sights) near a specific resort."""
+    session = SessionLocal()
+    try:
+        # Get resort city
+        resort = session.query(ResortMigration).filter(ResortMigration.resort_id == resort_id).first()
+        if not resort:
+             return [{"error": f"Resort ID {resort_id} not found."}]
+        
+        # Find POIs in the same city
+        pois = (
+            session.query(EsPlaceOfInterests)
+            .filter(EsPlaceOfInterests.city.ilike(f"%{resort.city}%"))
+            .limit(limit)
+            .all()
+        )
+        
+        return [
+            {
+                "name": p.full_term or p.term,
+                "category": p.type,
+                "description": p.description[:150] + "..." if p.description else "A popular local spot.",
+                "url": p.url
+            }
+            for p in pois
+        ]
+    except Exception as e:
+        return [{"error": str(e)}]
+    finally:
+        session.close()
+
+def get_resort_reviews(resort_id: int, limit: int = 3) -> List[Dict[str, Any]]:
+    """Get the latest guest reviews for a resort to understand sentiment and highlights."""
+    session = SessionLocal()
+    try:
+        reviews = (
+            session.query(ResortReview)
+            .filter(ResortReview.resort_id == resort_id)
+            .order_by(ResortReview.id.desc())
+            .limit(limit)
+            .all()
+        )
+        
+        if not reviews:
+            return [{"info": "No reviews available for this resort yet."}]
+            
+        return [
+            {
+                "author": r.author_name,
+                "rating": r.rating,
+                "text": r.text,
+                "date_description": r.relative_time_description
+            }
+            for r in reviews
+        ]
+    except Exception as e:
+        return [{"error": str(e)}]
     finally:
         session.close()

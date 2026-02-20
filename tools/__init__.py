@@ -4,7 +4,11 @@ from tools.resort_tools import (
     get_available_resorts, 
     get_resort_details, 
     search_resorts_by_amenities,
-    get_user_profile
+    get_user_profile,
+    get_platform_stats,
+    get_top_rated_resorts,
+    get_nearby_poi,
+    get_resort_reviews
 )
 from tools.booking_tools import (
     get_user_bookings, 
@@ -13,6 +17,7 @@ from tools.booking_tools import (
     get_cancellation_policy
 )
 from tools.search_tools import search_available_future_listings_merged
+from tools.analytics_tools import get_market_price_trends
 from tools.utils import test_database_connection
 from src.database.db import get_database_url, initialize_database
 from tools.schema_utils import generate_schema
@@ -33,6 +38,11 @@ AVAILABLE_TOOLS = {
     "book_resort_listing": book_resort_listing,
     "get_payment_methods": get_payment_methods,
     "get_cancellation_policy": get_cancellation_policy,
+    "get_platform_stats": get_platform_stats,
+    "get_top_rated_resorts": get_top_rated_resorts,
+    "get_nearby_poi": get_nearby_poi,
+    "get_resort_reviews": get_resort_reviews,
+    "get_market_price_trends": get_market_price_trends,
 }
 
 def call_tool(tool_name: str, **kwargs) -> Any:

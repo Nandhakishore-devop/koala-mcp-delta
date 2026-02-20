@@ -69,6 +69,52 @@ components.html(
                     }, 3000);
                 }
 
+                window.parent.submitQuery = function(queryText) {
+                    const textarea = window.parent.document.querySelector('textarea');
+                    if (textarea) {
+                        textarea.focus();
+                        
+                        // Use React-compatible value setter to ensure Streamlit state updates
+                        const valueSetter = Object.getOwnPropertyDescriptor(window.parent.HTMLTextAreaElement.prototype, "value").set;
+                        if (valueSetter) {
+                            valueSetter.call(textarea, queryText);
+                            // Dispatch multiple events to satisfy different listener types
+                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                            textarea.dispatchEvent(new Event('change', { bubbles: true }));
+                        } else {
+                            textarea.value = queryText;
+                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                        
+                        // allow React/Streamlit enough time to sync the state
+                        setTimeout(() => {
+                            const submitButton = window.parent.document.querySelector('button[kind="secondaryFormSubmit"]');
+                            if (submitButton) {
+                                submitButton.click();
+                            }
+                        }, 250);
+                    }
+                };
+
+                // Event delegation with more robust matching
+                window.parent.document.addEventListener("click", function(event) {
+                    const card = event.target.closest('.quick-action-card');
+                    if (card) {
+                        const titleEl = card.querySelector('strong');
+                        if (titleEl) {
+                            const title = titleEl.textContent.trim();
+                            let query = "";
+                            if (title.includes("Search Stays")) query = "Can you help me search for stays?";
+                            else if (title.includes("My Bookings")) query = "Show my bookings";
+                            else if (title.includes("Memberships")) query = "What are my membership benefits?";
+                            
+                            if (query) {
+                                window.parent.submitQuery(query);
+                            }
+                        }
+                    }
+                }, true);
+
                 window.parent.document.addEventListener("keydown", function(event) {
                     if (event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.altKey) {
                         event.preventDefault(); // stop newline
@@ -384,6 +430,20 @@ st.markdown(
            font-size: 18px;
         }
 
+        .chat-message p {
+            margin-bottom: 8px !important;
+            line-height: 1.4 !important;
+        }
+
+        .chat-message ul, .chat-message ol {
+            margin-top: 5px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .chat-message li {
+            margin-bottom: 4px !important;
+        }
+
         .stTextInput label {
             color: #ffffff !important;
         }
@@ -653,17 +713,23 @@ if 'username' not in st.session_state:
 
 # Map username to database user ID (Mocking a login/session)
 if 'user_id' not in st.session_state:
-    # Defaulting "Boss" to Priya (ID 4785) who has 172 listings
-    st.session_state.user_id = 4785 if st.session_state.username == "Boss" else None
+    # Defaulting "Boss" to Ashwin (ID 5198) 
+    st.session_state.user_id = 5198 if st.session_state.username == "Boss" else None
 
 # Initialize session state
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
+# User profile data for personalized assistant context
+user_profile = {
+    "user_tier": "Gold VIP" if st.session_state.user_id == 5198 else "Standard",
+}
+
 if 'thread' not in st.session_state:
     st.session_state.thread = AssistantThread(
         username=st.session_state.username,
-        user_id=st.session_state.user_id
+        user_id=st.session_state.user_id,
+        user_profile=user_profile
     )
 
 if 'total_tokens' not in st.session_state:
@@ -691,13 +757,14 @@ _GREETING_PATTERNS = _re.compile(
     r"how\s+are\s+you|how\s+r\s+u|how\s+do\s+you\s+do|"
     r"thank(s|\s+you|\s+u)|thx|ty|"
     r"ok(ay)?|sure|alright|great|cool|"
-    r"who\s+are\s+you|what\s+(are|is|can)\s+(you|koala)|"
+    r"who\s+are\s+you|what\s+is\s+your\s+name|what\s+can\s+you\s+do|"
+    r"who\s+am\s+i|what\s+is\s+my\s+name|my\s+name|"
     r"what\s+do\s+you\s+do"
     r")(\s+(myles|koala))?[\s!?.]*$",
     _re.IGNORECASE
 )
 
-def handle_simple_greetings(client, user_input: str, history: List[Dict] = None):
+def handle_simple_greetings(client, user_input: str, username: str = "Boss", user_profile: Dict = None):
     """
     Fast-path: check hardcoded dictionary first.
     If no match but input looks like a greeting, use a lightweight LLM call.
@@ -720,7 +787,6 @@ def handle_simple_greetings(client, user_input: str, history: List[Dict] = None)
         "what's up":    "Just here to help you plan your next getaway! 🏝️ What kind of timeshare experience are you looking for?",
         'whats up':     "Ready to help you book your dream timeshare! ✨ What destination interests you?",
         'okay':         "Perfect! 🌴 How can I help you find your next Go-Koala timeshare today?",
-        'what is koala':"Go-Koala is a premium timeshare marketplace where you can find and book amazing resort stays! 🐨 We offer a curated selection of verified listings with professional photos and competitive prices. We're currently rated 9.8/10 for our service! 🏖️ Are you looking for any specific destination today?",
         'who are you':  "I'm Myles AI, your personal vacation planning assistant from Go-Koala! 🐨 I'm here to help you discover incredible timeshare resorts, check availability, and book your dream vacation. How can I assist you today? 🌴",
         'what can you do':"I can help you find timeshare resorts by location or amenities, check real-time availability, provide details about resort features, and guide you through the booking process! 🐨 Just tell me where you'd like to go! 🏨",
         'hello myles':  "Hello! I'm Myles AI, your personal vacation planning assistant from Go-Koala! 🐨 I'm here to help you discover incredible timeshare resorts, check availability, and book your dream vacation. How can I assist you today? 🌴",
@@ -739,8 +805,12 @@ def handle_simple_greetings(client, user_input: str, history: List[Dict] = None)
                     {
                         "role": "system",
                         "content": (
-                            "You are Myles AI, a friendly vacation assistant for Go-Koala — "
+                            f"You are Myles AI, a friendly vacation assistant for Go-Koala. "
                             "a premium timeshare and resort booking marketplace. "
+                            f"The current user is {username}. Profile: {user_profile}. "
+                            "When a user greets you, asks 'who am i', or makes small talk, respond warmly and briefly. "
+                            "Always welcome them to Go-Koala. If they ask who they are, identify them by name and mention their status. "
+                            "If they ask who you are, identify yourself as Myles AI. "
                             "When a user greets you or makes small talk, respond warmly and briefly "
                             "in the Go-Koala brand voice. Always welcome them to Go-Koala, "
                             "mention that you help find timeshares or resort getaways, "
@@ -929,21 +999,22 @@ def main():
         welcome_msg = f"""<div style="font-family: proxima-nova, sans-serif; color: #333;">
 <p style="font-size: 19px; margin-bottom: 5px;">Hi {st.session_state.username} 👋</p>
 <p style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #000;">Welcome to Go-Koala! 🐨</p>
-<p style="font-size: 16px; margin-bottom: 15px; color: #666;">How can I help you plan your perfect getaway today?</p>
+
 <div class="quick-actions-container">
-<div class="quick-action-card">
+<div class="quick-action-card" onclick="submitQuery('Can you help me search for stays?')">
 <div class="quick-action-icon">🔍</div>
 <div><strong>Search Stays</strong><br><span style="font-size: 13px; color: #888;">Find available timeshares</span></div>
 </div>
-<div class="quick-action-card">
+<div class="quick-action-card" onclick="submitQuery('Show my bookings')">
 <div class="quick-action-icon">📅</div>
 <div><strong>My Bookings</strong><br><span style="font-size: 13px; color: #888;">Check existing reservations</span></div>
 </div>
-<div class="quick-action-card">
+<div class="quick-action-card" onclick="submitQuery('What are my membership benefits?')">
 <div class="quick-action-icon">💎</div>
 <div><strong>Memberships</strong><br><span style="font-size: 13px; color: #888;">Learn about Koala benefits</span></div>
 </div>
 </div>
+<p style="font-size: 16px; margin-bottom: 15px; color: #666;">How can I help you plan your perfect getaway today?</p>
 </div>"""
         display_message(welcome_msg, is_user=False)
     
@@ -1072,7 +1143,7 @@ def main():
 
 
         # Check greetings: hardcoded dict first, then LLM fallback, then main LLM
-        greeting_response = handle_simple_greetings(st.session_state.client, user_input)
+        greeting_response = handle_simple_greetings(st.session_state.client, user_input, st.session_state.username, user_profile)
         if greeting_response:
             st.session_state.messages.append({
                 "type": "assistant",
@@ -1247,19 +1318,19 @@ def main():
                         st.session_state.total_cost += final_cost
 
                     # Add final assistant message
+                    final_content = final_message.content or "I've retrieved the details for you. How else can I help?"
                     st.session_state.thread.add_assistant_message({
                         "role": "assistant",
-                        "content": final_message.content or "" # Ensure content is never None
+                        "content": final_content
                     })
 
-                    print("final_message_1",final_message)
+                    print("final_message_1", final_message)
 
                     # Add to chat history
-                    if final_message.content:
-                        st.session_state.messages.append({
-                            "type": "assistant",
-                            "content": final_message.content
-                        })
+                    st.session_state.messages.append({
+                        "type": "assistant",
+                        "content": final_content
+                    })
 
                 else:
                     # No function calls, just add the response

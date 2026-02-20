@@ -71,6 +71,11 @@ def search_available_future_listings_merged(
     min_nights: Optional[int] = None,
     price_sort: Optional[str] = "asc",
     limit: Optional[int] = None,
+    brand_id: Optional[int] = None,
+    brand_name: Optional[str] = None,
+    min_rating: Optional[float] = None,
+    pets_allowed: Optional[bool] = None,
+    min_sleeps: Optional[int] = None,
     **kwargs
 ) -> Dict[str, Any]:
     """
@@ -101,7 +106,12 @@ def search_available_future_listings_merged(
         "min_guests": min_guests,
         "min_nights": min_nights,
         "price_sort": price_sort,
-        "limit": limit
+        "limit": limit,
+        "brand_id": brand_id,
+        "brand_name": brand_name,
+        "min_rating": min_rating,
+        "pets_allowed": pets_allowed,
+        "min_sleeps": min_sleeps
     }
     filters.update(kwargs)
     
@@ -137,6 +147,32 @@ def search_available_future_listings_merged(
                 filter_conditions.append(PtRtListing.resort_name.ilike(f"%{resort_name.strip()}%"))
             else:
                 filter_conditions.append(PtRtListing.resort_name == resort_name)
+
+        # ---------------- Brand filter ----------------
+        brand_id = filters.get("brand_id")
+        if brand_id:
+            filter_conditions.append(PtRtListing.resort_brand_id == brand_id)
+        
+        brand_name = filters.get("brand_name")
+        if brand_name:
+            filter_conditions.append(PtRtListing.resort_brand_name.ilike(f"%{brand_name.strip()}%"))
+
+        # ---------------- Advanced Filters (Rating & Pets) ----------------
+        min_rating = filters.get("min_rating")
+        if min_rating:
+            filter_conditions.append(PtRtListing.resort_google_rating >= float(min_rating))
+        
+        pets_allowed = filters.get("pets_allowed")
+        if pets_allowed is not None:
+            # Usually pet friendly columns are string 'Yes', 'No', '1', '0'
+            if pets_allowed:
+                filter_conditions.append(PtRtListing.resort_pets_friendly.ilike("%yes%"))
+            else:
+                filter_conditions.append(PtRtListing.resort_pets_friendly.ilike("%no%"))
+
+        min_sleeps = filters.get("min_sleeps")
+        if min_sleeps:
+            filter_conditions.append(PtRtListing.unit_sleeps >= int(min_sleeps))
 
         # ---------------- Total count listings with filter ----------------
         total_count_listings = (
