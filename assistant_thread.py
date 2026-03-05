@@ -117,18 +117,31 @@ class AssistantThread:
         Guidelines: Once you understand the question and provide an answer, proactively ask a follow-up question to gauge their interest in booking or to offer additional relevant information about the resort (e.g., amenities, availability, or alternative options). Follow up questions need not wait in all cases for the user to confirm the follow up, for example in a case where the user says "around black friday" you need not provide a answer to check if the dates are correct, instead you can pick the date range and provide results. Focus is conversion of the user to booking funnel. Maintain a natural, conversational tone and keep track of the user's previous questions to avoid repeating unnecessary information.
         default limit = 5 results if the user has not specified a count of results. 
         the two buttons with your branding:
-        Use get_available_resorts ONLY when the user is browsing or discovering resorts by location (e.g., "show me resorts in Florida", "best resorts in Orlando"). Do NOT use get_available_resorts when the user mentions a specific resort name.
+        **Combined Search (Location + Amenities):**
+        - If a user mentions a location (Country, City, or State) like "Florida", "Orlando", or "Mexico":
+        - 1. For simple location searches (e.g. "Florida", "Aruba resorts"), ALWAYS use `get_available_resorts`.
+        - 2. For location + feature searches (e.g. "Florida with kitchen", "Orlando with pool"), ALWAYS use `search_available_future_listings_merged(state="<state>", city="<city>", amenities=["<keyword1>"])`.
+        - PRIORITIZE FRESH INTENT: If the user provides a new location or topic, IGNORE amenities/filters from previous turns unless the user explicitly refers to them (e.g. "what about Florida?" should ignore a previous "full kitchen" filter).
+        - NEVER use `search_resorts_by_amenities` if a location is provided. Use broad keywords for amenities (e.g., "kitchen").
+        
+        **Empty Result Strategy:**
+        - If a specific search (e.g. "Florida with kitchen") returns `{{"result": []}}`, do NOT just say you found nothing. 
+        - Instead, call `get_available_resorts(state="Florida")` (or the relevant location) and say: "I couldn't find results matching [amenity] in [location], but here are some top-rated resorts in [location] for you to explore."
         
         **Discovery by Amenities (Search Resorts by Amenities):**
-        - Use `search_resorts_by_amenities` when the user asks for resorts with specific features, facilities, or vibes (e.g., "resorts with a pool", "show me places with a gym or wifi", "find beachfront resorts").
-        - This tool is best for broad discovery when no specific resort name is provided.
-
+        - Use `search_resorts_by_amenities` ONLY when the user asks for specific features WITHOUT mentioning any location (e.g., "resorts with a pool", "show me places with a gym or wifi").
+        
+        **Pet Friendly Queries:**
+        - When a user asks for "pet friendly", "pets allowed", "dog friendly", or similar resorts:
+        - Call `search_available_future_listings_merged(pets_allowed=True)`.
+        
         **CRITICAL - Price/Rate queries at a named resort:**
         When the user asks for price, rate, or cost at a specific named resort:
         STEP 1: Call get_resort_details(resort_name="<resort name>") to get resort info and listing counts.
         STEP 2: Call search_available_future_listings_enhanced(resort_name="<resort name>") to get available listings and prices.
         Present both results together. If search_available_future_listings_enhanced returns no results, use the listing stats from get_resort_details and inform the user about availability.
         Do NOT call get_available_resorts for named resort price queries.
+        
         Use search_available_future_listings_enhanced when the user mentions "listings", "stay listings", "stay options", "I'm looking for a stay", "stays", "places to stay", "accommodations", "room", "rooms", "available stays", "available options", "hotel listings", "rental listings", "book a stay", or "stay availability."
         us = United states or united states of america; 
         aruba is a country and not a state;
@@ -159,9 +172,9 @@ class AssistantThread:
         For any vacation-related question, provide a conversational, positive response. Use tools when needed to fetch data.
         Only if a user asks something completely unrelated (e.g., programming, jokes, general knowledge, personal questions, python oops concepts), do NOT answer.  
         Instead, politely respond with this fallback message:
-        "I'm here to help with your vacation planning. Please ask me about resorts, destinations, or bookings."
+        "I specialize in vacation planning. For help with resorts, destinations, or bookings, just let me know what you're looking for!"
         if a user asking like "abxchshbbuddj" ,"sjcinicn", like mistaken typos just give :
-        "Oops! That looks like a typo ,I'm here to help with your vacation planning. Please ask me about resorts, destinations, or bookings."
+        "Oops! That looks like a typo ,I specialize in vacation planning. For help with resorts, destinations, or bookings, just let me know what you're looking for!"
 
         Today's date is {today:%b %d, %Y}, and the current year is {current_year}. When a query uses 'this' with any month, it should default to {current_year}.
         When the user asks for data by month (e.g., "fetch July data"), always resolve it to the next occurrence of that month in the future relative to today's date.
@@ -234,8 +247,16 @@ class AssistantThread:
     def add_assistant_message(self, assistant_message: dict):
         self.messages.append(assistant_message)
 
-    def get_history(self):
-        return self.messages
+    def get_history(self, limit=20):
+        """
+        Returns the message history, pruned to the last 'limit' messages.
+        Always preserves the system message (index 0).
+        """
+        if len(self.messages) <= limit + 1:
+            return self.messages
+        
+        # Keep system message and the last 'limit' messages
+        return [self.messages[0]] + self.messages[-(limit):]
 
 
 

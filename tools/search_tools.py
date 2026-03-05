@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, date
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_, cast, Numeric, extract, asc, desc
 from src.database.db import SessionLocal
-from src.database.models import PtRtListing, UnitType, Resort
+from src.database.models import PtRtListing, UnitType, Resort, Amenity, ResortAmenity
 
 CANCELLATION_POLICY_DESCRIPTIONS = {
     "flexible": "Full refund if canceled at least 3 days before check-in.",
@@ -59,6 +59,9 @@ def get_month_year_range(month_input: str, year_input: int = None):
 def search_available_future_listings_merged(
     resort_id: Optional[int] = None,
     resort_name: Optional[str] = None,
+    state: Optional[str] = None,
+    city: Optional[str] = None,
+    amenities: Optional[List[str]] = None,
     unit_type_name: Optional[str] = None,
     check_in: Optional[str] = None,
     check_out: Optional[str] = None,
@@ -83,6 +86,9 @@ def search_available_future_listings_merged(
     
     :param resort_id: Internal ID of the resort.
     :param resort_name: Name of the resort (partial match).
+    :param state: Filter by state (e.g., 'Florida').
+    :param city: Filter by city name.
+    :param amenities: List of amenity keywords (e.g., ['kitchen', 'pool']).
     :param unit_type_name: Type of unit (e.g., 'Studio', '1 Bedroom').
     :param check_in: Check-in date (YYYY-MM-DD).
     :param check_out: Check-out date (YYYY-MM-DD).
@@ -95,6 +101,9 @@ def search_available_future_listings_merged(
     filters = {
         "resort_id": resort_id,
         "resort_name": resort_name,
+        "state": state,
+        "city": city,
+        "amenities": amenities,
         "unit_type_name": unit_type_name,
         "check_in": check_in,
         "check_out": check_out,
@@ -166,9 +175,47 @@ def search_available_future_listings_merged(
         if pets_allowed is not None:
             # Usually pet friendly columns are string 'Yes', 'No', '1', '0'
             if pets_allowed:
-                filter_conditions.append(PtRtListing.resort_pets_friendly.ilike("%yes%"))
+                filter_conditions.append(or_(
+                    PtRtListing.resort_pets_friendly.ilike("%yes%"),
+                    PtRtListing.resort_pets_friendly == "1"
+                ))
             else:
-                filter_conditions.append(PtRtListing.resort_pets_friendly.ilike("%no%"))
+                filter_conditions.append(or_(
+                    PtRtListing.resort_pets_friendly.ilike("%no%"),
+                    PtRtListing.resort_pets_friendly == "0"
+                ))
+
+        # ---------------- State & City filters ----------------
+        state = filters.get("state")
+        if state:
+             filter_conditions.append(PtRtListing.resort_state.ilike(f"%{state.strip()}%"))
+        
+        city = filters.get("city")
+        if city:
+             filter_conditions.append(PtRtListing.resort_city.ilike(f"%{city.strip()}%"))
+
+        # ---------------- Amenity filter ----------------
+        amenities_list = filters.get("amenities")
+        if amenities_list:
+            if isinstance(amenities_list, str):
+                amenities_list = [amenities_list]
+            
+            for term in amenities_list:
+                term = term.strip().lower()
+                if not term: continue
+                
+                # Find resorts that have THIS amenity keyword via ResortAmenity
+                subq = (
+                    session.query(ResortAmenity.resort_id)
+                    .join(Amenity, ResortAmenity.amenity_id == Amenity.id)
+                    .filter(func.lower(Amenity.name).like(f"%{term}%"))
+                    .subquery()
+                )
+                # Match if resort has amenity OR if the specific unit type name mentions it (e.g., "1 BR with Kitchen")
+                filter_conditions.append(or_(
+                    PtRtListing.resort_id.in_(subq),
+                    UnitType.name.ilike(f"%{term}%")
+                ))
 
         min_sleeps = filters.get("min_sleeps")
         if min_sleeps:

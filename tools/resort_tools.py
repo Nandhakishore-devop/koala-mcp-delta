@@ -393,9 +393,13 @@ def search_resorts_by_amenities(
     """
     Find resorts based on specific property features and conveniences (amenities).
     
-    Use this tool for granular feature searches like 'Pool', 'Kitchen', 'Balcony', 'Gym', or 'WiFi'.
-    This tool does NOT support geographic filtering. For searches involving a Country or City, 
-    use 'get_available_resorts' instead.
+    Use this tool for granular feature searches like 'Pool', 'Kitchen', 'Balcony', 'Gym', or 'WiFi'. 
+    
+    **CRITICAL**: 
+    1. Do NOT use this tool for 'Pet Friendly' or 'Pets Allowed' searches. 
+       Instead, use `search_available_future_listings_merged(pets_allowed=True)` from `search_tools.py`.
+    2. Do NOT use this tool for geographic filtering (e.g., 'Florida', 'Orlando'). 
+       For searches involving a Country, City, or State, use `get_available_resorts` or `search_available_future_listings_merged`.
     
     :param amenities: List of strings (e.g., ['Pool', 'Kitchen']).
     :param match_all: If True, only returns resorts containing ALL specified amenities.
@@ -404,42 +408,51 @@ def search_resorts_by_amenities(
     session = SessionLocal()
     try:
         from sqlalchemy.orm import joinedload
-        # Group IDs by the keyword that found them to support match_all logic
-        keyword_to_ids = {}
-        all_found_ids = set()
+        # Group subqueries by keyword to support match_all logic
+        keyword_to_subqs = {}
 
         for term in amenities:
             term = term.strip().lower()
             if not term: continue
             
-            # Find all amenities that CONTAIN this term
-            # Using .like() with func.lower() for standard SQL compatibility
-            ids = [
+            # 1. Match via ResortAmenity table
+            amenity_ids = [
                 a[0] for a in session.query(Amenity.id)
                 .filter(func.lower(Amenity.name).like(f"%{term}%"))
                 .all()
             ]
-            if ids:
-                keyword_to_ids[term] = set(ids)
-                all_found_ids.update(ids)
+            
+            # 2. Match via UnitType names (common fallback for "Kitchen", "Balcony", etc.)
+            unittype_match_subq = (
+                session.query(PtRtListing.resort_id)
+                .join(UnitType, PtRtListing.unit_type_id == UnitType.id)
+                .filter(UnitType.name.ilike(f"%{term}%"))
+            )
 
-        if not keyword_to_ids:
+            if amenity_ids:
+                amenity_match_subq = session.query(ResortAmenity.resort_id).filter(ResortAmenity.amenity_id.in_(amenity_ids))
+                # Union the results for this specific keyword
+                combined_term_subq = amenity_match_subq.union(unittype_match_subq).subquery()
+            else:
+                combined_term_subq = unittype_match_subq.subquery()
+            
+            keyword_to_subqs[term] = combined_term_subq
+
+        if not keyword_to_subqs:
             return []
 
-        # Start with a base query and eager load amenities to avoid lazy-loading issues
+        # Base query
         query = session.query(Resort).filter(Resort.has_deleted == 0)
         query = query.options(joinedload(Resort.resort_amenities).joinedload(ResortAmenity.amenity))
 
         if match_all:
-            # Find resorts that match ALL keywords (intersection of resort sets)
-            for keyword, ids in keyword_to_ids.items():
-                # For each keyword, at least one of its matching amenities must be present
-                subq = session.query(ResortAmenity.resort_id).filter(ResortAmenity.amenity_id.in_(list(ids))).subquery()
+            # Must match EVERY keyword
+            for keyword, subq in keyword_to_subqs.items():
                 query = query.filter(Resort.id.in_(subq))
         else:
-            # Any match will do
-            query = query.join(ResortAmenity, Resort.id == ResortAmenity.resort_id)
-            query = query.filter(ResortAmenity.amenity_id.in_(list(all_found_ids))).distinct()
+            # Match ANY of the keywords
+            all_subqs = or_(*[Resort.id.in_(subq) for subq in keyword_to_subqs.values()])
+            query = query.filter(all_subqs).distinct()
 
         results = query.limit(limit).all()
         return [
@@ -498,10 +511,16 @@ def get_platform_stats() -> Dict[str, Any]:
         session.close()
 
 def get_top_rated_resorts(limit: int = 5, min_rating: float = 4.0) -> List[Dict[str, Any]]:
-    """Find highly-rated resorts using Google ratings and count of reviews."""
+    """
+    Find highly-rated resorts using Google ratings and count of reviews.
+    
+    :param limit: Maximum number of resorts to return.
+    :param min_rating: Minimum rating threshold. If no resorts meet this threshold (e.g., asked for 9.5 but max is 5.0), 
+                      the tool will automatically return the top available resorts.
+    """
     session = SessionLocal()
     try:
-        # ResortMigration often has ratings in integer/string form
+        # 1. Try matching the specific threshold
         top_resorts = (
             session.query(ResortMigration)
             .filter(ResortMigration.resort_has_deleted == 0)
@@ -510,6 +529,16 @@ def get_top_rated_resorts(limit: int = 5, min_rating: float = 4.0) -> List[Dict[
             .limit(limit)
             .all()
         )
+        
+        # 2. Fallback: If no results (e.g., threshold was out of range), return the top results anyway
+        if not top_resorts:
+            top_resorts = (
+                session.query(ResortMigration)
+                .filter(ResortMigration.resort_has_deleted == 0)
+                .order_by(ResortMigration.resort_google_rating.desc())
+                .limit(limit)
+                .all()
+            )
         
         results = []
         for r in top_resorts:
