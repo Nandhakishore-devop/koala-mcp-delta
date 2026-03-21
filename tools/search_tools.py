@@ -32,12 +32,15 @@ def slugify_resort_name(name: str) -> str:
 
 def normalize_future_dates(check_in_str: str, check_out_str: str):
     """Ensure dates are always in the future relative to today."""
-    today = datetime.today()
+    today = datetime.combine(datetime.today().date(), datetime.min.time())
     ci = datetime.strptime(check_in_str, "%Y-%m-%d")
     co = datetime.strptime(check_out_str, "%Y-%m-%d")
-    while co < today:
+    
+    # If check-in is in the past, shift both dates to next year
+    while ci < today:
         ci = ci.replace(year=ci.year + 1)
         co = co.replace(year=co.year + 1)
+        
     return ci.strftime("%Y-%m-%d"), co.strftime("%Y-%m-%d")
 
 def get_month_year_range(month_input: str, year_input: int = None):
@@ -263,8 +266,9 @@ def search_available_future_listings_merged(
 
         try:
             if check_in and check_out:
-                ci_date = datetime.strptime(check_in, "%Y-%m-%d")
-                co_date = datetime.strptime(check_out, "%Y-%m-%d")
+                ci_str, co_str = normalize_future_dates(check_in, check_out)
+                ci_date = datetime.strptime(ci_str, "%Y-%m-%d")
+                co_date = datetime.strptime(co_str, "%Y-%m-%d")
                 date_conditions.append(PtRtListing.listing_check_in.between(ci_date, co_date))
                 date_filters_applied = True
 

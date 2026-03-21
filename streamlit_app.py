@@ -166,30 +166,30 @@ def calculate_cost(prompt_tokens: int, completion_tokens: int) -> float:
 def display_cost_info():
     """Display cost information in a fixed position on the right side."""
     st.markdown(f"""
-    <div style="
-        position: fixed;
-        bottom:45px;
-        right: 20px;
-        background-color: #232221;
-        padding: 1rem;
-        border-radius: 20px;
-        z-index: 1000;
-        min-width: 150px;
-        color: #ffffff;
-        font-size: 14px;
-        border:3px solid #ccc;
-    ">       
-        <div>
-            <strong>Tokens:</strong> {st.session_state.total_tokens:,}
-        </div>
-        <div>
-            <strong>Cost:</strong> ${st.session_state.total_cost:.4f}
-        </div>
-        <div>
-            <strong>Messages:</strong> {len([m for m in st.session_state.messages if m['type'] == 'user'])}
-        </div>
+<div style="
+    position: fixed;
+    bottom:45px;
+    right: 20px;
+    background-color: #232221;
+    padding: 1rem;
+    border-radius: 20px;
+    z-index: 1000;
+    min-width: 150px;
+    color: #ffffff;
+    font-size: 14px;
+    border:3px solid #ccc;
+">       
+    <div>
+        <strong>Tokens:</strong> {st.session_state.total_tokens:,}
     </div>
-    """, unsafe_allow_html=True)
+    <div>
+        <strong>Cost:</strong> ${st.session_state.total_cost:.4f}
+    </div>
+    <div>
+        <strong>Messages:</strong> {len([m for m in st.session_state.messages if m['type'] == 'user'])}
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Page configuration
 st.set_page_config(
@@ -246,17 +246,19 @@ st.markdown(
             border-radius: 24px;
             border-bottom-right-radius: 3px;
             font-family: proxima-nova, sans-serif;
-            display:inline-flex;
-            align-items: center;
+            display: inline-flex;
+            align-items: flex-start;
             flex-direction: row-reverse;
             justify-content: end;
             gap: 20px;
             padding: 10px 15px 10px 20px;
-            max-width:90%;
-            float:right;
-            font-size:17px;
-            line-height:24px;
-            
+            max-width: 90%;
+            float: right;
+            font-size: 17px;
+            line-height: 24px;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
         }
         .user-message strong{
             flex: 0 0 40px;
@@ -834,16 +836,11 @@ def handle_simple_greetings(client, user_input: str, username: str = "Boss", use
 
 def display_message(message, is_user=True):
     """Display a chat message with appropriate styling."""
-        # Check for "Book Now" keyword and wrap it in a <p> with custom class
-    if not is_user:
-        
-        # Match "Book Now" with optional "!"
-        # message = re.sub(
-        #     r'(?i)\bbook\s*(now|here|noe)\b!?',
-        #     r'<p class="booknow-btn">Book Now</p>',
-        #     message
-        # )
+    if not message or not str(message).strip():
+        return
 
+    # Check for "Book Now" keyword and wrap it in a <p> with custom class
+    if not is_user:
         # Replace "Book Now" / "Book Now!"
         message = re.sub(
             r'(?i)\bbook\s*now!?',
@@ -874,27 +871,25 @@ def display_message(message, is_user=True):
 
     if is_user:
         st.markdown(f"""
-        <div class="chat-message user-message">
-            <strong>
-            <img width="40" height="40" src="https://www.go-koala.com/assets/img/beforLoginAvatarMobile.svg" />
-            </strong>
-            {message}
-        </div>
-        """, unsafe_allow_html=True)
+<div class="chat-message user-message">
+    <strong>
+        <img width="40" height="40" src="https://www.go-koala.com/assets/img/beforLoginAvatarMobile.svg" />
+    </strong>
+    <div style="flex: 1;">{message}</div>
+</div>
+""", unsafe_allow_html=True)
     else:
-        # Render the avatar/name header as HTML, then use st.markdown for the message body
-        # so that markdown (bold, links, bullet points) is properly rendered
         st.markdown(f"""
-        <div class="chat-message assistant-message">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <img width="40" height="40" src="https://koalaadmin-prod.s3.us-east-2.amazonaws.com/static/assets/img/availablity-koala-icon.svg" />
-                <strong>Myles AI</strong>
-            </div>
-            <div style="margin-top: 5px;">
-                {message}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+<div class="chat-message assistant-message">
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <img width="40" height="40" src="https://koalaadmin-prod.s3.us-east-2.amazonaws.com/static/assets/img/availablity-koala-icon.svg" />
+        <strong>Myles AI</strong>
+    </div>
+    <div style="margin-top: 5px;">
+        {message}
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 
 
@@ -911,25 +906,25 @@ def display_function_call(function_name, arguments, result=None):
             result_display = '<br><strong>✅ Result:</strong> Function executed successfully'
     
     st.markdown(f"""
-    <div class="chat-message function-call">
-        <strong>🔧 Function Call:</strong> {function_name}<br>
-        <strong>Arguments:</strong> {arguments}
-        {result_display}
-    </div>
-    """, unsafe_allow_html=True)
+<div class="chat-message function-call">
+    <strong>🔧 Function Call:</strong> {function_name}<br>
+    <strong>Arguments:</strong> {arguments}
+    {result_display}
+</div>
+""", unsafe_allow_html=True)
 
 
 def display_schema(schema_name, schema_content):
     """Display schema details in UI."""
     st.markdown(f"""
-    <div class="chat-message_s schema-display">
-        <strong>📑 Schema:</strong> {schema_name}<br>
-        <details>
-            <summary>Click to expand</summary>
-            <pre>{json.dumps(schema_content, indent=2)}</pre>
-        </details>
-    </div>
-    """, unsafe_allow_html=True)
+<div class="chat-message_s schema-display">
+    <strong>📑 Schema:</strong> {schema_name}<br>
+    <details>
+        <summary>Click to expand</summary>
+        <pre>{json.dumps(schema_content, indent=2)}</pre>
+    </details>
+</div>
+""", unsafe_allow_html=True)
 
 
 # def display_tools(tools):
@@ -983,11 +978,11 @@ def main():
     # Header
     st.markdown(
         """
-        <div class="main-header" style="text-align:center;">
-            <img src="https://koalaadmin-prod.s3.us-east-2.amazonaws.com/static/assets/img/Koala-Home-hero-logo.svg" 
-                alt="Header Image" width="200">
-        </div>
-        """,
+<div class="main-header" style="text-align:center;">
+    <img src="https://koalaadmin-prod.s3.us-east-2.amazonaws.com/static/assets/img/Koala-Home-hero-logo.svg" 
+        alt="Header Image" width="200">
+</div>
+""",
         unsafe_allow_html=True
     )
     # Check API key
@@ -1085,19 +1080,19 @@ def main():
 
     st.markdown(
         """
-        <style>
-        /* Target only our custom chat input */
-        div[data-testid="stTextInput"] input {
-            background-image: url("https://koalaadmin-prod.s3.us-east-2.amazonaws.com/images/send-black.svg");
-            background-repeat: no-repeat;
-            background-position: 10px center;  /* left padding */
-            background-size: 40px;        /* resize image */
-            padding-right: 40px;  
-            background-position: 97% 28px;
-                          /* leave space for the image */
-        }
-        </style>
-        """,
+<style>
+/* Target only our custom chat input */
+div[data-testid="stTextInput"] input {
+    background-image: url("https://koalaadmin-prod.s3.us-east-2.amazonaws.com/images/send-black.svg");
+    background-repeat: no-repeat;
+    background-position: 10px center;  /* left padding */
+    background-size: 40px;        /* resize image */
+    padding-right: 40px;  
+    background-position: 97% 28px;
+                  /* leave space for the image */
+}
+</style>
+""",
         unsafe_allow_html=True
     )
 
