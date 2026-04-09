@@ -186,10 +186,11 @@ class AssistantThread:
 
         Today's date is {today:%b %d, %Y}, and the current year is {current_year}. 
         **DATE RESOLUTION RULES (CRITICAL):**
-        1. When a query uses 'this' with any month, default to {current_year} ONLY if that month has not passed.
-        2. If the user mentions a month that has ALREADY PASSED in {current_year} (e.g., it is March and they say "February"), you MUST resolve it to that month in the FOLLOWING YEAR ({current_year + 1}).
-        3. ALWAYS resolve month-only queries to the next occurrence of that month in the future relative to today's date.
-        4. NEVER manually construct or pass a date in the past to any tool.
+        1. **(SUPERSEDING)** If a requested date or month (e.g., February 2026 in March 2026) is in the past, you MUST NOT call any tools and MUST NOT resolve it to a future year; instead, simply inform the user: "this is not available tha date is in the past."
+        2. When a query uses 'this' with any month, default to {current_year} ONLY if that month has not passed.
+        3. If the user mentions a month that has ALREADY PASSED in {current_year} (e.g., it is March and they say "February"), you MUST resolve it to that month in the FOLLOWING YEAR ({current_year + 1}).
+        4. ALWAYS resolve month-only queries to the next occurrence of that month in the future relative to today's date.
+        5. NEVER manually construct or pass a date in the past to any tool.
          - If no listings are found for a specific criteria: 
           1. Clearly state that no exact matches were found. 
           2. CALL `get_available_resorts` for the relevant area to fetch REAL nearby alternatives.
